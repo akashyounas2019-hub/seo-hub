@@ -232,11 +232,25 @@ function Index() {
                   <div className="p-4">
                     <div className="flex items-center justify-between">
                       <div
-                        className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${e.accent} shadow-lg transition-transform duration-300 ${
-                          isOpen ? "scale-110" : "group-hover:scale-105"
+                        className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-950/60 ring-1 transition-all duration-300 ${
+                          isOpen
+                            ? "scale-110 ring-cyan-400/60 shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+                            : "ring-slate-700/60 group-hover:scale-105 group-hover:ring-cyan-500/40"
                         }`}
                       >
-                        <Icon className="h-4 w-4 text-slate-950" />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${e.accent} opacity-20`} />
+                        <img
+                          src={agentBot}
+                          alt=""
+                          className="relative h-full w-full object-contain"
+                          loading="lazy"
+                          width={512}
+                          height={512}
+                        />
+                        {/* keep expert domain hint as small badge */}
+                        <div className={`absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br ${e.accent} shadow ring-2 ring-slate-950`}>
+                          <Icon className="h-2.5 w-2.5 text-slate-950" />
+                        </div>
                       </div>
                       {/* Expand/collapse indicator */}
                       <div
