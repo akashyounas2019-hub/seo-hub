@@ -121,6 +121,17 @@ const EXPERTS: Expert[] = [
   },
 ];
 
+// Per-index bus-half visibility for 5 experts at breakpoints:
+// base = 1 col (both halves hidden), sm = 2 cols, lg = 5 cols (single row).
+// Hide "left half" when the item is a row-start; hide "right half" when it's a row-end.
+const CONNECTOR_CLASSES: { left: string; right: string }[] = [
+  { left: "hidden",                     right: "hidden sm:block" },            // idx 0
+  { left: "hidden sm:block",            right: "hidden sm:hidden lg:block" },   // idx 1
+  { left: "hidden sm:hidden lg:block",  right: "hidden sm:block" },             // idx 2
+  { left: "hidden sm:block",            right: "hidden sm:hidden lg:block" },   // idx 3
+  { left: "hidden sm:hidden lg:block",  right: "hidden" },                      // idx 4
+];
+
 const DEFAULT_SKILLS: Record<string, string> = {
   onpage: "SEO copywriting, on-page optimization, schema markup, keyword targeting, content structuring",
   offpage: "Link building, digital PR, outreach, brand mentions, disavow management",
