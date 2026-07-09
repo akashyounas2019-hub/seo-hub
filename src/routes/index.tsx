@@ -112,6 +112,19 @@ const EXPERTS: Expert[] = [
 
 function Index() {
   const [open, setOpen] = useState<string | null>("onpage");
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!open) return;
+    const el = cardRefs.current[open];
+    if (!el) return;
+    const t = setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 200);
+    return () => clearTimeout(t);
+  }, [open]);
+
+
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200 relative overflow-hidden">
