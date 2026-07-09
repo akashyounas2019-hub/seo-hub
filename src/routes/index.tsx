@@ -9,7 +9,7 @@ import {
   Plus,
   Minus,
   Activity,
-  X,
+  
   Trash2,
   CalendarClock,
   ListTodo,
