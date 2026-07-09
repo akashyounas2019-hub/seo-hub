@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Crown,
   FileText,
@@ -7,7 +7,8 @@ import {
   Settings2,
   Search,
   ShieldCheck,
-  ChevronDown,
+  Plus,
+  Minus,
   Activity,
   Sparkles,
 } from "lucide-react";
@@ -111,6 +112,19 @@ const EXPERTS: Expert[] = [
 
 function Index() {
   const [open, setOpen] = useState<string | null>("onpage");
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!open) return;
+    const el = cardRefs.current[open];
+    if (!el) return;
+    const t = setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 200);
+    return () => clearTimeout(t);
+  }, [open]);
+
+
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200 relative overflow-hidden">
@@ -185,33 +199,64 @@ function Index() {
             const Icon = e.icon;
             const isOpen = open === e.id;
             return (
-              <div key={e.id} className="flex flex-col">
+              <div
+                key={e.id}
+                ref={(el) => {
+                  cardRefs.current[e.id] = el;
+                }}
+                className="flex scroll-mt-24 flex-col"
+              >
                 {/* vertical line into card */}
-                <div className="mx-auto h-6 w-px bg-gradient-to-b from-cyan-400/40 to-transparent" />
+                <div
+                  className={`mx-auto w-px transition-all duration-500 ${
+                    isOpen
+                      ? "h-6 bg-gradient-to-b from-cyan-300 to-cyan-400/60 shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                      : "h-6 bg-gradient-to-b from-cyan-400/40 to-transparent"
+                  }`}
+                />
 
                 <button
                   onClick={() => setOpen(isOpen ? null : e.id)}
-                  className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
+                  aria-expanded={isOpen}
+                  className={`group relative overflow-hidden rounded-xl border text-left transition-all duration-300 ease-out ${
                     isOpen
-                      ? "border-cyan-400/50 bg-slate-900/80 shadow-[0_0_30px_rgba(34,211,238,0.15)]"
-                      : "border-slate-800 bg-slate-900/40 hover:border-cyan-500/30 hover:bg-slate-900/70"
+                      ? "-translate-y-0.5 border-cyan-400/60 bg-slate-900/80 shadow-[0_0_40px_rgba(34,211,238,0.25)] ring-1 ring-cyan-400/30"
+                      : "border-slate-800 bg-slate-900/40 hover:-translate-y-0.5 hover:border-cyan-500/40 hover:bg-slate-900/70 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]"
                   }`}
                 >
                   <div
-                    className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${e.accent}`}
+                    className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${e.accent} transition-opacity duration-300 ${
+                      isOpen ? "opacity-100" : "opacity-60"
+                    }`}
                   />
                   <div className="p-4">
                     <div className="flex items-center justify-between">
                       <div
-                        className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${e.accent} shadow-lg`}
+                        className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${e.accent} shadow-lg transition-transform duration-300 ${
+                          isOpen ? "scale-110" : "group-hover:scale-105"
+                        }`}
                       >
                         <Icon className="h-4 w-4 text-slate-950" />
                       </div>
-                      <ChevronDown
-                        className={`h-4 w-4 text-slate-500 transition-transform ${
-                          isOpen ? "rotate-180 text-cyan-300" : ""
+                      {/* Expand/collapse indicator */}
+                      <div
+                        className={`relative grid h-6 w-6 place-items-center rounded-full border transition-all duration-300 ${
+                          isOpen
+                            ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.5)]"
+                            : "border-slate-700 bg-slate-900/60 text-slate-400 group-hover:border-cyan-500/40 group-hover:text-cyan-300"
                         }`}
-                      />
+                      >
+                        <Plus
+                          className={`absolute h-3.5 w-3.5 transition-all duration-300 ${
+                            isOpen ? "rotate-90 opacity-0 scale-50" : "rotate-0 opacity-100 scale-100"
+                          }`}
+                        />
+                        <Minus
+                          className={`absolute h-3.5 w-3.5 transition-all duration-300 ${
+                            isOpen ? "rotate-0 opacity-100 scale-100" : "-rotate-90 opacity-0 scale-50"
+                          }`}
+                        />
+                      </div>
                     </div>
                     <div className="mt-3 text-sm font-semibold text-white">
                       {e.title}
@@ -219,36 +264,45 @@ function Index() {
                     <div className="text-[11px] uppercase tracking-wider text-slate-500">
                       {e.tag}
                     </div>
-                    <div className="mt-3 flex items-center gap-1.5 text-[11px] text-cyan-300/80">
-                      <Activity className="h-3 w-3" />
-                      {e.subs.length} sub-agents
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-[11px] text-cyan-300/80">
+                        <Activity className="h-3 w-3" />
+                        {e.subs.length} sub-agents
+                      </div>
+                      <span
+                        className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${
+                          isOpen ? "text-cyan-300" : "text-slate-600"
+                        }`}
+                      >
+                        {isOpen ? "Expanded" : "Tap to open"}
+                      </span>
                     </div>
                   </div>
                 </button>
 
                 {/* sub-agents */}
                 <div
-                  className={`grid transition-all duration-300 ${
+                  className={`grid transition-[grid-template-rows,margin,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                     isOpen
                       ? "mt-3 grid-rows-[1fr] opacity-100"
-                      : "grid-rows-[0fr] opacity-0"
+                      : "mt-0 grid-rows-[0fr] opacity-0"
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <ul className="space-y-2">
+                    <ul className="space-y-2 pt-1">
                       {e.subs.map((s, i) => (
                         <li
                           key={s.name}
-                          className="group relative rounded-lg border border-slate-800/80 bg-slate-950/60 p-3 transition hover:border-cyan-500/40 hover:bg-slate-900/60"
+                          className="group/sub relative rounded-lg border border-slate-800/80 bg-slate-950/60 p-3 transition hover:translate-x-0.5 hover:border-cyan-500/40 hover:bg-slate-900/60"
                           style={{
                             animation: isOpen
-                              ? `fadeUp .35s ease ${i * 60}ms both`
+                              ? `subIn .45s cubic-bezier(0.22,1,0.36,1) ${i * 70}ms both`
                               : undefined,
                           }}
                         >
                           <div className="flex items-center gap-2">
                             <span
-                              className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${e.accent}`}
+                              className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${e.accent} shadow-[0_0_6px_rgba(34,211,238,0.6)]`}
                             />
                             <div className="text-xs font-medium text-slate-100">
                               {s.name}
@@ -266,6 +320,7 @@ function Index() {
             );
           })}
         </section>
+
 
         {/* footer stats */}
         <section className="mt-14 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -291,9 +346,9 @@ function Index() {
       </div>
 
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes subIn {
+          from { opacity: 0; transform: translateY(8px) scale(0.98); filter: blur(2px); }
+          to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
       `}</style>
     </div>
