@@ -273,21 +273,16 @@ function Index() {
             </div>
           </div>
 
-          {/* wiring: vertical drop + horizontal bus */}
-          <div className="relative mt-2 w-full">
-            <div className="mx-auto h-10 w-px bg-gradient-to-b from-cyan-300/80 to-cyan-400/40 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
-            {/* horizontal bus spanning across the 5 columns */}
-            <div className="mx-auto hidden lg:block h-px w-[calc(100%-((100%/5)))] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent shadow-[0_0_8px_rgba(34,211,238,0.4)]" />
-            {/* mobile bus */}
-            <div className="mx-auto lg:hidden h-px w-4/5 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
-          </div>
+          {/* leader trunk drops down into the connector row of the grid */}
+          <div className="mx-auto mt-2 h-8 w-px bg-gradient-to-b from-cyan-300/80 to-cyan-400/50 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
         </section>
 
         {/* Experts grid */}
-        <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-          {EXPERTS.map((e) => {
+        <section className="grid grid-cols-1 gap-x-5 gap-y-0 sm:grid-cols-2 lg:grid-cols-5">
+          {EXPERTS.map((e, idx) => {
             const Icon = e.icon;
             const isOpen = open === e.id;
+            const conn = CONNECTOR_CLASSES[idx];
             return (
               <div
                 key={e.id}
@@ -296,12 +291,23 @@ function Index() {
                 }}
                 className="flex scroll-mt-24 flex-col"
               >
-                {/* vertical drop from bus into card — colored per expert */}
-                <div
-                  className={`mx-auto w-px bg-gradient-to-b ${e.accent} transition-all duration-500 ${
-                    isOpen ? "h-8 opacity-100" : "h-8 opacity-60"
-                  }`}
-                />
+                {/* T-connector: horizontal bus halves + vertical drop, colored per expert */}
+                <div className="relative h-8 w-full">
+                  {/* left half of bus (hidden when this card is a row-start at that breakpoint) */}
+                  <div
+                    className={`absolute top-1/2 left-0 right-1/2 h-px -translate-y-1/2 bg-gradient-to-l from-cyan-400/60 to-cyan-400/20 ${conn.left}`}
+                  />
+                  {/* right half of bus */}
+                  <div
+                    className={`absolute top-1/2 left-1/2 right-0 h-px -translate-y-1/2 bg-gradient-to-r from-cyan-400/60 to-cyan-400/20 ${conn.right}`}
+                  />
+                  {/* vertical drop into the card, colored per expert */}
+                  <div
+                    className={`absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-gradient-to-b ${e.accent} ${isOpen ? "opacity-100" : "opacity-70"} transition-opacity duration-500`}
+                  />
+                </div>
+
+
 
 
                 <button
