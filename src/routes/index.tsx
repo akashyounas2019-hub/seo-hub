@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  Crown,
   FileText,
   Link2,
   Settings2,
@@ -10,8 +9,9 @@ import {
   Plus,
   Minus,
   Activity,
-  Sparkles,
 } from "lucide-react";
+import agentBot from "@/assets/agent-bot.png";
+import leaderBot from "@/assets/leader-bot.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
