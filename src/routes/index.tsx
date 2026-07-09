@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Crown,
   FileText,
@@ -7,7 +7,8 @@ import {
   Settings2,
   Search,
   ShieldCheck,
-  ChevronDown,
+  Plus,
+  Minus,
   Activity,
   Sparkles,
 } from "lucide-react";
