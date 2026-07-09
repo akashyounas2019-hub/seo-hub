@@ -100,7 +100,7 @@ const EXPERTS: Expert[] = [
     title: "Auditor",
     tag: "Quality & Compliance",
     icon: ShieldCheck,
-    accent: "from-cyan-400 to-teal-500",
+    accent: "from-rose-400 to-pink-500",
     subs: [
       { name: "Site Auditor", desc: "Full-site health scan" },
       { name: "Content QA", desc: "E-E-A-T & accuracy checks" },
