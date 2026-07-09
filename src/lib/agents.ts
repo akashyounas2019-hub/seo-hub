@@ -117,7 +117,41 @@ export type AgentProfile = {
   skills: string;
   tasks: Task[];
   settings: AgentSettings;
+  extraSubs?: Sub[];
 };
+
+export function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function parseAgentId(id: string): { parentId: string; subSlug?: string } {
+  const [parentId, subSlug] = id.split("__");
+  return { parentId, subSlug };
+}
+
+export function buildSubAgentId(parentId: string, subName: string) {
+  return `${parentId}__${slugify(subName)}`;
+}
+
+export function resolveAgent(id: string):
+  | { kind: "expert"; expert: Expert; subs: Sub[] }
+  | { kind: "sub"; expert: Expert; sub: Sub; subs: Sub[] }
+  | null {
+  const { parentId, subSlug } = parseAgentId(id);
+  const expert = EXPERTS.find((e) => e.id === parentId);
+  if (!expert) return null;
+  const profiles = loadProfiles();
+  const extras = profiles[parentId]?.extraSubs ?? [];
+  const subs = [...expert.subs, ...extras];
+  if (!subSlug) return { kind: "expert", expert, subs };
+  const sub = subs.find((s) => slugify(s.name) === subSlug);
+  if (!sub) return null;
+  return { kind: "sub", expert, sub, subs };
+}
 
 export type ProfileState = Record<string, AgentProfile>;
 
