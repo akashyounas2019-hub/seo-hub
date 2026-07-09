@@ -106,7 +106,6 @@ function AgentDetail() {
     if (id !== parentId) next[parentId] = parentProfile;
     saveProfiles(next);
   }, [profile, parentProfile, id, parentId, hydrated]);
-  }, [profile, parentProfile, id, parentId, hydrated]);
 
   // Sub-agent context (name/desc)
   const resolved = useMemo(() => {
