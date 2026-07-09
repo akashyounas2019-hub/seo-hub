@@ -146,8 +146,8 @@ function Index() {
         {/* Header */}
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_30px_rgba(34,211,238,0.35)]">
-              <Sparkles className="h-5 w-5 text-slate-950" />
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-slate-900/60 ring-1 ring-cyan-400/30 shadow-[0_0_30px_rgba(34,211,238,0.35)]">
+              <img src={agentBot} alt="" className="h-full w-full object-contain" loading="lazy" width={512} height={512} />
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold tracking-tight text-white">
