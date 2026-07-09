@@ -224,32 +224,38 @@ function Index() {
                       {e.subs.map((s, i) => (
                         <li
                           key={s.name}
-                          className="group/sub relative rounded-lg border border-slate-800/80 bg-slate-950/60 p-3 transition hover:translate-x-0.5 hover:border-cyan-500/40 hover:bg-slate-900/60"
                           style={{
                             animation: isOpen
                               ? `subIn .45s cubic-bezier(0.22,1,0.36,1) ${i * 70}ms both`
                               : undefined,
                           }}
                         >
-                          <span
-                            aria-hidden
-                            className={`absolute -left-px top-1/2 h-px w-2 -translate-y-1/2 bg-gradient-to-r ${e.accent} opacity-70`}
-                          />
-                          <div className="flex items-center gap-2">
-                            <span className="relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-900 ring-1 ring-slate-700/60">
-                              <span className={`absolute inset-0 bg-gradient-to-br ${e.accent} opacity-25`} />
-                              <img src={agentBot} alt="" className="relative h-5 w-5 object-contain" loading="lazy" />
-                            </span>
+                          <Link
+                            to="/agents/$id"
+                            params={{ id: buildSubAgentId(e.id, s.name) }}
+                            className="group/sub relative block rounded-lg border border-slate-800/80 bg-slate-950/60 p-3 transition hover:translate-x-0.5 hover:border-cyan-500/40 hover:bg-slate-900/60"
+                          >
                             <span
-                              className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${e.accent} shadow-[0_0_6px_rgba(34,211,238,0.6)]`}
+                              aria-hidden
+                              className={`absolute -left-px top-1/2 h-px w-2 -translate-y-1/2 bg-gradient-to-r ${e.accent} opacity-70`}
                             />
-                            <div className="text-xs font-medium text-slate-100">
-                              {s.name}
+                            <div className="flex items-center gap-2">
+                              <span className="relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-900 ring-1 ring-slate-700/60">
+                                <span className={`absolute inset-0 bg-gradient-to-br ${e.accent} opacity-25`} />
+                                <img src={agentBot} alt="" className="relative h-5 w-5 object-contain" loading="lazy" />
+                              </span>
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${e.accent} shadow-[0_0_6px_rgba(34,211,238,0.6)]`}
+                              />
+                              <div className="text-xs font-medium text-slate-100 group-hover/sub:text-cyan-100">
+                                {s.name}
+                              </div>
+                              <ArrowUpRight className="ml-auto h-3 w-3 text-slate-500 opacity-0 transition group-hover/sub:opacity-100" />
                             </div>
-                          </div>
-                          <div className="mt-1 pl-8 text-[11px] text-slate-500">
-                            {s.desc}
-                          </div>
+                            <div className="mt-1 pl-8 text-[11px] text-slate-500">
+                              {s.desc}
+                            </div>
+                          </Link>
                         </li>
                       ))}
                     </ul>
