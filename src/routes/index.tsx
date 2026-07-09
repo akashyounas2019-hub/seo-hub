@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, Minus, Activity, ArrowUpRight } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
-import { EXPERTS } from "@/lib/agents";
+import { EXPERTS, buildSubAgentId } from "@/lib/agents";
 
 export const Route = createFileRoute("/")({
   head: () => ({
