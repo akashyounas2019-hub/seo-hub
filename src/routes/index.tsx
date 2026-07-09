@@ -61,7 +61,7 @@ const EXPERTS: Expert[] = [
     title: "Off-Page Expert",
     tag: "Authority & Signals",
     icon: Link2,
-    accent: "from-sky-400 to-blue-500",
+    accent: "from-violet-400 to-fuchsia-500",
     subs: [
       { name: "Backlink Prospector", desc: "Link opportunity discovery" },
       { name: "Outreach Agent", desc: "Personalized pitches" },
