@@ -102,9 +102,10 @@ function AgentDetail() {
   useEffect(() => {
     if (!hydrated) return;
     const all = loadProfiles();
-    const next = { ...all, [id]: profile };
+    const next: Record<string, AgentProfile> = { ...all, [id]: profile };
     if (id !== parentId) next[parentId] = parentProfile;
     saveProfiles(next);
+  }, [profile, parentProfile, id, parentId, hydrated]);
   }, [profile, parentProfile, id, parentId, hydrated]);
 
   // Sub-agent context (name/desc)
