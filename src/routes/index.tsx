@@ -296,14 +296,13 @@ function Index() {
                 }}
                 className="flex scroll-mt-24 flex-col"
               >
-                {/* vertical drop from bus into card */}
+                {/* vertical drop from bus into card — colored per expert */}
                 <div
-                  className={`mx-auto w-px transition-all duration-500 ${
-                    isOpen
-                      ? "h-8 bg-gradient-to-b from-cyan-300 to-cyan-400/60 shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                      : "h-8 bg-gradient-to-b from-cyan-400/50 to-transparent"
+                  className={`mx-auto w-px bg-gradient-to-b ${e.accent} transition-all duration-500 ${
+                    isOpen ? "h-8 opacity-100" : "h-8 opacity-60"
                   }`}
                 />
+
 
                 <button
                   onClick={() => setOpen(isOpen ? null : e.id)}
