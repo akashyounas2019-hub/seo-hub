@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FileText,
   Link2,
@@ -9,9 +9,19 @@ import {
   Plus,
   Minus,
   Activity,
+  
+  Trash2,
+  CalendarClock,
+  ListTodo,
+  Sparkles,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,13 +43,14 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+type Sub = { name: string; desc: string };
 type Expert = {
   id: string;
   title: string;
   tag: string;
   icon: typeof FileText;
   accent: string;
-  subs: { name: string; desc: string }[];
+  subs: Sub[];
 };
 
 const EXPERTS: Expert[] = [
@@ -110,9 +121,47 @@ const EXPERTS: Expert[] = [
   },
 ];
 
+const DEFAULT_SKILLS: Record<string, string> = {
+  onpage: "SEO copywriting, on-page optimization, schema markup, keyword targeting, content structuring",
+  offpage: "Link building, digital PR, outreach, brand mentions, disavow management",
+  technical: "Core Web Vitals, crawl budget, log analysis, JS rendering, indexation",
+  research: "Keyword research, SERP analysis, competitor intelligence, trend detection",
+  auditor: "Site auditing, E-E-A-T review, compliance, executive reporting",
+};
+
+type Task = { id: string; title: string; assignee: string; due: string; status: "pending" | "done" };
+
+type ProfileState = Record<string, { skills: string; tasks: Task[] }>;
+
+const STORAGE_KEY = "aks-agent-profiles-v1";
+
+function loadProfiles(): ProfileState {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
 function Index() {
   const [open, setOpen] = useState<string | null>("onpage");
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<ProfileState>({});
+  const [hydrated, setHydrated] = useState(false);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    setProfiles(loadProfiles());
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+    } catch {}
+  }, [profiles, hydrated]);
 
   useEffect(() => {
     if (!open) return;
@@ -124,7 +173,42 @@ function Index() {
     return () => clearTimeout(t);
   }, [open]);
 
+  const activeExpert = useMemo(
+    () => EXPERTS.find((e) => e.id === profileId) ?? null,
+    [profileId]
+  );
 
+  const getProfile = (id: string) =>
+    profiles[id] ?? { skills: DEFAULT_SKILLS[id] ?? "", tasks: [] };
+
+  const updateSkills = (id: string, skills: string) =>
+    setProfiles((p) => ({ ...p, [id]: { ...getProfile(id), skills } }));
+
+  const addTask = (id: string, task: Task) =>
+    setProfiles((p) => ({
+      ...p,
+      [id]: { ...getProfile(id), tasks: [task, ...getProfile(id).tasks] },
+    }));
+
+  const toggleTask = (id: string, taskId: string) =>
+    setProfiles((p) => ({
+      ...p,
+      [id]: {
+        ...getProfile(id),
+        tasks: getProfile(id).tasks.map((t) =>
+          t.id === taskId ? { ...t, status: t.status === "done" ? "pending" : "done" } : t
+        ),
+      },
+    }));
+
+  const removeTask = (id: string, taskId: string) =>
+    setProfiles((p) => ({
+      ...p,
+      [id]: {
+        ...getProfile(id),
+        tasks: getProfile(id).tasks.filter((t) => t.id !== taskId),
+      },
+    }));
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200 relative overflow-hidden">
@@ -189,8 +273,14 @@ function Index() {
             </div>
           </div>
 
-          {/* connector */}
-          <div className="relative h-16 w-px bg-gradient-to-b from-cyan-400/60 to-transparent" />
+          {/* wiring: vertical drop + horizontal bus */}
+          <div className="relative mt-2 w-full">
+            <div className="mx-auto h-10 w-px bg-gradient-to-b from-cyan-300/80 to-cyan-400/40 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+            {/* horizontal bus spanning across the 5 columns */}
+            <div className="mx-auto hidden lg:block h-px w-[calc(100%-((100%/5)))] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent shadow-[0_0_8px_rgba(34,211,238,0.4)]" />
+            {/* mobile bus */}
+            <div className="mx-auto lg:hidden h-px w-4/5 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+          </div>
         </section>
 
         {/* Experts grid */}
@@ -206,12 +296,12 @@ function Index() {
                 }}
                 className="flex scroll-mt-24 flex-col"
               >
-                {/* vertical line into card */}
+                {/* vertical drop from bus into card */}
                 <div
                   className={`mx-auto w-px transition-all duration-500 ${
                     isOpen
-                      ? "h-6 bg-gradient-to-b from-cyan-300 to-cyan-400/60 shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                      : "h-6 bg-gradient-to-b from-cyan-400/40 to-transparent"
+                      ? "h-8 bg-gradient-to-b from-cyan-300 to-cyan-400/60 shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                      : "h-8 bg-gradient-to-b from-cyan-400/50 to-transparent"
                   }`}
                 />
 
@@ -247,10 +337,6 @@ function Index() {
                           width={512}
                           height={512}
                         />
-                        {/* keep expert domain hint as small badge */}
-                        <div className={`absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br ${e.accent} shadow ring-2 ring-slate-950`}>
-                          <Icon className="h-2.5 w-2.5 text-slate-950" />
-                        </div>
                       </div>
                       {/* Expand/collapse indicator */}
                       <div
@@ -272,10 +358,16 @@ function Index() {
                         />
                       </div>
                     </div>
-                    <div className="mt-3 text-sm font-semibold text-white">
-                      {e.title}
+                    {/* title row with icon adjacent */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-md bg-gradient-to-br ${e.accent} shadow`}>
+                        <Icon className="h-3.5 w-3.5 text-slate-950" />
+                      </span>
+                      <div className="text-sm font-semibold text-white leading-tight">
+                        {e.title}
+                      </div>
                     </div>
-                    <div className="text-[11px] uppercase tracking-wider text-slate-500">
+                    <div className="mt-1 text-[11px] uppercase tracking-wider text-slate-500">
                       {e.tag}
                     </div>
                     <div className="mt-3 flex items-center justify-between">
@@ -284,11 +376,14 @@ function Index() {
                         {e.subs.length} sub-agents
                       </div>
                       <span
-                        className={`text-[10px] font-medium uppercase tracking-wider transition-colors ${
-                          isOpen ? "text-cyan-300" : "text-slate-600"
-                        }`}
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          setProfileId(e.id);
+                        }}
+                        role="button"
+                        className="rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-200 transition hover:bg-cyan-400/20"
                       >
-                        {isOpen ? "Expanded" : "Tap to open"}
+                        Profile
                       </span>
                     </div>
                   </div>
@@ -303,6 +398,8 @@ function Index() {
                   }`}
                 >
                   <div className="overflow-hidden">
+                    {/* sub-agent connector line */}
+                    <div className="mx-auto -mt-1 mb-2 h-3 w-px bg-gradient-to-b from-cyan-400/40 to-transparent" />
                     <ul className="space-y-2 pt-1">
                       {e.subs.map((s, i) => (
                         <li
@@ -314,7 +411,17 @@ function Index() {
                               : undefined,
                           }}
                         >
+                          {/* connector tick */}
+                          <span
+                            aria-hidden
+                            className={`absolute -left-px top-1/2 h-px w-2 -translate-y-1/2 bg-gradient-to-r ${e.accent} opacity-70`}
+                          />
                           <div className="flex items-center gap-2">
+                            {/* small agent icon for hierarchy */}
+                            <span className={`relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-900 ring-1 ring-slate-700/60`}>
+                              <span className={`absolute inset-0 bg-gradient-to-br ${e.accent} opacity-25`} />
+                              <img src={agentBot} alt="" className="relative h-5 w-5 object-contain" loading="lazy" />
+                            </span>
                             <span
                               className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${e.accent} shadow-[0_0_6px_rgba(34,211,238,0.6)]`}
                             />
@@ -322,7 +429,7 @@ function Index() {
                               {s.name}
                             </div>
                           </div>
-                          <div className="mt-1 pl-3.5 text-[11px] text-slate-500">
+                          <div className="mt-1 pl-8 text-[11px] text-slate-500">
                             {s.desc}
                           </div>
                         </li>
@@ -334,7 +441,6 @@ function Index() {
             );
           })}
         </section>
-
 
         {/* footer stats */}
         <section className="mt-14 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -359,6 +465,16 @@ function Index() {
         </section>
       </div>
 
+      <ProfileDialog
+        expert={activeExpert}
+        profile={activeExpert ? getProfile(activeExpert.id) : null}
+        onOpenChange={(o) => !o && setProfileId(null)}
+        onSkillsChange={(s) => activeExpert && updateSkills(activeExpert.id, s)}
+        onAddTask={(t) => activeExpert && addTask(activeExpert.id, t)}
+        onToggleTask={(tid) => activeExpert && toggleTask(activeExpert.id, tid)}
+        onRemoveTask={(tid) => activeExpert && removeTask(activeExpert.id, tid)}
+      />
+
       <style>{`
         @keyframes subIn {
           from { opacity: 0; transform: translateY(8px) scale(0.98); filter: blur(2px); }
@@ -366,5 +482,179 @@ function Index() {
         }
       `}</style>
     </div>
+  );
+}
+
+function ProfileDialog({
+  expert,
+  profile,
+  onOpenChange,
+  onSkillsChange,
+  onAddTask,
+  onToggleTask,
+  onRemoveTask,
+}: {
+  expert: Expert | null;
+  profile: { skills: string; tasks: Task[] } | null;
+  onOpenChange: (open: boolean) => void;
+  onSkillsChange: (s: string) => void;
+  onAddTask: (t: Task) => void;
+  onToggleTask: (id: string) => void;
+  onRemoveTask: (id: string) => void;
+}) {
+  const [taskTitle, setTaskTitle] = useState("");
+  const [assignee, setAssignee] = useState("");
+  const [due, setDue] = useState("");
+
+  useEffect(() => {
+    if (expert) {
+      setTaskTitle("");
+      setAssignee(expert.subs[0]?.name ?? "");
+      setDue("");
+    }
+  }, [expert]);
+
+  if (!expert || !profile) return null;
+  const Icon = expert.icon;
+
+  const submit = () => {
+    if (!taskTitle.trim()) return;
+    onAddTask({
+      id: crypto.randomUUID(),
+      title: taskTitle.trim(),
+      assignee: assignee || expert.subs[0]?.name || "Unassigned",
+      due: due || new Date().toISOString().slice(0, 16),
+      status: "pending",
+    });
+    setTaskTitle("");
+    setDue("");
+  };
+
+  return (
+    <Dialog open={!!expert} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl border-cyan-400/20 bg-slate-950/95 text-slate-200 backdrop-blur">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3 text-white">
+            <span className={`relative grid h-10 w-10 place-items-center overflow-hidden rounded-lg bg-slate-900 ring-1 ring-cyan-400/40`}>
+              <span className={`absolute inset-0 bg-gradient-to-br ${expert.accent} opacity-25`} />
+              <img src={agentBot} alt="" className="relative h-8 w-8 object-contain" />
+            </span>
+            <span className="flex items-center gap-2">
+              <span className={`grid h-6 w-6 place-items-center rounded-md bg-gradient-to-br ${expert.accent}`}>
+                <Icon className="h-3.5 w-3.5 text-slate-950" />
+              </span>
+              {expert.title}
+            </span>
+          </DialogTitle>
+          <DialogDescription className="text-slate-400">
+            {expert.tag} · {expert.subs.length} sub-agents under this expert
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Skills */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-cyan-200">
+              <Sparkles className="h-4 w-4" /> Skill set
+            </Label>
+            <Textarea
+              value={profile.skills}
+              onChange={(e) => onSkillsChange(e.target.value)}
+              placeholder="Comma-separated skills this agent should master"
+              className="min-h-[140px] resize-none border-slate-800 bg-slate-900/60 text-slate-100"
+            />
+            <p className="text-[11px] text-slate-500">Auto-saved locally as you type.</p>
+          </div>
+
+          {/* Assign + Schedule */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2 text-cyan-200">
+              <ListTodo className="h-4 w-4" /> Assign task
+            </Label>
+            <Input
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+              placeholder="Task title (e.g. Audit homepage schema)"
+              className="border-slate-800 bg-slate-900/60"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={assignee}
+                onChange={(e) => setAssignee(e.target.value)}
+                className="h-9 rounded-md border border-slate-800 bg-slate-900/60 px-2 text-sm text-slate-100"
+              >
+                {expert.subs.map((s) => (
+                  <option key={s.name} value={s.name}>{s.name}</option>
+                ))}
+              </select>
+              <div className="relative">
+                <CalendarClock className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                <Input
+                  type="datetime-local"
+                  value={due}
+                  onChange={(e) => setDue(e.target.value)}
+                  className="border-slate-800 bg-slate-900/60 pl-7"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={submit}
+              className="w-full bg-gradient-to-r from-cyan-500 to-sky-500 text-slate-950 hover:opacity-90"
+            >
+              <Plus className="mr-1 h-4 w-4" /> Schedule task
+            </Button>
+          </div>
+        </div>
+
+        {/* Task list */}
+        <div className="mt-2">
+          <div className="mb-2 flex items-center justify-between">
+            <Label className="text-cyan-200">Scheduled tasks</Label>
+            <span className="text-[11px] text-slate-500">
+              {profile.tasks.filter((t) => t.status === "pending").length} pending
+            </span>
+          </div>
+          <div className="max-h-64 space-y-2 overflow-auto pr-1">
+            {profile.tasks.length === 0 && (
+              <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
+                No tasks scheduled yet.
+              </div>
+            )}
+            {profile.tasks.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/50 p-2.5"
+              >
+                <input
+                  type="checkbox"
+                  checked={t.status === "done"}
+                  onChange={() => onToggleTask(t.id)}
+                  className="h-4 w-4 accent-cyan-400"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className={`truncate text-sm ${t.status === "done" ? "text-slate-500 line-through" : "text-slate-100"}`}>
+                    {t.title}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
+                    <span className="rounded bg-slate-800/70 px-1.5 py-0.5 text-slate-300">{t.assignee}</span>
+                    <span className="flex items-center gap-1">
+                      <CalendarClock className="h-3 w-3" />
+                      {t.due.replace("T", " ")}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onRemoveTask(t.id)}
+                  className="rounded-md p-1.5 text-slate-500 hover:bg-slate-800 hover:text-rose-300"
+                  aria-label="Remove task"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
