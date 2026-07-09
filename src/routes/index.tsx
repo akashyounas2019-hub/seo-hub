@@ -172,8 +172,8 @@ function Index() {
           <div className="relative">
             <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
             <div className="relative flex items-center gap-4 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-6 py-5 backdrop-blur">
-              <div className="grid h-14 w-14 place-items-center rounded-xl bg-gradient-to-br from-cyan-300 to-blue-600 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
-                <Crown className="h-7 w-7 text-slate-950" />
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
+                <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
               </div>
               <div>
                 <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
