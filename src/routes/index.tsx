@@ -87,7 +87,7 @@ const EXPERTS: Expert[] = [
     title: "Researcher",
     tag: "Intelligence & Trends",
     icon: Search,
-    accent: "from-teal-400 to-cyan-500",
+    accent: "from-emerald-400 to-teal-500",
     subs: [
       { name: "Keyword Miner", desc: "Volume, difficulty, intent" },
       { name: "SERP Analyst", desc: "Competitor SERP dissection" },
