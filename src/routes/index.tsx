@@ -397,8 +397,9 @@ function Index() {
                   }`}
                 >
                   <div className="overflow-hidden">
-                    {/* sub-agent connector line */}
-                    <div className="mx-auto -mt-1 mb-2 h-3 w-px bg-gradient-to-b from-cyan-400/40 to-transparent" />
+                    {/* sub-agent connector line — colored per expert */}
+                    <div className={`mx-auto -mt-1 mb-2 h-3 w-px bg-gradient-to-b ${e.accent} opacity-70`} />
+
                     <ul className="space-y-2 pt-1">
                       {e.subs.map((s, i) => (
                         <li
