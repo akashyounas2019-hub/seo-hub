@@ -61,7 +61,7 @@ const EXPERTS: Expert[] = [
     title: "Off-Page Expert",
     tag: "Authority & Signals",
     icon: Link2,
-    accent: "from-sky-400 to-blue-500",
+    accent: "from-violet-400 to-fuchsia-500",
     subs: [
       { name: "Backlink Prospector", desc: "Link opportunity discovery" },
       { name: "Outreach Agent", desc: "Personalized pitches" },
@@ -74,7 +74,7 @@ const EXPERTS: Expert[] = [
     title: "Technical SEO Expert",
     tag: "Crawl & Performance",
     icon: Settings2,
-    accent: "from-blue-400 to-indigo-500",
+    accent: "from-amber-400 to-orange-500",
     subs: [
       { name: "Crawl Analyst", desc: "Robots, sitemaps, indexation" },
       { name: "Core Web Vitals", desc: "LCP, INP, CLS tuning" },
@@ -87,7 +87,7 @@ const EXPERTS: Expert[] = [
     title: "Researcher",
     tag: "Intelligence & Trends",
     icon: Search,
-    accent: "from-teal-400 to-cyan-500",
+    accent: "from-emerald-400 to-teal-500",
     subs: [
       { name: "Keyword Miner", desc: "Volume, difficulty, intent" },
       { name: "SERP Analyst", desc: "Competitor SERP dissection" },
@@ -100,7 +100,7 @@ const EXPERTS: Expert[] = [
     title: "Auditor",
     tag: "Quality & Compliance",
     icon: ShieldCheck,
-    accent: "from-cyan-400 to-teal-500",
+    accent: "from-rose-400 to-pink-500",
     subs: [
       { name: "Site Auditor", desc: "Full-site health scan" },
       { name: "Content QA", desc: "E-E-A-T & accuracy checks" },
