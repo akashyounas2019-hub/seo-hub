@@ -74,7 +74,7 @@ const EXPERTS: Expert[] = [
     title: "Technical SEO Expert",
     tag: "Crawl & Performance",
     icon: Settings2,
-    accent: "from-blue-400 to-indigo-500",
+    accent: "from-amber-400 to-orange-500",
     subs: [
       { name: "Crawl Analyst", desc: "Robots, sitemaps, indexation" },
       { name: "Core Web Vitals", desc: "LCP, INP, CLS tuning" },
