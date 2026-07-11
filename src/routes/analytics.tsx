@@ -73,6 +73,7 @@ const WIDGETS: Widget[] = [
       { label: "Conversions", value: "1,624", delta: 8.7, icon: MousePointerClick },
     ],
     spark: [22, 28, 26, 34, 31, 40, 38, 46, 44, 52, 49, 58],
+    drillTo: "/analytics/google-analytics",
   },
   {
     id: "gsc",
