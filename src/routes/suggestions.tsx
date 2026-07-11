@@ -12,6 +12,12 @@ import {
   Zap,
   Filter,
   Sparkles,
+  Bot,
+  Calendar,
+  PenLine,
+  Repeat,
+  PlayCircle,
+  Workflow,
 } from "lucide-react";
 
 export const Route = createFileRoute("/suggestions")({
@@ -99,6 +105,82 @@ const SECTIONS: Section[] = [
   },
 ];
 
+type Automation = {
+  id: string;
+  title: string;
+  desc: string;
+  agent: string;
+  agentIcon: typeof PenLine;
+  cadence: string;
+  trigger: string;
+  nextRun: string;
+  lift: string;
+  impact: Impact;
+};
+
+const AUTOMATIONS: Automation[] = [
+  {
+    id: "a1",
+    title: "Schedule 8 blog posts with Blog Writer for Ramadan season",
+    desc: "Auto-brief, draft and queue 'Ramadan deep cleaning' + 'iftar prep cleaning' posts to publish Feb 12 – Mar 3.",
+    agent: "Blog Writer",
+    agentIcon: PenLine,
+    cadence: "One-off · 8 posts",
+    trigger: "Feb 12, 2026 · 09:00 GST",
+    nextRun: "Starts in 6 days",
+    lift: "+22% seasonal traffic",
+    impact: "High",
+  },
+  {
+    id: "a2",
+    title: "Auto-publish weekly GBP post every Monday 9 AM",
+    desc: "Hand Content Strategist → GBP Publisher: rotate offers, service highlights and area spotlights.",
+    agent: "GBP Publisher",
+    agentIcon: Calendar,
+    cadence: "Weekly · Mon 09:00",
+    trigger: "Recurring schedule",
+    nextRun: "Next: Mon 09:00 GST",
+    lift: "+14% GBP calls",
+    impact: "High",
+  },
+  {
+    id: "a3",
+    title: "Trigger review request 2h after every completed job",
+    desc: "CRM 'job completed' webhook → Review Agent sends bilingual WhatsApp + email request.",
+    agent: "Review Agent",
+    agentIcon: Repeat,
+    cadence: "Real-time",
+    trigger: "CRM webhook",
+    nextRun: "Live · avg 42 / week",
+    lift: "3.4× review velocity",
+    impact: "High",
+  },
+  {
+    id: "a4",
+    title: "Refresh 5 declining posts on the 1st of each month",
+    desc: "Meta Optimizer + Content Strategist auto-update stats, FAQ and internal links on flagged URLs.",
+    agent: "Content Strategist",
+    agentIcon: FileText,
+    cadence: "Monthly · 1st 08:00",
+    trigger: "Traffic drop > 20%",
+    nextRun: "Next: Feb 1, 08:00",
+    lift: "Recover ~1.2k sessions",
+    impact: "Medium",
+  },
+  {
+    id: "a5",
+    title: "Auto-outreach when a new UAE brand mention is detected",
+    desc: "Mention listener → Outreach Agent drafts a 1-line link-add pitch and queues for approval.",
+    agent: "Outreach Agent",
+    agentIcon: Bot,
+    cadence: "Real-time",
+    trigger: "New unlinked mention",
+    nextRun: "Live · 3 pending",
+    lift: "+6 DR links / mo",
+    impact: "Medium",
+  },
+];
+
 function SuggestionsPage() {
   const total = SECTIONS.reduce((n, s) => n + s.items.length, 0);
   const assigned = SECTIONS.reduce((n, s) => n + s.items.filter((i) => i.assigned).length, 0);
@@ -177,11 +259,141 @@ function SuggestionsPage() {
           {SECTIONS.map((s) => (
             <SectionBlock key={s.id} section={s} />
           ))}
+          <AutomationSuggestions />
         </div>
 
         <div aria-hidden className="h-16" />
       </div>
     </div>
+  );
+}
+
+function AutomationSuggestions() {
+  const [expanded, setExpanded] = useState(false);
+  const previewCount = 3;
+  const items = expanded ? AUTOMATIONS : AUTOMATIONS.slice(0, previewCount);
+  const remaining = AUTOMATIONS.length - previewCount;
+  const from = "#22d3ee";
+  const to = "#a855f7";
+
+  const impactStyle: Record<Impact, string> = {
+    High: "bg-rose-400/10 text-rose-300 border-rose-400/20",
+    Medium: "bg-amber-400/10 text-amber-300 border-amber-400/20",
+    Low: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  };
+
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-px"
+        style={{ background: `linear-gradient(to right, ${from}, ${to})` }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-[0.08] blur-3xl"
+        style={{ background: `radial-gradient(circle, ${from}, transparent 70%)` }}
+      />
+
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/70 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div
+            className="grid h-10 w-10 place-items-center rounded-xl text-slate-950 shadow"
+            style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+          >
+            <Workflow className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-white">Automation Suggestions</h2>
+            <div className="text-[11px] text-slate-500">
+              Tasks and workflows your agents can run on a schedule or trigger
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
+            {AUTOMATIONS.length} candidates
+          </span>
+          <Link
+            to="/automation"
+            className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-200 hover:bg-cyan-400/20"
+          >
+            Open studio <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Items */}
+      <ul className="divide-y divide-slate-800/70">
+        {items.map((a) => {
+          const AgentIcon = a.agentIcon;
+          return (
+            <li
+              key={a.id}
+              className="group relative grid gap-4 px-5 py-4 transition hover:bg-slate-900/60 md:grid-cols-[minmax(0,1fr)_auto] md:items-start"
+            >
+              <div className="flex min-w-0 items-start gap-3">
+                <div
+                  className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-950"
+                  style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-white leading-snug">{a.title}</div>
+                  <div className="mt-0.5 text-xs text-slate-400">{a.desc}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${impactStyle[a.impact]}`}
+                    >
+                      {a.impact} impact
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/25 bg-cyan-400/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-cyan-200">
+                      <AgentIcon className="h-3 w-3" /> {a.agent}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
+                      <Repeat className="h-3 w-3" /> {a.cadence}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
+                      <Calendar className="h-3 w-3" /> {a.trigger}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-emerald-300">
+                      <TrendingUp className="h-3 w-3" /> {a.lift}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 md:flex-col md:items-end md:gap-1.5">
+                <div className="text-[11px] text-slate-500 md:text-right">{a.nextRun}</div>
+                <button
+                  className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-200 hover:bg-cyan-400/20"
+                >
+                  <PlayCircle className="h-3.5 w-3.5" /> Automate
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Footer */}
+      {AUTOMATIONS.length > previewCount && (
+        <div className="flex items-center justify-between border-t border-slate-800/70 bg-slate-950/40 px-5 py-3">
+          <div className="text-[11px] text-slate-500">
+            Showing {items.length} of {AUTOMATIONS.length}
+          </div>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-cyan-400/40 hover:bg-slate-800 hover:text-cyan-200"
+          >
+            {expanded ? "Show less" : `View all (${remaining} more)`}
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
 
