@@ -485,7 +485,12 @@ function Constellation() {
               >
 
               {/* Avatar — perfectly centered and fully enclosed in the frame */}
-              <div className="relative h-[76px] w-[76px]">
+              <Link
+                to="/scout-team/$scoutId"
+                params={{ scoutId: n.id }}
+                aria-label={`Open ${n.title} profile`}
+                className="pointer-events-auto relative block h-[76px] w-[76px] transition hover:scale-[1.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 rounded-full"
+              >
                 {/* static halo — matches frame exactly, so bot is always inside the visible circle */}
                 <span className="pointer-events-none absolute inset-[-6px] rounded-full border border-cyan-400/25 bg-cyan-400/[0.04]" />
                 <span
@@ -512,7 +517,8 @@ function Constellation() {
                     <Icon className="h-2.5 w-2.5 text-slate-950" />
                   </span>
                 </div>
-              </div>
+              </Link>
+
 
 
               {/* Label — absolutely positioned beside the avatar, does not shift it */}
