@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Search,
@@ -18,7 +18,7 @@ import {
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
 
-export const Route = createFileRoute("/scout-team")({
+export const Route = createFileRoute("/scout-team/")({
   head: () => ({
     meta: [
       { title: "Scout Team — AKS SEO Console" },
@@ -231,12 +231,14 @@ function ScoutTeamPage() {
           {SCOUTS.map((s, i) => {
             const Icon = s.icon;
             return (
-              <div
+              <Link
                 key={s.id}
+                to="/scout-team/$scoutId"
+                params={{ scoutId: s.id }}
                 style={{
                   animation: `deskIn .5s cubic-bezier(0.22,1,0.36,1) ${i * 60}ms both`,
                 }}
-                className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-3 transition hover:-translate-y-0.5 hover:border-cyan-500/40"
+                className="group relative block overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-3 transition hover:-translate-y-0.5 hover:border-cyan-500/40"
               >
                 <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${s.accent}`} />
                 <div className="flex items-center gap-3">
@@ -261,7 +263,8 @@ function ScoutTeamPage() {
                     {s.role}
                   </span>
                 </div>
-              </div>
+              </Link>
+
             );
           })}
         </section>
@@ -482,7 +485,12 @@ function Constellation() {
               >
 
               {/* Avatar — perfectly centered and fully enclosed in the frame */}
-              <div className="relative h-[76px] w-[76px]">
+              <Link
+                to="/scout-team/$scoutId"
+                params={{ scoutId: n.id }}
+                aria-label={`Open ${n.title} profile`}
+                className="pointer-events-auto relative block h-[76px] w-[76px] transition hover:scale-[1.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 rounded-full"
+              >
                 {/* static halo — matches frame exactly, so bot is always inside the visible circle */}
                 <span className="pointer-events-none absolute inset-[-6px] rounded-full border border-cyan-400/25 bg-cyan-400/[0.04]" />
                 <span
@@ -509,7 +517,8 @@ function Constellation() {
                     <Icon className="h-2.5 w-2.5 text-slate-950" />
                   </span>
                 </div>
-              </div>
+              </Link>
+
 
 
               {/* Label — absolutely positioned beside the avatar, does not shift it */}
