@@ -470,13 +470,14 @@ function Constellation() {
           </div>
         </div>
 
-        {/* Scout nodes — avatar is dead-centered on the node point; label floats beside it */}
+        {/* Scout nodes — avatar is clipped inside a single circular frame; label floats beside it */}
         {nodes.map((n, i) => {
           const Icon = n.icon;
           const leftSide = n.x < cx;
           return (
             <div
               key={n.id}
+              data-scout-node={n.id}
               className="pointer-events-none absolute"
               style={{
                 left: `${(n.x / W) * 100}%`,
@@ -485,32 +486,32 @@ function Constellation() {
                 animation: `deskIn .5s cubic-bezier(0.22,1,0.36,1) ${150 + i * 90}ms both`,
               }}
             >
-              {/* Avatar — perfectly centered on the point */}
-              <div className="relative h-16 w-16">
+              {/* Avatar — perfectly centered and fully enclosed in the frame */}
+              <div className="relative h-[76px] w-[76px]">
                 <span
-                  className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/25"
+                  className="pointer-events-none absolute left-1/2 top-1/2 h-[76px] w-[76px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/25"
                   style={{ animation: "pulseRing 3.2s ease-out infinite", animationDelay: `${i * 0.25}s` }}
                 />
-                <div className="relative h-16 w-16 overflow-hidden rounded-full bg-slate-950/80 ring-1 ring-slate-700/70 shadow-[0_0_20px_rgba(0,0,0,0.6)]">
+                <div className="relative grid h-[76px] w-[76px] place-items-center overflow-hidden rounded-full border border-cyan-300/30 bg-slate-950/90 ring-1 ring-slate-700/70 shadow-[0_0_20px_rgba(0,0,0,0.6)]">
                   <div className={`absolute inset-0 bg-gradient-to-br ${n.accent} opacity-30`} />
                   <img
                     src={agentBot}
                     alt=""
-                    className="relative h-full w-full scale-[0.72] object-contain"
+                    className="relative block h-[58px] w-[58px] object-contain"
                     loading="lazy"
                     width={512}
                     height={512}
                   />
+                  {/* status LED */}
+                  <span
+                    className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-slate-950 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
+                    style={{ animation: "ledPulse 1.6s ease-in-out infinite" }}
+                  />
+                  {/* role icon badge */}
+                  <span className={`absolute bottom-1.5 ${leftSide ? "left-1.5" : "right-1.5"} grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br ${n.accent} ring-1 ring-slate-950`}>
+                    <Icon className="h-2.5 w-2.5 text-slate-950" />
+                  </span>
                 </div>
-                {/* status LED */}
-                <span
-                  className="absolute right-0 top-0 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
-                  style={{ animation: "ledPulse 1.6s ease-in-out infinite" }}
-                />
-                {/* role icon badge */}
-                <span className={`absolute -bottom-1 ${leftSide ? "-left-1" : "-right-1"} grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br ${n.accent} ring-2 ring-slate-950`}>
-                  <Icon className="h-3 w-3 text-slate-950" />
-                </span>
               </div>
 
               {/* Label — absolutely positioned beside the avatar, does not shift it */}
