@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import { SCOUTS, getScout, type Scout } from "@/lib/scouts";
+import { BlogWriterWizard } from "@/components/blog-writer-wizard";
 
 export const Route = createFileRoute("/scout-team/$scoutId")({
   head: ({ params }) => {
