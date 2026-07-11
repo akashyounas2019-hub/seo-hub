@@ -7,6 +7,7 @@ import {
   Settings,
   BarChart3,
   Bell,
+  Radar,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 
@@ -26,6 +27,7 @@ import {
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Agent Jobs", url: "/", icon: Users },
+  { title: "Scout Team", url: "/scout-team", icon: Radar },
   { title: "Automation", url: "/automation", icon: Zap },
   { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },

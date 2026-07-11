@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuggestionsRouteImport } from './routes/suggestions'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ScoutTeamRouteImport } from './routes/scout-team'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AlertsRouteImport } from './routes/alerts'
@@ -29,6 +30,11 @@ const SuggestionsRoute = SuggestionsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScoutTeamRoute = ScoutTeamRouteImport.update({
+  id: '/scout-team',
+  path: '/scout-team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
+  '/scout-team': typeof ScoutTeamRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
+  '/scout-team': typeof ScoutTeamRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
+  '/scout-team': typeof ScoutTeamRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/automation'
     | '/dashboard'
+    | '/scout-team'
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/automation'
     | '/dashboard'
+    | '/scout-team'
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/automation'
     | '/dashboard'
+    | '/scout-team'
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   AlertsRoute: typeof AlertsRoute
   AutomationRoute: typeof AutomationRoute
   DashboardRoute: typeof DashboardRoute
+  ScoutTeamRoute: typeof ScoutTeamRoute
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   AgentsIdRoute: typeof AgentsIdRoute
@@ -189,6 +202,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scout-team': {
+      id: '/scout-team'
+      path: '/scout-team'
+      fullPath: '/scout-team'
+      preLoaderRoute: typeof ScoutTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -262,6 +282,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlertsRoute: AlertsRoute,
   AutomationRoute: AutomationRoute,
   DashboardRoute: DashboardRoute,
+  ScoutTeamRoute: ScoutTeamRoute,
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   AgentsIdRoute: AgentsIdRoute,
@@ -273,13 +294,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
