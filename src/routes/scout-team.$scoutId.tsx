@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import { SCOUTS, getScout, type Scout } from "@/lib/scouts";
+import { BlogWriterWizard } from "@/components/blog-writer-wizard";
 
 export const Route = createFileRoute("/scout-team/$scoutId")({
   head: ({ params }) => {
@@ -242,6 +243,11 @@ function ScoutProfilePage() {
           </div>
 
           {/* Tab body */}
+          {tab.id === "blog-writer" ? (
+            <div key={tab.id} className="p-5" style={{ animation: "fadeInUp .35s ease both" }}>
+              <BlogWriterWizard accent={scout.accent} />
+            </div>
+          ) : (
           <div key={tab.id} className="grid gap-4 p-5 lg:grid-cols-3" style={{ animation: "fadeInUp .35s ease both" }}>
             {/* Primary panel */}
             <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
@@ -325,7 +331,9 @@ function ScoutProfilePage() {
               </button>
             </aside>
           </div>
+          )}
         </div>
+
 
         {/* Peer scouts */}
         <div className="mt-8 mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
