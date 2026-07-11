@@ -36,11 +36,12 @@ export const Route = createFileRoute("/scout-team/$scoutId")({
   loader: ({ params }) => {
     const scout = getScout(params.scoutId);
     if (!scout) throw notFound();
-    return { scout };
+    return { scoutId: scout.id };
   },
   notFoundComponent: ScoutNotFound,
   component: ScoutProfilePage,
 });
+
 
 function ScoutNotFound() {
   const { scoutId } = Route.useParams();
