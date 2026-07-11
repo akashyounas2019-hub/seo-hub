@@ -231,12 +231,14 @@ function ScoutTeamPage() {
           {SCOUTS.map((s, i) => {
             const Icon = s.icon;
             return (
-              <div
+              <Link
                 key={s.id}
+                to="/scout-team/$scoutId"
+                params={{ scoutId: s.id }}
                 style={{
                   animation: `deskIn .5s cubic-bezier(0.22,1,0.36,1) ${i * 60}ms both`,
                 }}
-                className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-3 transition hover:-translate-y-0.5 hover:border-cyan-500/40"
+                className="group relative block overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-3 transition hover:-translate-y-0.5 hover:border-cyan-500/40"
               >
                 <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${s.accent}`} />
                 <div className="flex items-center gap-3">
@@ -261,7 +263,8 @@ function ScoutTeamPage() {
                     {s.role}
                   </span>
                 </div>
-              </div>
+              </Link>
+
             );
           })}
         </section>
