@@ -16,6 +16,8 @@ import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsSearchConsoleRouteImport } from './routes/analytics.search-console'
+import { Route as AnalyticsGoogleAnalyticsRouteImport } from './routes/analytics.google-analytics'
+import { Route as AnalyticsBusinessProfileRouteImport } from './routes/analytics.business-profile'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 
 const SuggestionsRoute = SuggestionsRouteImport.update({
@@ -53,6 +55,18 @@ const AnalyticsSearchConsoleRoute = AnalyticsSearchConsoleRouteImport.update({
   path: '/search-console',
   getParentRoute: () => AnalyticsRoute,
 } as any)
+const AnalyticsGoogleAnalyticsRoute =
+  AnalyticsGoogleAnalyticsRouteImport.update({
+    id: '/google-analytics',
+    path: '/google-analytics',
+    getParentRoute: () => AnalyticsRoute,
+  } as any)
+const AnalyticsBusinessProfileRoute =
+  AnalyticsBusinessProfileRouteImport.update({
+    id: '/business-profile',
+    path: '/business-profile',
+    getParentRoute: () => AnalyticsRoute,
+  } as any)
 const AgentsIdRoute = AgentsIdRouteImport.update({
   id: '/agents/$id',
   path: '/agents/$id',
@@ -67,6 +81,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
+  '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
+  '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +93,8 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
+  '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
+  '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
 }
 export interface FileRoutesById {
@@ -88,6 +106,8 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
+  '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
+  '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +120,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
+    | '/analytics/business-profile'
+    | '/analytics/google-analytics'
     | '/analytics/search-console'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +132,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
+    | '/analytics/business-profile'
+    | '/analytics/google-analytics'
     | '/analytics/search-console'
   id:
     | '__root__'
@@ -120,6 +144,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
+    | '/analytics/business-profile'
+    | '/analytics/google-analytics'
     | '/analytics/search-console'
   fileRoutesById: FileRoutesById
 }
@@ -184,6 +210,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsSearchConsoleRouteImport
       parentRoute: typeof AnalyticsRoute
     }
+    '/analytics/google-analytics': {
+      id: '/analytics/google-analytics'
+      path: '/google-analytics'
+      fullPath: '/analytics/google-analytics'
+      preLoaderRoute: typeof AnalyticsGoogleAnalyticsRouteImport
+      parentRoute: typeof AnalyticsRoute
+    }
+    '/analytics/business-profile': {
+      id: '/analytics/business-profile'
+      path: '/business-profile'
+      fullPath: '/analytics/business-profile'
+      preLoaderRoute: typeof AnalyticsBusinessProfileRouteImport
+      parentRoute: typeof AnalyticsRoute
+    }
     '/agents/$id': {
       id: '/agents/$id'
       path: '/agents/$id'
@@ -195,10 +235,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AnalyticsRouteChildren {
+  AnalyticsBusinessProfileRoute: typeof AnalyticsBusinessProfileRoute
+  AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
   AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
 }
 
 const AnalyticsRouteChildren: AnalyticsRouteChildren = {
+  AnalyticsBusinessProfileRoute: AnalyticsBusinessProfileRoute,
+  AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
   AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
 }
 
