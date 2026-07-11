@@ -13,8 +13,8 @@ import { Route as SuggestionsRouteImport } from './routes/suggestions'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AutomationRouteImport } from './routes/automation'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalyticsIndexRouteImport } from './routes/analytics.index'
 import { Route as AnalyticsSearchConsoleRouteImport } from './routes/analytics.search-console'
 import { Route as AnalyticsGoogleAnalyticsRouteImport } from './routes/analytics.google-analytics'
 import { Route as AnalyticsBusinessProfileRouteImport } from './routes/analytics.business-profile'
@@ -40,32 +40,32 @@ const AutomationRoute = AutomationRouteImport.update({
   path: '/automation',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
+  id: '/analytics/',
+  path: '/analytics/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyticsSearchConsoleRoute = AnalyticsSearchConsoleRouteImport.update({
-  id: '/search-console',
-  path: '/search-console',
-  getParentRoute: () => AnalyticsRoute,
+  id: '/analytics/search-console',
+  path: '/analytics/search-console',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsGoogleAnalyticsRoute =
   AnalyticsGoogleAnalyticsRouteImport.update({
-    id: '/google-analytics',
-    path: '/google-analytics',
-    getParentRoute: () => AnalyticsRoute,
+    id: '/analytics/google-analytics',
+    path: '/analytics/google-analytics',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AnalyticsBusinessProfileRoute =
   AnalyticsBusinessProfileRouteImport.update({
-    id: '/business-profile',
-    path: '/business-profile',
-    getParentRoute: () => AnalyticsRoute,
+    id: '/analytics/business-profile',
+    path: '/analytics/business-profile',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AgentsIdRoute = AgentsIdRouteImport.update({
   id: '/agents/$id',
@@ -75,7 +75,6 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
@@ -84,10 +83,10 @@ export interface FileRoutesByFullPath {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/analytics/': typeof AnalyticsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
@@ -96,11 +95,11 @@ export interface FileRoutesByTo {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/analytics': typeof AnalyticsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/analytics': typeof AnalyticsRouteWithChildren
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
@@ -109,12 +108,12 @@ export interface FileRoutesById {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/analytics/': typeof AnalyticsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/analytics'
     | '/automation'
     | '/dashboard'
     | '/settings'
@@ -123,10 +122,10 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/analytics/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/analytics'
     | '/automation'
     | '/dashboard'
     | '/settings'
@@ -135,10 +134,10 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/analytics'
   id:
     | '__root__'
     | '/'
-    | '/analytics'
     | '/automation'
     | '/dashboard'
     | '/settings'
@@ -147,16 +146,20 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/analytics/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AnalyticsRoute: typeof AnalyticsRouteWithChildren
   AutomationRoute: typeof AutomationRoute
   DashboardRoute: typeof DashboardRoute
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   AgentsIdRoute: typeof AgentsIdRoute
+  AnalyticsBusinessProfileRoute: typeof AnalyticsBusinessProfileRoute
+  AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
+  AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
+  AnalyticsIndexRoute: typeof AnalyticsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -189,13 +192,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AutomationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -203,26 +199,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/analytics/': {
+      id: '/analytics/'
+      path: '/analytics'
+      fullPath: '/analytics/'
+      preLoaderRoute: typeof AnalyticsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analytics/search-console': {
       id: '/analytics/search-console'
-      path: '/search-console'
+      path: '/analytics/search-console'
       fullPath: '/analytics/search-console'
       preLoaderRoute: typeof AnalyticsSearchConsoleRouteImport
-      parentRoute: typeof AnalyticsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/analytics/google-analytics': {
       id: '/analytics/google-analytics'
-      path: '/google-analytics'
+      path: '/analytics/google-analytics'
       fullPath: '/analytics/google-analytics'
       preLoaderRoute: typeof AnalyticsGoogleAnalyticsRouteImport
-      parentRoute: typeof AnalyticsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/analytics/business-profile': {
       id: '/analytics/business-profile'
-      path: '/business-profile'
+      path: '/analytics/business-profile'
       fullPath: '/analytics/business-profile'
       preLoaderRoute: typeof AnalyticsBusinessProfileRouteImport
-      parentRoute: typeof AnalyticsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/agents/$id': {
       id: '/agents/$id'
@@ -234,30 +237,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AnalyticsRouteChildren {
-  AnalyticsBusinessProfileRoute: typeof AnalyticsBusinessProfileRoute
-  AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
-  AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
-}
-
-const AnalyticsRouteChildren: AnalyticsRouteChildren = {
-  AnalyticsBusinessProfileRoute: AnalyticsBusinessProfileRoute,
-  AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
-  AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
-}
-
-const AnalyticsRouteWithChildren = AnalyticsRoute._addFileChildren(
-  AnalyticsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AnalyticsRoute: AnalyticsRouteWithChildren,
   AutomationRoute: AutomationRoute,
   DashboardRoute: DashboardRoute,
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   AgentsIdRoute: AgentsIdRoute,
+  AnalyticsBusinessProfileRoute: AnalyticsBusinessProfileRoute,
+  AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
+  AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
+  AnalyticsIndexRoute: AnalyticsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
