@@ -12,6 +12,12 @@ import {
   Zap,
   Filter,
   Sparkles,
+  Bot,
+  Calendar,
+  PenLine,
+  Repeat,
+  PlayCircle,
+  Workflow,
 } from "lucide-react";
 
 export const Route = createFileRoute("/suggestions")({
