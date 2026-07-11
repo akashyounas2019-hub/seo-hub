@@ -51,21 +51,21 @@ const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsSearchConsoleRoute = AnalyticsSearchConsoleRouteImport.update({
-  id: '/analytics/search-console',
-  path: '/analytics/search-console',
-  getParentRoute: () => rootRouteImport,
+  id: '/search-console',
+  path: '/search-console',
+  getParentRoute: () => AnalyticsRoute,
 } as any)
 const AnalyticsGoogleAnalyticsRoute =
   AnalyticsGoogleAnalyticsRouteImport.update({
-    id: '/analytics/google-analytics',
-    path: '/analytics/google-analytics',
-    getParentRoute: () => rootRouteImport,
+    id: '/google-analytics',
+    path: '/google-analytics',
+    getParentRoute: () => AnalyticsRoute,
   } as any)
 const AnalyticsBusinessProfileRoute =
   AnalyticsBusinessProfileRouteImport.update({
-    id: '/analytics/business-profile',
-    path: '/analytics/business-profile',
-    getParentRoute: () => rootRouteImport,
+    id: '/business-profile',
+    path: '/business-profile',
+    getParentRoute: () => AnalyticsRoute,
   } as any)
 const AgentsIdRoute = AgentsIdRouteImport.update({
   id: '/agents/$id',
@@ -156,9 +156,6 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   AgentsIdRoute: typeof AgentsIdRoute
-  AnalyticsBusinessProfileRoute: typeof AnalyticsBusinessProfileRoute
-  AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
-  AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
   AnalyticsIndexRoute: typeof AnalyticsIndexRoute
 }
 
@@ -208,24 +205,24 @@ declare module '@tanstack/react-router' {
     }
     '/analytics/search-console': {
       id: '/analytics/search-console'
-      path: '/analytics/search-console'
+      path: '/search-console'
       fullPath: '/analytics/search-console'
       preLoaderRoute: typeof AnalyticsSearchConsoleRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AnalyticsRoute
     }
     '/analytics/google-analytics': {
       id: '/analytics/google-analytics'
-      path: '/analytics/google-analytics'
+      path: '/google-analytics'
       fullPath: '/analytics/google-analytics'
       preLoaderRoute: typeof AnalyticsGoogleAnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AnalyticsRoute
     }
     '/analytics/business-profile': {
       id: '/analytics/business-profile'
-      path: '/analytics/business-profile'
+      path: '/business-profile'
       fullPath: '/analytics/business-profile'
       preLoaderRoute: typeof AnalyticsBusinessProfileRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AnalyticsRoute
     }
     '/agents/$id': {
       id: '/agents/$id'
@@ -244,11 +241,18 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   AgentsIdRoute: AgentsIdRoute,
-  AnalyticsBusinessProfileRoute: AnalyticsBusinessProfileRoute,
-  AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
-  AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
   AnalyticsIndexRoute: AnalyticsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
