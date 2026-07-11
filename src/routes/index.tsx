@@ -212,63 +212,16 @@ function Index() {
                   </div>
                 </button>
 
-                {/* sub-agents (non-onpage render inline; onpage renders in full-width strip below) */}
-                {e.id !== "onpage" && (
-                  <div
-                    className={`grid transition-[grid-template-rows,margin,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                      isOpen ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"
-                    }`}
-                  >
-                    <div className="overflow-hidden">
-                      <div className={`mx-auto -mt-1 mb-2 h-3 w-px bg-gradient-to-b ${e.accent} opacity-70`} />
-                      <ul className="space-y-2 pt-1">
-                        {e.subs.map((s, i) => (
-                          <li
-                            key={s.name}
-                            style={{
-                              animation: isOpen
-                                ? `subIn .45s cubic-bezier(0.22,1,0.36,1) ${i * 70}ms both`
-                                : undefined,
-                            }}
-                          >
-                            <Link
-                              to="/agents/$id"
-                              params={{ id: buildSubAgentId(e.id, s.name) }}
-                              className="group/sub relative block rounded-lg border border-slate-800/80 bg-slate-950/60 p-3 transition hover:translate-x-0.5 hover:border-cyan-500/40 hover:bg-slate-900/60"
-                            >
-                              <span
-                                aria-hidden
-                                className={`absolute -left-px top-1/2 h-px w-2 -translate-y-1/2 bg-gradient-to-r ${e.accent} opacity-70`}
-                              />
-                              <div className="flex items-center gap-2">
-                                <span className="relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-900 ring-1 ring-slate-700/60">
-                                  <span className={`absolute inset-0 bg-gradient-to-br ${e.accent} opacity-25`} />
-                                  <img src={agentBot} alt="" className="relative h-5 w-5 object-contain" loading="lazy" />
-                                </span>
-                                <span className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${e.accent} shadow-[0_0_6px_rgba(34,211,238,0.6)]`} />
-                                <div className="text-xs font-medium text-slate-100 group-hover/sub:text-cyan-100">
-                                  {s.name}
-                                </div>
-                                <ArrowUpRight className="ml-auto h-3 w-3 text-slate-500 opacity-0 transition group-hover/sub:opacity-100" />
-                              </div>
-                              <div className="mt-1 pl-8 text-[11px] text-slate-500">
-                                {s.desc}
-                              </div>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
+                {/* inline sub-agents removed — all experts render sub-agents in the full-width strip below */}
               </div>
             );
           })}
         </section>
 
-        {/* On-Page sub-agents: full-width horizontal strip so cards can match top-level size */}
-        {open === "onpage" && (() => {
-          const onpage = EXPERTS.find((x) => x.id === "onpage")!;
+        {/* Full-width horizontal sub-agent strip for the currently open expert */}
+        {open && (() => {
+          const current = EXPERTS.find((x) => x.id === open);
+          if (!current) return null;
           const SUB_ACCENTS = [
             "from-cyan-400 to-sky-500",
             "from-violet-400 to-fuchsia-500",
@@ -281,11 +234,11 @@ function Index() {
             <section className="mt-6">
               <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
                 <span className="h-px flex-1 bg-slate-800" />
-                <span>On-Page Expert · Sub-agents</span>
+                <span>{current.title} · Sub-agents</span>
                 <span className="h-px flex-1 bg-slate-800" />
               </div>
               <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {onpage.subs.map((s, i) => {
+                {current.subs.map((s, i) => {
                   const accent = SUB_ACCENTS[i % SUB_ACCENTS.length];
                   return (
                     <li
@@ -294,7 +247,7 @@ function Index() {
                     >
                       <Link
                         to="/agents/$id"
-                        params={{ id: buildSubAgentId(onpage.id, s.name) }}
+                        params={{ id: buildSubAgentId(current.id, s.name) }}
                         className="group/sub relative block overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-4 transition hover:-translate-y-0.5 hover:border-cyan-500/40 hover:bg-slate-900/70 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]"
                       >
                         <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
