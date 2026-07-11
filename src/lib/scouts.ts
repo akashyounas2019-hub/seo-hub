@@ -33,6 +33,7 @@ import {
   Bug,
   Braces,
   Route as RouteIcon,
+  PenSquare,
 } from "lucide-react";
 
 export type ScoutTab = {
