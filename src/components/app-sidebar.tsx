@@ -6,6 +6,7 @@ import {
   Lightbulb,
   Settings,
   BarChart3,
+  Bell,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 
@@ -28,6 +29,7 @@ const items = [
   { title: "Automation", url: "/automation", icon: Zap },
   { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Alerts", url: "/alerts", icon: Bell },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
