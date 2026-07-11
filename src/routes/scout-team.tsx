@@ -527,7 +527,9 @@ function Constellation() {
                   </div>
                 </div>
               </div>
+              </div>
             </div>
+
           );
         })}
       </div>
