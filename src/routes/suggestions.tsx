@@ -105,6 +105,82 @@ const SECTIONS: Section[] = [
   },
 ];
 
+type Automation = {
+  id: string;
+  title: string;
+  desc: string;
+  agent: string;
+  agentIcon: typeof PenLine;
+  cadence: string;
+  trigger: string;
+  nextRun: string;
+  lift: string;
+  impact: Impact;
+};
+
+const AUTOMATIONS: Automation[] = [
+  {
+    id: "a1",
+    title: "Schedule 8 blog posts with Blog Writer for Ramadan season",
+    desc: "Auto-brief, draft and queue 'Ramadan deep cleaning' + 'iftar prep cleaning' posts to publish Feb 12 – Mar 3.",
+    agent: "Blog Writer",
+    agentIcon: PenLine,
+    cadence: "One-off · 8 posts",
+    trigger: "Feb 12, 2026 · 09:00 GST",
+    nextRun: "Starts in 6 days",
+    lift: "+22% seasonal traffic",
+    impact: "High",
+  },
+  {
+    id: "a2",
+    title: "Auto-publish weekly GBP post every Monday 9 AM",
+    desc: "Hand Content Strategist → GBP Publisher: rotate offers, service highlights and area spotlights.",
+    agent: "GBP Publisher",
+    agentIcon: Calendar,
+    cadence: "Weekly · Mon 09:00",
+    trigger: "Recurring schedule",
+    nextRun: "Next: Mon 09:00 GST",
+    lift: "+14% GBP calls",
+    impact: "High",
+  },
+  {
+    id: "a3",
+    title: "Trigger review request 2h after every completed job",
+    desc: "CRM 'job completed' webhook → Review Agent sends bilingual WhatsApp + email request.",
+    agent: "Review Agent",
+    agentIcon: Repeat,
+    cadence: "Real-time",
+    trigger: "CRM webhook",
+    nextRun: "Live · avg 42 / week",
+    lift: "3.4× review velocity",
+    impact: "High",
+  },
+  {
+    id: "a4",
+    title: "Refresh 5 declining posts on the 1st of each month",
+    desc: "Meta Optimizer + Content Strategist auto-update stats, FAQ and internal links on flagged URLs.",
+    agent: "Content Strategist",
+    agentIcon: FileText,
+    cadence: "Monthly · 1st 08:00",
+    trigger: "Traffic drop > 20%",
+    nextRun: "Next: Feb 1, 08:00",
+    lift: "Recover ~1.2k sessions",
+    impact: "Medium",
+  },
+  {
+    id: "a5",
+    title: "Auto-outreach when a new UAE brand mention is detected",
+    desc: "Mention listener → Outreach Agent drafts a 1-line link-add pitch and queues for approval.",
+    agent: "Outreach Agent",
+    agentIcon: Bot,
+    cadence: "Real-time",
+    trigger: "New unlinked mention",
+    nextRun: "Live · 3 pending",
+    lift: "+6 DR links / mo",
+    impact: "Medium",
+  },
+];
+
 function SuggestionsPage() {
   const total = SECTIONS.reduce((n, s) => n + s.items.length, 0);
   const assigned = SECTIONS.reduce((n, s) => n + s.items.filter((i) => i.assigned).length, 0);
