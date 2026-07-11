@@ -125,9 +125,29 @@ function RootComponent() {
         <div className="flex min-h-screen w-full bg-[#05070d]">
           <AppSidebar />
           <div className="flex-1 flex flex-col min-w-0">
-            <header className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b border-slate-800 bg-[#05070d]/80 px-3 backdrop-blur">
-              <SidebarTrigger className="text-slate-300 hover:text-white" />
-              <span className="text-xs text-slate-500">AKS SEO Console</span>
+            <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-cyan-500/10 bg-[#05070d]/85 px-3 backdrop-blur">
+              <SidebarTrigger className="text-slate-400 hover:text-cyan-200" />
+              <div className="hidden md:flex flex-1 max-w-xl items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-2.5 py-1.5 hover:border-cyan-400/40">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-500"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span className="flex-1 text-[12px] text-slate-500">Search or jump to anywhere</span>
+                <span className="rounded border border-slate-700 bg-slate-900 px-1.5 py-px font-mono text-[10px] text-slate-400">⌘K</span>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] text-cyan-200">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.9)]" />
+                  Agent active
+                </span>
+                <button className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-[11px] text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+                  Connected Sites
+                </button>
+                <button className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-3 py-1 text-[11px] font-semibold text-slate-950 shadow-[0_0_16px_rgba(34,211,238,0.35)] hover:brightness-110">
+                  + New Website
+                </button>
+                <button className="grid h-8 w-8 place-items-center rounded-full border border-slate-800 bg-slate-950/60 text-slate-400 hover:border-cyan-400/40 hover:text-cyan-200">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                </button>
+              </div>
             </header>
             <main className="flex-1 min-w-0">
               <Outlet />
