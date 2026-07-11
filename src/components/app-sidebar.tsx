@@ -98,6 +98,7 @@ export function AppSidebar() {
   const scoutOpenDefault = currentPath.startsWith("/scout-team");
   const [scoutOpen, setScoutOpen] = useState(scoutOpenDefault);
   const [githubOpen, setGithubOpen] = useState(false);
+  const [seoOpen, setSeoOpen] = useState(currentPath.startsWith("/seo-suite"));
   const [systemOpen, setSystemOpen] = useState(currentPath.startsWith("/settings"));
 
   return (
