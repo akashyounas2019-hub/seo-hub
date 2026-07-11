@@ -187,6 +187,23 @@ export const SCOUTS: Scout[] = [
         ],
       },
       {
+        id: "blog-writer",
+        label: "Blog Writer",
+        icon: PenSquare,
+        summary:
+          "Six-step wizard: topic → keywords → outline → media → generation → review & publish.",
+        metrics: [
+          { label: "Drafts in progress", value: "4" },
+          { label: "Ready to publish", value: "2" },
+          { label: "Avg. time to draft", value: "9m 20s" },
+        ],
+        activity: [
+          { time: "3m", text: "Draft ‘villa move checklist’ reached step 4/6" },
+          { time: "42m", text: "Auto-saved outline for ‘office relocation UAE’" },
+          { time: "yday", text: "Published ‘packing hacks for summer moves’" },
+        ],
+      },
+      {
         id: "calendar",
         label: "Editorial Calendar",
         icon: Calendar,
