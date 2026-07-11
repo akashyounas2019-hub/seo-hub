@@ -321,10 +321,6 @@ function Index() {
             </section>
           );
         })()}
-              </div>
-            );
-          })}
-        </section>
 
         {/* generous breathing room below the agent graph */}
         <div aria-hidden className="h-24 sm:h-32" />
