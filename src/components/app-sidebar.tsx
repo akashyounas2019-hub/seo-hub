@@ -23,8 +23,10 @@ import {
   ClipboardCheck,
   Wrench,
   Command,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
+import { SEO_TOOLS } from "@/lib/seo-tools";
 import agentBot from "@/assets/agent-bot.png";
 
 import {
@@ -96,6 +98,7 @@ export function AppSidebar() {
   const scoutOpenDefault = currentPath.startsWith("/scout-team");
   const [scoutOpen, setScoutOpen] = useState(scoutOpenDefault);
   const [githubOpen, setGithubOpen] = useState(false);
+  const [seoOpen, setSeoOpen] = useState(currentPath.startsWith("/seo-suite"));
   const [systemOpen, setSystemOpen] = useState(currentPath.startsWith("/settings"));
 
   return (
@@ -275,6 +278,104 @@ export function AppSidebar() {
                         </SidebarMenuSubItem>
                       );
                     })}
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* SEO Suite — Advanced */}
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel asChild>
+              <button
+                type="button"
+                onClick={() => setSeoOpen((v) => !v)}
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-300/60 hover:text-cyan-200"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Rocket className="h-3 w-3" />
+                  SEO Suite
+                  <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-1.5 py-px text-[8px] font-medium text-cyan-200">
+                    NEW
+                  </span>
+                </span>
+                <ChevronDown
+                  className={`h-3 w-3 transition-transform ${seoOpen ? "" : "-rotate-90"}`}
+                />
+              </button>
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={currentPath === "/seo-suite"}
+                  className={
+                    currentPath === "/seo-suite"
+                      ? "bg-gradient-to-r from-cyan-500/15 to-transparent text-cyan-100 data-[active=true]:from-cyan-500/15 data-[active=true]:text-cyan-100"
+                      : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                  }
+                >
+                  <Link to="/seo-suite" className="flex items-center gap-2.5">
+                    <Rocket className="h-4 w-4 text-cyan-300" />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 text-[13px]">Optimisation Hub</span>
+                        <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-1.5 py-px text-[9px] uppercase tracking-wider text-cyan-200">
+                          {SEO_TOOLS.length}
+                        </span>
+                      </>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+
+                {!collapsed && seoOpen && (
+                  <SidebarMenuSub className="border-l border-cyan-500/15">
+                    {SEO_TOOLS.slice(0, 10).map((t) => {
+                      const path = `/seo-suite/${t.id}`;
+                      const active = currentPath === path;
+                      const Icon = t.icon;
+                      return (
+                        <SidebarMenuSubItem key={t.id}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={active}
+                            className={
+                              active
+                                ? "bg-cyan-500/10 text-cyan-100 data-[active=true]:bg-cyan-500/10 data-[active=true]:text-cyan-100"
+                                : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                            }
+                          >
+                            <Link
+                              to="/seo-suite/$toolId"
+                              params={{ toolId: t.id }}
+                              className="flex items-center gap-2"
+                            >
+                              <Icon
+                                className={`h-3.5 w-3.5 ${active ? "text-cyan-300" : "text-slate-500"}`}
+                              />
+                              <span className="truncate text-[12px]">{t.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="text-cyan-300/80 hover:bg-slate-800/40 hover:text-cyan-100"
+                      >
+                        <Link to="/seo-suite" className="flex items-center gap-2">
+                          <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
+                          <span className="truncate text-[12px]">
+                            View all {SEO_TOOLS.length} tools →
+                          </span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 )}
               </SidebarMenuItem>

@@ -15,8 +15,10 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SeoSuiteIndexRouteImport } from './routes/seo-suite.index'
 import { Route as ScoutTeamIndexRouteImport } from './routes/scout-team.index'
 import { Route as AnalyticsIndexRouteImport } from './routes/analytics.index'
+import { Route as SeoSuiteToolIdRouteImport } from './routes/seo-suite.$toolId'
 import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scoutId'
 import { Route as AnalyticsSearchConsoleRouteImport } from './routes/analytics.search-console'
 import { Route as AnalyticsGoogleAnalyticsRouteImport } from './routes/analytics.google-analytics'
@@ -53,6 +55,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SeoSuiteIndexRoute = SeoSuiteIndexRouteImport.update({
+  id: '/seo-suite/',
+  path: '/seo-suite/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ScoutTeamIndexRoute = ScoutTeamIndexRouteImport.update({
   id: '/scout-team/',
   path: '/scout-team/',
@@ -61,6 +68,11 @@ const ScoutTeamIndexRoute = ScoutTeamIndexRouteImport.update({
 const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
   id: '/analytics/',
   path: '/analytics/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeoSuiteToolIdRoute = SeoSuiteToolIdRouteImport.update({
+  id: '/seo-suite/$toolId',
+  path: '/seo-suite/$toolId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScoutTeamScoutIdRoute = ScoutTeamScoutIdRouteImport.update({
@@ -103,8 +115,10 @@ export interface FileRoutesByFullPath {
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
+  '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
+  '/seo-suite/': typeof SeoSuiteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,8 +132,10 @@ export interface FileRoutesByTo {
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
+  '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
   '/analytics': typeof AnalyticsIndexRoute
   '/scout-team': typeof ScoutTeamIndexRoute
+  '/seo-suite': typeof SeoSuiteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,8 +150,10 @@ export interface FileRoutesById {
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
+  '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
+  '/seo-suite/': typeof SeoSuiteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,8 +169,10 @@ export interface FileRouteTypes {
     | '/analytics/google-analytics'
     | '/analytics/search-console'
     | '/scout-team/$scoutId'
+    | '/seo-suite/$toolId'
     | '/analytics/'
     | '/scout-team/'
+    | '/seo-suite/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,8 +186,10 @@ export interface FileRouteTypes {
     | '/analytics/google-analytics'
     | '/analytics/search-console'
     | '/scout-team/$scoutId'
+    | '/seo-suite/$toolId'
     | '/analytics'
     | '/scout-team'
+    | '/seo-suite'
   id:
     | '__root__'
     | '/'
@@ -181,8 +203,10 @@ export interface FileRouteTypes {
     | '/analytics/google-analytics'
     | '/analytics/search-console'
     | '/scout-team/$scoutId'
+    | '/seo-suite/$toolId'
     | '/analytics/'
     | '/scout-team/'
+    | '/seo-suite/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,8 +221,10 @@ export interface RootRouteChildren {
   AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
   AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
   ScoutTeamScoutIdRoute: typeof ScoutTeamScoutIdRoute
+  SeoSuiteToolIdRoute: typeof SeoSuiteToolIdRoute
   AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   ScoutTeamIndexRoute: typeof ScoutTeamIndexRoute
+  SeoSuiteIndexRoute: typeof SeoSuiteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -245,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seo-suite/': {
+      id: '/seo-suite/'
+      path: '/seo-suite'
+      fullPath: '/seo-suite/'
+      preLoaderRoute: typeof SeoSuiteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/scout-team/': {
       id: '/scout-team/'
       path: '/scout-team'
@@ -257,6 +290,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/analytics/'
       preLoaderRoute: typeof AnalyticsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seo-suite/$toolId': {
+      id: '/seo-suite/$toolId'
+      path: '/seo-suite/$toolId'
+      fullPath: '/seo-suite/$toolId'
+      preLoaderRoute: typeof SeoSuiteToolIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/scout-team/$scoutId': {
@@ -309,8 +349,10 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
   AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
   ScoutTeamScoutIdRoute: ScoutTeamScoutIdRoute,
+  SeoSuiteToolIdRoute: SeoSuiteToolIdRoute,
   AnalyticsIndexRoute: AnalyticsIndexRoute,
   ScoutTeamIndexRoute: ScoutTeamIndexRoute,
+  SeoSuiteIndexRoute: SeoSuiteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
