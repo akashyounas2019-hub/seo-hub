@@ -331,7 +331,9 @@ function ScoutProfilePage() {
               </button>
             </aside>
           </div>
+          )}
         </div>
+
 
         {/* Peer scouts */}
         <div className="mt-8 mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
