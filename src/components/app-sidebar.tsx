@@ -101,12 +101,13 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-cyan-500/10 bg-gradient-to-b from-[#05070d] via-[#060915] to-[#04060c]"
+      className="border-r border-white/5 bg-[#010204]"
     >
       {/* subtle ambient glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-blue-600/10 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#02040a] to-black" />
+        <div className="absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-cyan-500/[0.06] blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-blue-600/[0.05] blur-3xl" />
       </div>
 
       <SidebarHeader className="relative border-b border-cyan-500/10 bg-transparent">
