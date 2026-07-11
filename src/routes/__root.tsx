@@ -121,8 +121,20 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-[#05070d]">
+          <AppSidebar />
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b border-slate-800 bg-[#05070d]/80 px-3 backdrop-blur">
+              <SidebarTrigger className="text-slate-300 hover:text-white" />
+              <span className="text-xs text-slate-500">AKS SEO Console</span>
+            </header>
+            <main className="flex-1 min-w-0">
+              <Outlet />
+            </main>
+          </div>
+        </div>
+      </SidebarProvider>
     </QueryClientProvider>
   );
 }
