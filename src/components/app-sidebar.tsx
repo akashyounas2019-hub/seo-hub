@@ -23,8 +23,10 @@ import {
   ClipboardCheck,
   Wrench,
   Command,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
+import { SEO_TOOLS } from "@/lib/seo-tools";
 import agentBot from "@/assets/agent-bot.png";
 
 import {
