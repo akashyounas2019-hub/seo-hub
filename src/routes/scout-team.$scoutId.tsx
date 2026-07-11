@@ -13,7 +13,7 @@ import {
   Download,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
-import { SCOUTS, getScout } from "@/lib/scouts";
+import { SCOUTS, getScout, type Scout } from "@/lib/scouts";
 
 export const Route = createFileRoute("/scout-team/$scoutId")({
   head: ({ params }) => {
