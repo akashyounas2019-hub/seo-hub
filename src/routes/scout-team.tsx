@@ -395,18 +395,8 @@ function Constellation() {
             </g>
           ))}
 
-          {/* node halos */}
-          {nodes.map((n) => (
-            <circle
-              key={`halo-${n.id}`}
-              cx={n.x}
-              cy={n.y}
-              r={44}
-              fill="rgba(34,211,238,0.05)"
-              stroke="rgba(34,211,238,0.25)"
-              strokeWidth={1}
-            />
-          ))}
+          {/* node halos removed — halo now lives on the avatar div itself so it always matches the frame size */}
+
         </svg>
 
         {/* Animated packets travelling on each link */}
