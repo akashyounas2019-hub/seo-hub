@@ -18,7 +18,7 @@ import {
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
 
-export const Route = createFileRoute("/scout-team")({
+export const Route = createFileRoute("/scout-team/")({
   head: () => ({
     meta: [
       { title: "Scout Team — AKS SEO Console" },

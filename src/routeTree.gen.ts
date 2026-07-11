@@ -11,11 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuggestionsRouteImport } from './routes/suggestions'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ScoutTeamRouteImport } from './routes/scout-team'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ScoutTeamIndexRouteImport } from './routes/scout-team.index'
 import { Route as AnalyticsIndexRouteImport } from './routes/analytics.index'
 import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scoutId'
 import { Route as AnalyticsSearchConsoleRouteImport } from './routes/analytics.search-console'
@@ -31,11 +31,6 @@ const SuggestionsRoute = SuggestionsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ScoutTeamRoute = ScoutTeamRouteImport.update({
-  id: '/scout-team',
-  path: '/scout-team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -58,15 +53,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScoutTeamIndexRoute = ScoutTeamIndexRouteImport.update({
+  id: '/scout-team/',
+  path: '/scout-team/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
   id: '/analytics/',
   path: '/analytics/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScoutTeamScoutIdRoute = ScoutTeamScoutIdRouteImport.update({
-  id: '/$scoutId',
-  path: '/$scoutId',
-  getParentRoute: () => ScoutTeamRoute,
+  id: '/scout-team/$scoutId',
+  path: '/scout-team/$scoutId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsSearchConsoleRoute = AnalyticsSearchConsoleRouteImport.update({
   id: '/analytics/search-console',
@@ -96,7 +96,6 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
-  '/scout-team': typeof ScoutTeamRouteWithChildren
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -105,13 +104,13 @@ export interface FileRoutesByFullPath {
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/analytics/': typeof AnalyticsIndexRoute
+  '/scout-team/': typeof ScoutTeamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
-  '/scout-team': typeof ScoutTeamRouteWithChildren
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -120,6 +119,7 @@ export interface FileRoutesByTo {
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/analytics': typeof AnalyticsIndexRoute
+  '/scout-team': typeof ScoutTeamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -127,7 +127,6 @@ export interface FileRoutesById {
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
-  '/scout-team': typeof ScoutTeamRouteWithChildren
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -136,6 +135,7 @@ export interface FileRoutesById {
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/analytics/': typeof AnalyticsIndexRoute
+  '/scout-team/': typeof ScoutTeamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -144,7 +144,6 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/automation'
     | '/dashboard'
-    | '/scout-team'
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
@@ -153,13 +152,13 @@ export interface FileRouteTypes {
     | '/analytics/search-console'
     | '/scout-team/$scoutId'
     | '/analytics/'
+    | '/scout-team/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/alerts'
     | '/automation'
     | '/dashboard'
-    | '/scout-team'
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
@@ -168,13 +167,13 @@ export interface FileRouteTypes {
     | '/analytics/search-console'
     | '/scout-team/$scoutId'
     | '/analytics'
+    | '/scout-team'
   id:
     | '__root__'
     | '/'
     | '/alerts'
     | '/automation'
     | '/dashboard'
-    | '/scout-team'
     | '/settings'
     | '/suggestions'
     | '/agents/$id'
@@ -183,6 +182,7 @@ export interface FileRouteTypes {
     | '/analytics/search-console'
     | '/scout-team/$scoutId'
     | '/analytics/'
+    | '/scout-team/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -190,14 +190,15 @@ export interface RootRouteChildren {
   AlertsRoute: typeof AlertsRoute
   AutomationRoute: typeof AutomationRoute
   DashboardRoute: typeof DashboardRoute
-  ScoutTeamRoute: typeof ScoutTeamRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AnalyticsBusinessProfileRoute: typeof AnalyticsBusinessProfileRoute
   AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
   AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
+  ScoutTeamScoutIdRoute: typeof ScoutTeamScoutIdRoute
   AnalyticsIndexRoute: typeof AnalyticsIndexRoute
+  ScoutTeamIndexRoute: typeof ScoutTeamIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -214,13 +215,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scout-team': {
-      id: '/scout-team'
-      path: '/scout-team'
-      fullPath: '/scout-team'
-      preLoaderRoute: typeof ScoutTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -251,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scout-team/': {
+      id: '/scout-team/'
+      path: '/scout-team'
+      fullPath: '/scout-team/'
+      preLoaderRoute: typeof ScoutTeamIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analytics/': {
       id: '/analytics/'
       path: '/analytics'
@@ -260,10 +261,10 @@ declare module '@tanstack/react-router' {
     }
     '/scout-team/$scoutId': {
       id: '/scout-team/$scoutId'
-      path: '/$scoutId'
+      path: '/scout-team/$scoutId'
       fullPath: '/scout-team/$scoutId'
       preLoaderRoute: typeof ScoutTeamScoutIdRouteImport
-      parentRoute: typeof ScoutTeamRoute
+      parentRoute: typeof rootRouteImport
     }
     '/analytics/search-console': {
       id: '/analytics/search-console'
@@ -296,31 +297,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ScoutTeamRouteChildren {
-  ScoutTeamScoutIdRoute: typeof ScoutTeamScoutIdRoute
-}
-
-const ScoutTeamRouteChildren: ScoutTeamRouteChildren = {
-  ScoutTeamScoutIdRoute: ScoutTeamScoutIdRoute,
-}
-
-const ScoutTeamRouteWithChildren = ScoutTeamRoute._addFileChildren(
-  ScoutTeamRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlertsRoute: AlertsRoute,
   AutomationRoute: AutomationRoute,
   DashboardRoute: DashboardRoute,
-  ScoutTeamRoute: ScoutTeamRouteWithChildren,
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   AgentsIdRoute: AgentsIdRoute,
   AnalyticsBusinessProfileRoute: AnalyticsBusinessProfileRoute,
   AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
   AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
+  ScoutTeamScoutIdRoute: ScoutTeamScoutIdRoute,
   AnalyticsIndexRoute: AnalyticsIndexRoute,
+  ScoutTeamIndexRoute: ScoutTeamIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
