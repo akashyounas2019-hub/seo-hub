@@ -467,15 +467,20 @@ function Constellation() {
           return (
             <div
               key={n.id}
-              data-scout-node={n.id}
               className="pointer-events-none absolute"
               style={{
                 left: `${(n.x / W) * 100}%`,
                 top: `${(n.y / H) * 100}%`,
                 transform: "translate(-50%, -50%)",
-                animation: `deskIn .5s cubic-bezier(0.22,1,0.36,1) ${150 + i * 90}ms both`,
               }}
             >
+              <div
+                data-scout-node={n.id}
+                style={{
+                  animation: `deskIn .5s cubic-bezier(0.22,1,0.36,1) ${150 + i * 90}ms both`,
+                }}
+              >
+
               {/* Avatar — perfectly centered and fully enclosed in the frame */}
               <div className="relative h-[76px] w-[76px]">
                 {/* static halo — matches frame exactly, so bot is always inside the visible circle */}
@@ -522,7 +527,9 @@ function Constellation() {
                   </div>
                 </div>
               </div>
+              </div>
             </div>
+
           );
         })}
       </div>
