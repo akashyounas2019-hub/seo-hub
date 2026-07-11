@@ -24,6 +24,9 @@ import {
   MessageSquare,
   Languages,
   TrendingUp,
+  Pencil,
+  Trash2,
+  X,
 } from "lucide-react";
 
 export const Route = createFileRoute("/automation")({
@@ -63,308 +66,49 @@ type Flow = {
 };
 
 const CATEGORIES = [
-  { id: "local", label: "Local SEO (Dubai)", icon: MapPin },
-  { id: "gbp", label: "Google Business Profile", icon: Building2 },
-  { id: "reviews", label: "Reviews & Reputation", icon: Star },
-  { id: "onpage", label: "On-Page & Content", icon: FileText },
-  { id: "offpage", label: "Backlinks & Outreach", icon: Link2 },
-  { id: "technical", label: "Technical & CWV", icon: Gauge },
-  { id: "research", label: "Research & Trends", icon: Search },
-  { id: "reporting", label: "Reporting & Alerts", icon: Bell },
+  { id: "local", label: "Local SEO (Dubai)", icon: MapPin, accent: "from-cyan-400 to-sky-500" },
+  { id: "gbp", label: "Google Business Profile", icon: Building2, accent: "from-violet-400 to-fuchsia-500" },
+  { id: "reviews", label: "Reviews & Reputation", icon: Star, accent: "from-amber-400 to-orange-500" },
+  { id: "onpage", label: "On-Page & Content", icon: FileText, accent: "from-emerald-400 to-teal-500" },
+  { id: "offpage", label: "Backlinks & Outreach", icon: Link2, accent: "from-rose-400 to-pink-500" },
+  { id: "technical", label: "Technical & CWV", icon: Gauge, accent: "from-indigo-400 to-blue-500" },
+  { id: "research", label: "Research & Trends", icon: Search, accent: "from-fuchsia-400 to-purple-500" },
+  { id: "reporting", label: "Reporting & Alerts", icon: Bell, accent: "from-slate-300 to-slate-500" },
 ] as const;
 
-const FLOWS: Flow[] = [
-  // Local SEO
-  {
-    id: "l1",
-    name: "Dubai suburb landing page generator",
-    desc: "Auto-create localized pages for Marina, JLT, Downtown, Business Bay, Deira, JVC, Al Barsha, Palm Jumeirah, Silicon Oasis.",
-    category: "local",
-    icon: MapPin,
-    accent: "from-cyan-400 to-sky-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "2h ago",
-    successRate: 96,
-  },
-  {
-    id: "l2",
-    name: "Local schema & NAP sync",
-    desc: "Keep LocalBusiness / CleaningService JSON-LD + NAP consistent across all UAE listings.",
-    category: "local",
-    icon: Globe,
-    accent: "from-cyan-400 to-sky-500",
-    status: "running",
-    cadence: "daily",
-    lastRun: "6h ago",
-    successRate: 99,
-  },
-  {
-    id: "l3",
-    name: "Arabic / English localization",
-    desc: "Auto-translate meta, headings and service pages with hreflang ar-AE / en-AE tagging.",
-    category: "local",
-    icon: Languages,
-    accent: "from-cyan-400 to-sky-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "1d ago",
-    successRate: 92,
-  },
+const TEMPLATES: Omit<Flow, "id" | "status" | "lastRun" | "successRate">[] = [
+  { name: "New Dubai suburb landing page", desc: "Localized service page for a specific Dubai area.", category: "local", icon: MapPin, accent: "from-cyan-400 to-sky-500", cadence: "weekly" },
+  { name: "GBP weekly post", desc: "Publish an offer or update to Google Business Profile.", category: "gbp", icon: Building2, accent: "from-violet-400 to-fuchsia-500", cadence: "weekly" },
+  { name: "Post-service review request", desc: "WhatsApp + email review request after job completion.", category: "reviews", icon: Star, accent: "from-amber-400 to-orange-500", cadence: "realtime" },
+  { name: "Blog brief factory", desc: "Generate SEO briefs for Dubai-intent queries.", category: "onpage", icon: FileText, accent: "from-emerald-400 to-teal-500", cadence: "weekly" },
+  { name: "UAE directory submission", desc: "Submit business to top UAE local directories.", category: "offpage", icon: Link2, accent: "from-rose-400 to-pink-500", cadence: "monthly" },
+  { name: "Core Web Vitals monitor", desc: "Alert on LCP / CLS regressions.", category: "technical", icon: Gauge, accent: "from-indigo-400 to-blue-500", cadence: "hourly" },
+];
 
-  // GBP
-  {
-    id: "g1",
-    name: "GBP weekly post publisher",
-    desc: "Publish offers, service highlights and photos on Google Business Profile every Monday.",
-    category: "gbp",
-    icon: Building2,
-    accent: "from-violet-400 to-fuchsia-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "3d ago",
-    successRate: 100,
-  },
-  {
-    id: "g2",
-    name: "GBP Q&A auto-responder",
-    desc: "Detect new questions on GBP and draft responses using service FAQ knowledge base.",
-    category: "gbp",
-    icon: MessageSquare,
-    accent: "from-violet-400 to-fuchsia-500",
-    status: "paused",
-    cadence: "realtime",
-    lastRun: "12h ago",
-    successRate: 88,
-  },
-  {
-    id: "g3",
-    name: "Service area & hours sync",
-    desc: "Update service areas across Dubai zones and public UAE holiday hours automatically.",
-    category: "gbp",
-    icon: Calendar,
-    accent: "from-violet-400 to-fuchsia-500",
-    status: "running",
-    cadence: "monthly",
-    lastRun: "12d ago",
-    successRate: 100,
-  },
-
-  // Reviews
-  {
-    id: "r1",
-    name: "Post-service review request",
-    desc: "Trigger WhatsApp + email review requests 2h after job completion in CRM.",
-    category: "reviews",
-    icon: Star,
-    accent: "from-amber-400 to-orange-500",
-    status: "running",
-    cadence: "realtime",
-    lastRun: "18m ago",
-    successRate: 94,
-  },
-  {
-    id: "r2",
-    name: "Review reply drafter",
-    desc: "Draft polite bilingual replies to new Google & Trustpilot reviews; flag < 4★ for human review.",
-    category: "reviews",
-    icon: MessageSquare,
-    accent: "from-amber-400 to-orange-500",
-    status: "running",
-    cadence: "hourly",
-    lastRun: "40m ago",
-    successRate: 97,
-  },
-  {
-    id: "r3",
-    name: "Negative-review alert",
-    desc: "Notify manager on Slack + email within 5 min of any 1–3★ review across UAE platforms.",
-    category: "reviews",
-    icon: Bell,
-    accent: "from-amber-400 to-orange-500",
-    status: "running",
-    cadence: "realtime",
-    lastRun: "2h ago",
-    successRate: 100,
-  },
-
-  // On-page / content
-  {
-    id: "c1",
-    name: "Service page meta refresh",
-    desc: "Rewrite outdated meta titles/descriptions for deep-clean, sofa, carpet, move-in/out pages.",
-    category: "onpage",
-    icon: Sparkles,
-    accent: "from-emerald-400 to-teal-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "4d ago",
-    successRate: 91,
-  },
-  {
-    id: "c2",
-    name: "Blog brief & draft factory",
-    desc: "Generate briefs for Dubai-intent queries (‘maid service DIFC’, ‘villa deep cleaning’) and produce first drafts.",
-    category: "onpage",
-    icon: FileText,
-    accent: "from-emerald-400 to-teal-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "1d ago",
-    successRate: 89,
-  },
-  {
-    id: "c3",
-    name: "Internal linking bot",
-    desc: "Suggest & apply internal links between service, area and blog pages.",
-    category: "onpage",
-    icon: Link2,
-    accent: "from-emerald-400 to-teal-500",
-    status: "running",
-    cadence: "daily",
-    lastRun: "5h ago",
-    successRate: 95,
-  },
-
-  // Backlinks
-  {
-    id: "b1",
-    name: "UAE directory submission",
-    desc: "Submit business to Yellow Pages UAE, Dubai Chamber, Connect.ae, Yalla, and 20+ local directories.",
-    category: "offpage",
-    icon: Link2,
-    accent: "from-rose-400 to-pink-500",
-    status: "running",
-    cadence: "monthly",
-    lastRun: "9d ago",
-    successRate: 87,
-  },
-  {
-    id: "b2",
-    name: "Guest-post outreach",
-    desc: "Prospect UAE lifestyle / real-estate blogs and send personalized pitches.",
-    category: "offpage",
-    icon: Mail,
-    accent: "from-rose-400 to-pink-500",
-    status: "paused",
-    cadence: "weekly",
-    lastRun: "6d ago",
-    successRate: 62,
-  },
-  {
-    id: "b3",
-    name: "Broken-link reclamation",
-    desc: "Find UAE sites linking to dead cleaning-service pages and pitch your page as replacement.",
-    category: "offpage",
-    icon: RefreshCw,
-    accent: "from-rose-400 to-pink-500",
-    status: "draft",
-    cadence: "monthly",
-    lastRun: "—",
-    successRate: 0,
-  },
-
-  // Technical
-  {
-    id: "t1",
-    name: "Core Web Vitals monitor",
-    desc: "Alert when LCP > 2.5s or CLS > 0.1 on any tracked Dubai service page.",
-    category: "technical",
-    icon: Gauge,
-    accent: "from-indigo-400 to-blue-500",
-    status: "running",
-    cadence: "hourly",
-    lastRun: "22m ago",
-    successRate: 99,
-  },
-  {
-    id: "t2",
-    name: "Indexation & crawl audit",
-    desc: "Weekly scan of robots.txt, sitemap, indexation and canonical issues.",
-    category: "technical",
-    icon: ShieldCheck,
-    accent: "from-indigo-400 to-blue-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "2d ago",
-    successRate: 98,
-  },
-  {
-    id: "t3",
-    name: "Uptime & SSL watcher",
-    desc: "Ping every 5 min from UAE region; alert on downtime or SSL expiry within 30 days.",
-    category: "technical",
-    icon: Bell,
-    accent: "from-indigo-400 to-blue-500",
-    status: "running",
-    cadence: "realtime",
-    lastRun: "3m ago",
-    successRate: 100,
-  },
-
-  // Research
-  {
-    id: "rs1",
-    name: "Dubai keyword miner",
-    desc: "Discover new intent keywords (deep clean, sofa shampoo, holiday-home turnover) with UAE volume.",
-    category: "research",
-    icon: Search,
-    accent: "from-fuchsia-400 to-purple-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "3d ago",
-    successRate: 93,
-  },
-  {
-    id: "rs2",
-    name: "Competitor SERP tracker",
-    desc: "Track ServiceMarket, Justmop, Matic, Urbanclap positions daily on 200+ UAE queries.",
-    category: "research",
-    icon: TrendingUp,
-    accent: "from-fuchsia-400 to-purple-500",
-    status: "running",
-    cadence: "daily",
-    lastRun: "7h ago",
-    successRate: 100,
-  },
-  {
-    id: "rs3",
-    name: "Ramadan / DSF trend watcher",
-    desc: "Surface seasonal query spikes (Ramadan deep clean, DSF villa cleaning) 3 weeks ahead.",
-    category: "research",
-    icon: Sparkles,
-    accent: "from-fuchsia-400 to-purple-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "5d ago",
-    successRate: 90,
-  },
-
-  // Reporting
-  {
-    id: "rp1",
-    name: "Weekly executive report",
-    desc: "Email PDF report every Sunday: rankings, GBP calls, reviews, traffic, top pages.",
-    category: "reporting",
-    icon: Mail,
-    accent: "from-slate-300 to-slate-500",
-    status: "running",
-    cadence: "weekly",
-    lastRun: "6d ago",
-    successRate: 100,
-  },
-  {
-    id: "rp2",
-    name: "Rank-drop Slack alert",
-    desc: "Notify #seo channel when tracked keyword drops > 3 positions overnight.",
-    category: "reporting",
-    icon: Bell,
-    accent: "from-slate-300 to-slate-500",
-    status: "running",
-    cadence: "daily",
-    lastRun: "8h ago",
-    successRate: 100,
-  },
+const INITIAL_FLOWS: Flow[] = [
+  { id: "l1", name: "Dubai suburb landing page generator", desc: "Auto-create localized pages for Marina, JLT, Downtown, Business Bay, Deira, JVC, Al Barsha, Palm Jumeirah, Silicon Oasis.", category: "local", icon: MapPin, accent: "from-cyan-400 to-sky-500", status: "running", cadence: "weekly", lastRun: "2h ago", successRate: 96 },
+  { id: "l2", name: "Local schema & NAP sync", desc: "Keep LocalBusiness / CleaningService JSON-LD + NAP consistent across all UAE listings.", category: "local", icon: Globe, accent: "from-cyan-400 to-sky-500", status: "running", cadence: "daily", lastRun: "6h ago", successRate: 99 },
+  { id: "l3", name: "Arabic / English localization", desc: "Auto-translate meta, headings and service pages with hreflang ar-AE / en-AE tagging.", category: "local", icon: Languages, accent: "from-cyan-400 to-sky-500", status: "running", cadence: "weekly", lastRun: "1d ago", successRate: 92 },
+  { id: "g1", name: "GBP weekly post publisher", desc: "Publish offers, service highlights and photos on Google Business Profile every Monday.", category: "gbp", icon: Building2, accent: "from-violet-400 to-fuchsia-500", status: "running", cadence: "weekly", lastRun: "3d ago", successRate: 100 },
+  { id: "g2", name: "GBP Q&A auto-responder", desc: "Detect new questions on GBP and draft responses using service FAQ knowledge base.", category: "gbp", icon: MessageSquare, accent: "from-violet-400 to-fuchsia-500", status: "paused", cadence: "realtime", lastRun: "12h ago", successRate: 88 },
+  { id: "g3", name: "Service area & hours sync", desc: "Update service areas across Dubai zones and public UAE holiday hours automatically.", category: "gbp", icon: Calendar, accent: "from-violet-400 to-fuchsia-500", status: "running", cadence: "monthly", lastRun: "12d ago", successRate: 100 },
+  { id: "r1", name: "Post-service review request", desc: "Trigger WhatsApp + email review requests 2h after job completion in CRM.", category: "reviews", icon: Star, accent: "from-amber-400 to-orange-500", status: "running", cadence: "realtime", lastRun: "18m ago", successRate: 94 },
+  { id: "r2", name: "Review reply drafter", desc: "Draft polite bilingual replies to new Google & Trustpilot reviews; flag < 4★ for human review.", category: "reviews", icon: MessageSquare, accent: "from-amber-400 to-orange-500", status: "running", cadence: "hourly", lastRun: "40m ago", successRate: 97 },
+  { id: "r3", name: "Negative-review alert", desc: "Notify manager on Slack + email within 5 min of any 1–3★ review across UAE platforms.", category: "reviews", icon: Bell, accent: "from-amber-400 to-orange-500", status: "running", cadence: "realtime", lastRun: "2h ago", successRate: 100 },
+  { id: "c1", name: "Service page meta refresh", desc: "Rewrite outdated meta titles/descriptions for deep-clean, sofa, carpet, move-in/out pages.", category: "onpage", icon: Sparkles, accent: "from-emerald-400 to-teal-500", status: "running", cadence: "weekly", lastRun: "4d ago", successRate: 91 },
+  { id: "c2", name: "Blog brief & draft factory", desc: "Generate briefs for Dubai-intent queries (‘maid service DIFC’, ‘villa deep cleaning’) and produce first drafts.", category: "onpage", icon: FileText, accent: "from-emerald-400 to-teal-500", status: "running", cadence: "weekly", lastRun: "1d ago", successRate: 89 },
+  { id: "c3", name: "Internal linking bot", desc: "Suggest & apply internal links between service, area and blog pages.", category: "onpage", icon: Link2, accent: "from-emerald-400 to-teal-500", status: "running", cadence: "daily", lastRun: "5h ago", successRate: 95 },
+  { id: "b1", name: "UAE directory submission", desc: "Submit business to Yellow Pages UAE, Dubai Chamber, Connect.ae, Yalla, and 20+ local directories.", category: "offpage", icon: Link2, accent: "from-rose-400 to-pink-500", status: "running", cadence: "monthly", lastRun: "9d ago", successRate: 87 },
+  { id: "b2", name: "Guest-post outreach", desc: "Prospect UAE lifestyle / real-estate blogs and send personalized pitches.", category: "offpage", icon: Mail, accent: "from-rose-400 to-pink-500", status: "paused", cadence: "weekly", lastRun: "6d ago", successRate: 62 },
+  { id: "b3", name: "Broken-link reclamation", desc: "Find UAE sites linking to dead cleaning-service pages and pitch your page as replacement.", category: "offpage", icon: RefreshCw, accent: "from-rose-400 to-pink-500", status: "draft", cadence: "monthly", lastRun: "—", successRate: 0 },
+  { id: "t1", name: "Core Web Vitals monitor", desc: "Alert when LCP > 2.5s or CLS > 0.1 on any tracked Dubai service page.", category: "technical", icon: Gauge, accent: "from-indigo-400 to-blue-500", status: "running", cadence: "hourly", lastRun: "22m ago", successRate: 99 },
+  { id: "t2", name: "Indexation & crawl audit", desc: "Weekly scan of robots.txt, sitemap, indexation and canonical issues.", category: "technical", icon: ShieldCheck, accent: "from-indigo-400 to-blue-500", status: "running", cadence: "weekly", lastRun: "2d ago", successRate: 98 },
+  { id: "t3", name: "Uptime & SSL watcher", desc: "Ping every 5 min from UAE region; alert on downtime or SSL expiry within 30 days.", category: "technical", icon: Bell, accent: "from-indigo-400 to-blue-500", status: "running", cadence: "realtime", lastRun: "3m ago", successRate: 100 },
+  { id: "rs1", name: "Dubai keyword miner", desc: "Discover new intent keywords (deep clean, sofa shampoo, holiday-home turnover) with UAE volume.", category: "research", icon: Search, accent: "from-fuchsia-400 to-purple-500", status: "running", cadence: "weekly", lastRun: "3d ago", successRate: 93 },
+  { id: "rs2", name: "Competitor SERP tracker", desc: "Track ServiceMarket, Justmop, Matic, Urbanclap positions daily on 200+ UAE queries.", category: "research", icon: TrendingUp, accent: "from-fuchsia-400 to-purple-500", status: "running", cadence: "daily", lastRun: "7h ago", successRate: 100 },
+  { id: "rs3", name: "Ramadan / DSF trend watcher", desc: "Surface seasonal query spikes (Ramadan deep clean, DSF villa cleaning) 3 weeks ahead.", category: "research", icon: Sparkles, accent: "from-fuchsia-400 to-purple-500", status: "running", cadence: "weekly", lastRun: "5d ago", successRate: 90 },
+  { id: "rp1", name: "Weekly executive report", desc: "Email PDF report every Sunday: rankings, GBP calls, reviews, traffic, top pages.", category: "reporting", icon: Mail, accent: "from-slate-300 to-slate-500", status: "running", cadence: "weekly", lastRun: "6d ago", successRate: 100 },
+  { id: "rp2", name: "Rank-drop Slack alert", desc: "Notify #seo channel when tracked keyword drops > 3 positions overnight.", category: "reporting", icon: Bell, accent: "from-slate-300 to-slate-500", status: "running", cadence: "daily", lastRun: "8h ago", successRate: 100 },
 ];
 
 const CADENCE_LABEL: Record<Cadence, string> = {
@@ -375,30 +119,85 @@ const CADENCE_LABEL: Record<Cadence, string> = {
   monthly: "Monthly",
 };
 
+type EditorState =
+  | { mode: "create"; base?: Omit<Flow, "id" | "status" | "lastRun" | "successRate"> }
+  | { mode: "edit"; flow: Flow }
+  | null;
+
 function AutomationPage() {
+  const [flows, setFlows] = useState<Flow[]>(INITIAL_FLOWS);
   const [category, setCategory] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [query, setQuery] = useState("");
+  const [editor, setEditor] = useState<EditorState>(null);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<Flow | null>(null);
 
   const filtered = useMemo(() => {
-    return FLOWS.filter((f) => {
+    return flows.filter((f) => {
       if (category !== "all" && f.category !== category) return false;
       if (statusFilter !== "all" && f.status !== statusFilter) return false;
       if (query && !(`${f.name} ${f.desc}`.toLowerCase().includes(query.toLowerCase()))) return false;
       return true;
     });
-  }, [category, statusFilter, query]);
+  }, [flows, category, statusFilter, query]);
 
   const kpi = useMemo(() => {
-    const running = FLOWS.filter((f) => f.status === "running").length;
-    const paused = FLOWS.filter((f) => f.status === "paused").length;
-    const draft = FLOWS.filter((f) => f.status === "draft").length;
-    const avg = Math.round(
-      FLOWS.filter((f) => f.successRate > 0).reduce((a, b) => a + b.successRate, 0) /
-        FLOWS.filter((f) => f.successRate > 0).length,
+    const running = flows.filter((f) => f.status === "running").length;
+    const paused = flows.filter((f) => f.status === "paused").length;
+    const draft = flows.filter((f) => f.status === "draft").length;
+    const scored = flows.filter((f) => f.successRate > 0);
+    const avg = scored.length ? Math.round(scored.reduce((a, b) => a + b.successRate, 0) / scored.length) : 0;
+    return { running, paused, draft, avg, total: flows.length };
+  }, [flows]);
+
+  function toggleStatus(id: string) {
+    setFlows((prev) =>
+      prev.map((f) =>
+        f.id === id ? { ...f, status: f.status === "running" ? "paused" : "running" } : f,
+      ),
     );
-    return { running, paused, draft, avg, total: FLOWS.length };
-  }, []);
+  }
+
+  function deleteFlow(id: string) {
+    setFlows((prev) => prev.filter((f) => f.id !== id));
+    setConfirmDelete(null);
+  }
+
+  function saveFlow(data: {
+    id?: string;
+    name: string;
+    desc: string;
+    category: string;
+    cadence: Cadence;
+    status: Status;
+  }) {
+    const cat = CATEGORIES.find((c) => c.id === data.category) ?? CATEGORIES[0];
+    if (data.id) {
+      setFlows((prev) =>
+        prev.map((f) =>
+          f.id === data.id
+            ? { ...f, name: data.name, desc: data.desc, category: data.category, cadence: data.cadence, status: data.status, accent: cat.accent }
+            : f,
+        ),
+      );
+    } else {
+      const newFlow: Flow = {
+        id: `n${Date.now()}`,
+        name: data.name,
+        desc: data.desc,
+        category: data.category,
+        cadence: data.cadence,
+        status: data.status,
+        icon: cat.icon,
+        accent: cat.accent,
+        lastRun: "—",
+        successRate: 0,
+      };
+      setFlows((prev) => [newFlow, ...prev]);
+    }
+    setEditor(null);
+  }
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
@@ -415,10 +214,16 @@ function AutomationPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800">
+            <button
+              onClick={() => setTemplatesOpen(true)}
+              className="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            >
               <Bot className="h-4 w-4" /> Templates
             </button>
-            <button className="inline-flex items-center gap-2 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 hover:bg-cyan-400/20">
+            <button
+              onClick={() => setEditor({ mode: "create" })}
+              className="inline-flex items-center gap-2 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 hover:bg-cyan-400/20"
+            >
               <Plus className="h-4 w-4" /> New flow
             </button>
           </div>
@@ -465,7 +270,7 @@ function AutomationPage() {
             ))}
           </div>
           <div className="flex items-center gap-1 text-[11px] text-slate-500">
-            <Filter className="h-3.5 w-3.5" /> {filtered.length} of {FLOWS.length}
+            <Filter className="h-3.5 w-3.5" /> {filtered.length} of {flows.length}
           </div>
         </div>
 
@@ -554,14 +359,29 @@ function AutomationPage() {
                     {CATEGORIES.find((c) => c.id === f.category)?.label}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <button className="rounded-md border border-slate-700 bg-slate-900/60 p-1.5 text-slate-300 hover:bg-slate-800 hover:text-white" aria-label="Run now">
-                      <Play className="h-3.5 w-3.5" />
+                    <button
+                      onClick={() => toggleStatus(f.id)}
+                      className="rounded-md border border-slate-700 bg-slate-900/60 p-1.5 text-slate-300 hover:bg-slate-800 hover:text-white"
+                      aria-label={f.status === "running" ? "Pause" : "Run"}
+                      title={f.status === "running" ? "Pause" : "Run"}
+                    >
+                      {f.status === "running" ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                     </button>
-                    <button className="rounded-md border border-slate-700 bg-slate-900/60 p-1.5 text-slate-300 hover:bg-slate-800 hover:text-white" aria-label="Pause">
-                      <Pause className="h-3.5 w-3.5" />
+                    <button
+                      onClick={() => setEditor({ mode: "edit", flow: f })}
+                      className="rounded-md border border-slate-700 bg-slate-900/60 p-1.5 text-slate-300 hover:bg-slate-800 hover:text-white"
+                      aria-label="Edit"
+                      title="Edit"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
                     </button>
-                    <button className="rounded-md border border-slate-700 bg-slate-900/60 p-1.5 text-slate-300 hover:bg-slate-800 hover:text-white" aria-label="Configure">
-                      <RefreshCw className="h-3.5 w-3.5" />
+                    <button
+                      onClick={() => setConfirmDelete(f)}
+                      className="rounded-md border border-rose-500/30 bg-rose-500/5 p-1.5 text-rose-300 hover:bg-rose-500/15 hover:text-rose-200"
+                      aria-label="Delete"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
@@ -578,6 +398,235 @@ function AutomationPage() {
 
         <div aria-hidden className="h-16" />
       </div>
+
+      {/* Editor modal */}
+      {editor && (
+        <FlowEditor
+          state={editor}
+          onClose={() => setEditor(null)}
+          onSave={saveFlow}
+        />
+      )}
+
+      {/* Templates modal */}
+      {templatesOpen && (
+        <TemplatesModal
+          onClose={() => setTemplatesOpen(false)}
+          onPick={(t) => {
+            setTemplatesOpen(false);
+            setEditor({ mode: "create", base: t });
+          }}
+        />
+      )}
+
+      {/* Delete confirm */}
+      {confirmDelete && (
+        <Modal onClose={() => setConfirmDelete(null)} title="Delete automation?">
+          <p className="text-sm text-slate-400">
+            This will permanently remove <span className="text-slate-200 font-medium">{confirmDelete.name}</span>. This action cannot be undone.
+          </p>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              onClick={() => setConfirmDelete(null)}
+              className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => deleteFlow(confirmDelete.id)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-rose-500/40 bg-rose-500/15 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/25"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
+  );
+}
+
+function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-xl border border-slate-800 bg-slate-950 p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-white">{title}</h2>
+          <button onClick={onClose} className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function FlowEditor({
+  state,
+  onClose,
+  onSave,
+}: {
+  state: EditorState;
+  onClose: () => void;
+  onSave: (data: { id?: string; name: string; desc: string; category: string; cadence: Cadence; status: Status }) => void;
+}) {
+  if (!state) return null;
+  const initial =
+    state.mode === "edit"
+      ? state.flow
+      : {
+          id: undefined as string | undefined,
+          name: state.base?.name ?? "",
+          desc: state.base?.desc ?? "",
+          category: state.base?.category ?? CATEGORIES[0].id,
+          cadence: state.base?.cadence ?? ("weekly" as Cadence),
+          status: "draft" as Status,
+        };
+
+  const [name, setName] = useState(initial.name);
+  const [desc, setDesc] = useState(initial.desc);
+  const [category, setCategory] = useState<string>(initial.category);
+  const [cadence, setCadence] = useState<Cadence>(initial.cadence);
+  const [status, setStatus] = useState<Status>(initial.status);
+
+  const isEdit = state.mode === "edit";
+
+  return (
+    <Modal onClose={onClose} title={isEdit ? "Edit automation" : "New automation"}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!name.trim()) return;
+          onSave({
+            id: isEdit ? (initial as Flow).id : undefined,
+            name: name.trim(),
+            desc: desc.trim(),
+            category,
+            cadence,
+            status,
+          });
+        }}
+        className="space-y-3"
+      >
+        <Field label="Name">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Dubai Marina landing pages"
+            className="w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400/50 focus:outline-none"
+            required
+          />
+        </Field>
+        <Field label="Description">
+          <textarea
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            rows={3}
+            placeholder="What does this automation do?"
+            className="w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400/50 focus:outline-none"
+          />
+        </Field>
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Category">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full rounded-md border border-slate-800 bg-slate-900/60 px-2 py-2 text-sm text-slate-100 focus:border-cyan-400/50 focus:outline-none"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Cadence">
+            <select
+              value={cadence}
+              onChange={(e) => setCadence(e.target.value as Cadence)}
+              className="w-full rounded-md border border-slate-800 bg-slate-900/60 px-2 py-2 text-sm text-slate-100 focus:border-cyan-400/50 focus:outline-none"
+            >
+              {(Object.keys(CADENCE_LABEL) as Cadence[]).map((c) => (
+                <option key={c} value={c}>{CADENCE_LABEL[c]}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Status">
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as Status)}
+              className="w-full rounded-md border border-slate-800 bg-slate-900/60 px-2 py-2 text-sm text-slate-100 focus:border-cyan-400/50 focus:outline-none"
+            >
+              <option value="running">Running</option>
+              <option value="paused">Paused</option>
+              <option value="draft">Draft</option>
+            </select>
+          </Field>
+        </div>
+        <div className="mt-2 flex justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/15 px-3 py-1.5 text-xs font-medium text-cyan-200 hover:bg-cyan-400/25"
+          >
+            {isEdit ? "Save changes" : "Create flow"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-500">{label}</div>
+      {children}
+    </label>
+  );
+}
+
+function TemplatesModal({
+  onClose,
+  onPick,
+}: {
+  onClose: () => void;
+  onPick: (t: (typeof TEMPLATES)[number]) => void;
+}) {
+  return (
+    <Modal onClose={onClose} title="Start from a template">
+      <p className="text-xs text-slate-400">Pick a starting point tuned for a Dubai cleaning business.</p>
+      <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {TEMPLATES.map((t) => {
+          const Icon = t.icon;
+          return (
+            <li key={t.name}>
+              <button
+                onClick={() => onPick(t)}
+                className="group flex w-full items-start gap-3 rounded-lg border border-slate-800 bg-slate-900/50 p-3 text-left transition hover:border-cyan-400/40 hover:bg-slate-900"
+              >
+                <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gradient-to-br ${t.accent} text-slate-950`}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-white leading-tight">{t.name}</div>
+                  <div className="mt-0.5 text-xs text-slate-400">{t.desc}</div>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </Modal>
   );
 }
