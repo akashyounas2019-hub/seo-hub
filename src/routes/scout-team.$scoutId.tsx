@@ -68,7 +68,7 @@ function ScoutNotFound() {
 }
 
 function ScoutProfilePage() {
-  const { scout } = Route.useLoaderData();
+  const { scout } = Route.useLoaderData() as { scout: Scout };
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(scout.tabs[0].id);
   const [clock, setClock] = useState("");
