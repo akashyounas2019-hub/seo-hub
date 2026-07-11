@@ -306,8 +306,8 @@ function Constellation() {
   const H = 640;
   const cx = W / 2;
   const cy = H / 2;
-  const rx = 380; // horizontal orbit radius
-  const ry = 250; // vertical orbit radius
+  const rx = 320; // horizontal orbit radius (inset so avatars + labels stay inside)
+  const ry = 210; // vertical orbit radius
 
   const nodes = SCOUTS.map((s) => {
     const rad = ((s.angle - 90) * Math.PI) / 180; // 0deg = top
@@ -496,7 +496,7 @@ function Constellation() {
                   <img
                     src={agentBot}
                     alt=""
-                    className="relative h-full w-full object-contain"
+                    className="relative h-full w-full scale-[0.72] object-contain"
                     loading="lazy"
                     width={512}
                     height={512}
