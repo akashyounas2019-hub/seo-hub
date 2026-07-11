@@ -478,16 +478,18 @@ function Constellation() {
             >
               {/* Avatar — perfectly centered and fully enclosed in the frame */}
               <div className="relative h-[76px] w-[76px]">
+                {/* static halo — matches frame exactly, so bot is always inside the visible circle */}
+                <span className="pointer-events-none absolute inset-[-6px] rounded-full border border-cyan-400/25 bg-cyan-400/[0.04]" />
                 <span
-                  className="pointer-events-none absolute left-1/2 top-1/2 h-[76px] w-[76px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/25"
+                  className="pointer-events-none absolute inset-0 rounded-full border border-cyan-400/25"
                   style={{ animation: "pulseRing 3.2s ease-out infinite", animationDelay: `${i * 0.25}s` }}
                 />
-                <div className="relative grid h-[76px] w-[76px] place-items-center overflow-hidden rounded-full border border-cyan-300/30 bg-slate-950/90 ring-1 ring-slate-700/70 shadow-[0_0_20px_rgba(0,0,0,0.6)]">
+                <div className="relative grid h-[76px] w-[76px] place-items-center overflow-hidden rounded-full border border-cyan-300/40 bg-slate-950/90 ring-1 ring-slate-700/70 shadow-[0_0_20px_rgba(0,0,0,0.6)]">
                   <div className={`absolute inset-0 bg-gradient-to-br ${n.accent} opacity-30`} />
                   <img
                     src={agentBot}
                     alt=""
-                    className="relative block h-[58px] w-[58px] object-contain"
+                    className="relative block h-[54px] w-[54px] object-contain"
                     loading="lazy"
                     width={512}
                     height={512}
@@ -503,6 +505,7 @@ function Constellation() {
                   </span>
                 </div>
               </div>
+
 
               {/* Label — absolutely positioned beside the avatar, does not shift it */}
               <div
