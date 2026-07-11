@@ -496,7 +496,7 @@ function Constellation() {
                   <img
                     src={agentBot}
                     alt=""
-                    className="relative h-full w-full object-contain"
+                    className="relative h-full w-full scale-[0.72] object-contain"
                     loading="lazy"
                     width={512}
                     height={512}
