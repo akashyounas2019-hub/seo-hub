@@ -231,18 +231,48 @@ function AutomationPage() {
 
         {/* KPIs */}
         <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { k: "Total flows", v: String(kpi.total), a: "from-cyan-400 to-sky-500" },
-            { k: "Running", v: String(kpi.running), a: "from-emerald-400 to-teal-500" },
-            { k: "Paused", v: String(kpi.paused), a: "from-amber-400 to-orange-500" },
-            { k: "Avg success", v: `${kpi.avg}%`, a: "from-violet-400 to-fuchsia-500" },
-          ].map((s) => (
-            <div key={s.k} className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-              <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${s.a}`} />
-              <div className="text-[11px] uppercase tracking-wider text-slate-500">{s.k}</div>
-              <div className="mt-1 text-xl font-semibold text-white">{s.v}</div>
-            </div>
-          ))}
+          <KpiCard
+            label="Total flows"
+            value={kpi.total}
+            sub="Across all categories"
+            percent={100}
+            ringFrom="#22d3ee"
+            ringTo="#0ea5e9"
+            icon={Zap}
+            active={statusFilter === "all"}
+            onClick={() => setStatusFilter("all")}
+          />
+          <KpiCard
+            label="Running"
+            value={kpi.running}
+            sub={`${kpi.total ? Math.round((kpi.running / kpi.total) * 100) : 0}% of pipeline`}
+            percent={kpi.total ? (kpi.running / kpi.total) * 100 : 0}
+            ringFrom="#34d399"
+            ringTo="#14b8a6"
+            icon={Play}
+            active={statusFilter === "running"}
+            onClick={() => setStatusFilter("running")}
+          />
+          <KpiCard
+            label="Paused"
+            value={kpi.paused}
+            sub={`${kpi.draft} draft`}
+            percent={kpi.total ? (kpi.paused / kpi.total) * 100 : 0}
+            ringFrom="#fbbf24"
+            ringTo="#f97316"
+            icon={Pause}
+            active={statusFilter === "paused"}
+            onClick={() => setStatusFilter("paused")}
+          />
+          <KpiCard
+            label="Avg success"
+            value={`${kpi.avg}%`}
+            sub="Across scored runs"
+            percent={kpi.avg}
+            ringFrom="#c084fc"
+            ringTo="#e879f9"
+            icon={TrendingUp}
+          />
         </section>
 
         {/* Filters */}
