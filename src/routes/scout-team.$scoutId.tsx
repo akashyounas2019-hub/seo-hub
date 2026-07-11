@@ -243,6 +243,11 @@ function ScoutProfilePage() {
           </div>
 
           {/* Tab body */}
+          {tab.id === "blog-writer" ? (
+            <div key={tab.id} className="p-5" style={{ animation: "fadeInUp .35s ease both" }}>
+              <BlogWriterWizard accent={scout.accent} />
+            </div>
+          ) : (
           <div key={tab.id} className="grid gap-4 p-5 lg:grid-cols-3" style={{ animation: "fadeInUp .35s ease both" }}>
             {/* Primary panel */}
             <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
