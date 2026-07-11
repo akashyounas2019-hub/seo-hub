@@ -17,6 +17,7 @@ import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsIndexRouteImport } from './routes/analytics.index'
+import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scoutId'
 import { Route as AnalyticsSearchConsoleRouteImport } from './routes/analytics.search-console'
 import { Route as AnalyticsGoogleAnalyticsRouteImport } from './routes/analytics.google-analytics'
 import { Route as AnalyticsBusinessProfileRouteImport } from './routes/analytics.business-profile'
@@ -62,6 +63,11 @@ const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
   path: '/analytics/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScoutTeamScoutIdRoute = ScoutTeamScoutIdRouteImport.update({
+  id: '/$scoutId',
+  path: '/$scoutId',
+  getParentRoute: () => ScoutTeamRoute,
+} as any)
 const AnalyticsSearchConsoleRoute = AnalyticsSearchConsoleRouteImport.update({
   id: '/analytics/search-console',
   path: '/analytics/search-console',
@@ -90,13 +96,14 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
-  '/scout-team': typeof ScoutTeamRoute
+  '/scout-team': typeof ScoutTeamRouteWithChildren
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/analytics/': typeof AnalyticsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -104,13 +111,14 @@ export interface FileRoutesByTo {
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
-  '/scout-team': typeof ScoutTeamRoute
+  '/scout-team': typeof ScoutTeamRouteWithChildren
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/analytics': typeof AnalyticsIndexRoute
 }
 export interface FileRoutesById {
@@ -119,13 +127,14 @@ export interface FileRoutesById {
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
-  '/scout-team': typeof ScoutTeamRoute
+  '/scout-team': typeof ScoutTeamRouteWithChildren
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/agents/$id': typeof AgentsIdRoute
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/analytics/': typeof AnalyticsIndexRoute
 }
 export interface FileRouteTypes {
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/scout-team/$scoutId'
     | '/analytics/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/scout-team/$scoutId'
     | '/analytics'
   id:
     | '__root__'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/scout-team/$scoutId'
     | '/analytics/'
   fileRoutesById: FileRoutesById
 }
@@ -178,7 +190,7 @@ export interface RootRouteChildren {
   AlertsRoute: typeof AlertsRoute
   AutomationRoute: typeof AutomationRoute
   DashboardRoute: typeof DashboardRoute
-  ScoutTeamRoute: typeof ScoutTeamRoute
+  ScoutTeamRoute: typeof ScoutTeamRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   AgentsIdRoute: typeof AgentsIdRoute
@@ -246,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scout-team/$scoutId': {
+      id: '/scout-team/$scoutId'
+      path: '/$scoutId'
+      fullPath: '/scout-team/$scoutId'
+      preLoaderRoute: typeof ScoutTeamScoutIdRouteImport
+      parentRoute: typeof ScoutTeamRoute
+    }
     '/analytics/search-console': {
       id: '/analytics/search-console'
       path: '/analytics/search-console'
@@ -277,12 +296,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ScoutTeamRouteChildren {
+  ScoutTeamScoutIdRoute: typeof ScoutTeamScoutIdRoute
+}
+
+const ScoutTeamRouteChildren: ScoutTeamRouteChildren = {
+  ScoutTeamScoutIdRoute: ScoutTeamScoutIdRoute,
+}
+
+const ScoutTeamRouteWithChildren = ScoutTeamRoute._addFileChildren(
+  ScoutTeamRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlertsRoute: AlertsRoute,
   AutomationRoute: AutomationRoute,
   DashboardRoute: DashboardRoute,
-  ScoutTeamRoute: ScoutTeamRoute,
+  ScoutTeamRoute: ScoutTeamRouteWithChildren,
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   AgentsIdRoute: AgentsIdRoute,
