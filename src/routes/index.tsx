@@ -239,18 +239,17 @@ function Index() {
                         "ring-indigo-400/40 hover:border-indigo-400/60",
                       ];
                       const listClass = isOnPage
-                        ? "flex flex-wrap gap-2 pt-1"
+                        ? "flex flex-nowrap gap-2 overflow-x-auto pt-1 pb-2 -mx-1 px-1 snap-x"
                         : "space-y-2 pt-1";
-                      const Wrapper: "ul" = "ul";
                       return (
-                        <Wrapper className={listClass}>
+                        <ul className={listClass}>
                           {e.subs.map((s, i) => {
                             const subAccent = isOnPage ? SUB_ACCENTS[i % SUB_ACCENTS.length] : e.accent;
                             const subRing = isOnPage ? SUB_RING[i % SUB_RING.length] : "ring-slate-700/60 hover:border-cyan-500/40";
                             return (
                               <li
                                 key={s.name}
-                                className={isOnPage ? "flex-1 min-w-[140px]" : ""}
+                                className={isOnPage ? "shrink-0 snap-start" : ""}
                                 style={{
                                   animation: isOpen
                                     ? `subIn .45s cubic-bezier(0.22,1,0.36,1) ${i * 70}ms both`
@@ -260,35 +259,41 @@ function Index() {
                                 <Link
                                   to="/agents/$id"
                                   params={{ id: buildSubAgentId(e.id, s.name) }}
-                                  className={`group/sub relative block h-full rounded-lg border border-slate-800/80 bg-slate-950/60 p-3 transition hover:-translate-y-0.5 hover:bg-slate-900/60 ${subRing.split(" ").filter(c => c.startsWith("hover:")).join(" ")}`}
+                                  className={`group/sub relative ${isOnPage ? "inline-flex items-center gap-1.5 rounded-full border border-slate-800/80 bg-slate-950/70 py-1 pl-1 pr-2.5" : "block rounded-lg border border-slate-800/80 bg-slate-950/60 p-3"} transition hover:-translate-y-0.5 hover:bg-slate-900/60 ${subRing.split(" ").filter(c => c.startsWith("hover:")).join(" ")}`}
                                 >
-                                  <span
-                                    aria-hidden
-                                    className={`absolute inset-x-0 top-0 h-px rounded-t bg-gradient-to-r ${subAccent}`}
-                                  />
-                                  <div className="flex items-center gap-2">
-                                    <span className={`relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-900 ring-1 ${subRing.split(" ").filter(c => c.startsWith("ring-")).join(" ")}`}>
-                                      <span className={`absolute inset-0 bg-gradient-to-br ${subAccent} opacity-30`} />
-                                      <img src={agentBot} alt="" className="relative h-5 w-5 object-contain" loading="lazy" />
-                                    </span>
+                                  {!isOnPage && (
                                     <span
-                                      className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${subAccent} shadow-[0_0_6px_rgba(34,211,238,0.5)]`}
+                                      aria-hidden
+                                      className={`absolute inset-x-0 top-0 h-px rounded-t bg-gradient-to-r ${subAccent}`}
                                     />
-                                    <div className="text-xs font-medium text-slate-100 group-hover/sub:text-cyan-100">
+                                  )}
+                                  <div className={`flex items-center gap-2 ${isOnPage ? "" : ""}`}>
+                                    <span className={`relative grid ${isOnPage ? "h-5 w-5" : "h-6 w-6"} shrink-0 place-items-center overflow-hidden rounded-md bg-slate-900 ring-1 ${subRing.split(" ").filter(c => c.startsWith("ring-")).join(" ")}`}>
+                                      <span className={`absolute inset-0 bg-gradient-to-br ${subAccent} opacity-40`} />
+                                      <img src={agentBot} alt="" className={`relative ${isOnPage ? "h-4 w-4" : "h-5 w-5"} object-contain`} loading="lazy" />
+                                    </span>
+                                    {!isOnPage && (
+                                      <span
+                                        className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${subAccent} shadow-[0_0_6px_rgba(34,211,238,0.5)]`}
+                                      />
+                                    )}
+                                    <div className={`${isOnPage ? "text-[11px] whitespace-nowrap" : "text-xs"} font-medium text-slate-100 group-hover/sub:text-cyan-100`}>
                                       {s.name}
                                     </div>
                                     {!isOnPage && (
                                       <ArrowUpRight className="ml-auto h-3 w-3 text-slate-500 opacity-0 transition group-hover/sub:opacity-100" />
                                     )}
                                   </div>
-                                  <div className={`mt-1 text-[11px] text-slate-500 ${isOnPage ? "" : "pl-8"}`}>
-                                    {s.desc}
-                                  </div>
+                                  {!isOnPage && (
+                                    <div className="mt-1 pl-8 text-[11px] text-slate-500">
+                                      {s.desc}
+                                    </div>
+                                  )}
                                 </Link>
                               </li>
                             );
                           })}
-                        </Wrapper>
+                        </ul>
                       );
                     })()}
                   </div>
