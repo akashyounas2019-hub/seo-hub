@@ -13,9 +13,10 @@ import {
   Wifi,
   Activity,
   Zap,
-  ArrowUpRight,
+  Crown,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
+import leaderBot from "@/assets/leader-bot.png";
 
 export const Route = createFileRoute("/scout-team")({
   head: () => ({
@@ -24,13 +25,13 @@ export const Route = createFileRoute("/scout-team")({
       {
         name: "description",
         content:
-          "Live view of the Scout Team office: Keyword, Content, Designing, Local Business, Competitor, Audit & Reporting, and Technical scouts working in real time.",
+          "Scout Leader orchestrating seven specialist scouts around a live-office command floor.",
       },
       { property: "og:title", content: "Scout Team — AKS SEO Console" },
       {
         property: "og:description",
         content:
-          "Dynamic office environment showing every Scout agent actively engaged.",
+          "Central Scout Leader connected to Keyword, Content, Designing, Local, Competitor, Audit and Technical scouts.",
       },
     ],
   }),
@@ -43,9 +44,10 @@ type Scout = {
   role: string;
   icon: typeof Search;
   accent: string;
-  desk: string; // desk color chip
-  activities: string[];
-  metrics: { label: string; value: string }[];
+  activity: string;
+  status: string;
+  /** angle in degrees, 0 = top, clockwise */
+  angle: number;
 };
 
 const SCOUTS: Scout[] = [
@@ -55,17 +57,9 @@ const SCOUTS: Scout[] = [
     role: "Query Intelligence",
     icon: Search,
     accent: "from-cyan-400 to-sky-500",
-    desk: "bg-cyan-500/10",
-    activities: [
-      "Mining long-tail queries around 'villa deep cleaning dubai'",
-      "Clustering 428 keywords by intent",
-      "Scoring difficulty vs opportunity",
-      "Pushing 12 wins to Content Scout",
-    ],
-    metrics: [
-      { label: "Keywords tracked", value: "4,812" },
-      { label: "New gaps", value: "37" },
-    ],
+    activity: "Mining 428 long-tail queries",
+    status: "Engaged",
+    angle: 0,
   },
   {
     id: "content",
@@ -73,17 +67,9 @@ const SCOUTS: Scout[] = [
     role: "Editorial Radar",
     icon: FileText,
     accent: "from-violet-400 to-fuchsia-500",
-    desk: "bg-violet-500/10",
-    activities: [
-      "Drafting brief for 'move-in cleaning checklist'",
-      "Auditing 18 pages for topical depth",
-      "Flagging 3 pages of thin content",
-      "Syncing outline with Designing Scout",
-    ],
-    metrics: [
-      { label: "Briefs in-flight", value: "9" },
-      { label: "Refresh queue", value: "22" },
-    ],
+    activity: "Drafting brief · move-in checklist",
+    status: "Writing",
+    angle: 51.4,
   },
   {
     id: "design",
@@ -91,17 +77,9 @@ const SCOUTS: Scout[] = [
     role: "Visual Systems",
     icon: Palette,
     accent: "from-pink-400 to-rose-500",
-    desk: "bg-pink-500/10",
-    activities: [
-      "Prototyping hero for 'office cleaning Dubai' landing",
-      "Optimising 14 images for LCP",
-      "Building schema-ready FAQ block",
-      "Handing wireframe to Technical Scout",
-    ],
-    metrics: [
-      { label: "Layouts shipped", value: "6" },
-      { label: "Assets optimised", value: "148" },
-    ],
+    activity: "Prototyping hero layout",
+    status: "Sketching",
+    angle: 102.8,
   },
   {
     id: "local",
@@ -109,17 +87,9 @@ const SCOUTS: Scout[] = [
     role: "GBP & Citations",
     icon: MapPin,
     accent: "from-emerald-400 to-teal-500",
-    desk: "bg-emerald-500/10",
-    activities: [
-      "Sweeping 42 UAE directories for NAP drift",
-      "Refreshing GBP posts across 3 branches",
-      "Responding to 5 fresh reviews",
-      "Watching grid rank in Business Bay",
-    ],
-    metrics: [
-      { label: "Citations clean", value: "96%" },
-      { label: "Avg. review score", value: "4.8" },
-    ],
+    activity: "Sweeping 42 UAE directories",
+    status: "Scanning",
+    angle: 154.3,
   },
   {
     id: "competitor",
@@ -127,17 +97,9 @@ const SCOUTS: Scout[] = [
     role: "SERP Surveillance",
     icon: Target,
     accent: "from-amber-400 to-orange-500",
-    desk: "bg-amber-500/10",
-    activities: [
-      "Diffing 6 competitor sitemaps",
-      "Alerting: rival gained 12 new backlinks",
-      "Snapshotting SERP for 'deep cleaning services'",
-      "Feeding gaps to Keyword Scout",
-    ],
-    metrics: [
-      { label: "Rivals watched", value: "8" },
-      { label: "Movements today", value: "23" },
-    ],
+    activity: "Diffing 6 rival sitemaps",
+    status: "Tracking",
+    angle: 205.7,
   },
   {
     id: "audit",
@@ -145,17 +107,9 @@ const SCOUTS: Scout[] = [
     role: "Insights Desk",
     icon: ClipboardCheck,
     accent: "from-indigo-400 to-blue-500",
-    desk: "bg-indigo-500/10",
-    activities: [
-      "Compiling weekly exec report",
-      "Cross-checking GA4 vs Search Console",
-      "Auto-tagging 14 anomalies",
-      "Scheduling client PDF for 09:00 GST",
-    ],
-    metrics: [
-      { label: "Reports queued", value: "4" },
-      { label: "Anomalies flagged", value: "14" },
-    ],
+    activity: "Compiling weekly exec report",
+    status: "Reporting",
+    angle: 257.1,
   },
   {
     id: "technical",
@@ -163,42 +117,23 @@ const SCOUTS: Scout[] = [
     role: "Crawl & Performance",
     icon: Wrench,
     accent: "from-rose-400 to-red-500",
-    desk: "bg-rose-500/10",
-    activities: [
-      "Running Lighthouse on 32 templates",
-      "Patching 7 broken canonical tags",
-      "Compressing JS bundle by 84 KB",
-      "Re-submitting sitemap to GSC",
-    ],
-    metrics: [
-      { label: "CWV pass rate", value: "92%" },
-      { label: "Errors open", value: "3" },
-    ],
+    activity: "Running Lighthouse on 32 pages",
+    status: "Auditing",
+    angle: 308.6,
   },
 ];
-
-function useTicker(len: number, intervalMs = 2600) {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setI((v) => (v + 1) % len), intervalMs);
-    return () => clearInterval(t);
-  }, [len, intervalMs]);
-  return i;
-}
 
 function ScoutTeamPage() {
   const [clock, setClock] = useState("");
   useEffect(() => {
-    const tick = () => {
-      const d = new Date();
+    const tick = () =>
       setClock(
-        d.toLocaleTimeString("en-GB", {
+        new Date().toLocaleTimeString("en-GB", {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
         }),
       );
-    };
     tick();
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
@@ -208,7 +143,7 @@ function ScoutTeamPage() {
     <div className="min-h-screen bg-[#05070d] text-slate-200 relative overflow-hidden">
       {/* ambient office glow */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[-10%] left-1/4 h-[500px] w-[900px] rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute top-[-10%] left-1/2 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-violet-600/10 blur-3xl" />
         <div
           className="absolute inset-0 opacity-[0.12]"
@@ -221,7 +156,7 @@ function ScoutTeamPage() {
       </div>
 
       <div className="relative mx-auto max-w-7xl px-6 py-10">
-        {/* Header — office reception */}
+        {/* Command header */}
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 px-5 py-4 backdrop-blur">
           <div className="flex items-center gap-3">
             <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-violet-500/20 ring-1 ring-cyan-400/30">
@@ -229,10 +164,10 @@ function ScoutTeamPage() {
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-white">
-                Scout Team · Live Office
+                Scout Team · Command Floor
               </h1>
               <p className="text-xs text-slate-400">
-                7 scouts on the floor · Dubai HQ
+                1 leader orchestrating 7 scouts · Dubai HQ
               </p>
             </div>
           </div>
@@ -242,10 +177,10 @@ function ScoutTeamPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              All desks active
+              All desks online
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-slate-300">
-              <Wifi className="h-3.5 w-3.5 text-cyan-300" /> Uplink 1.2 Gb/s
+              <Wifi className="h-3.5 w-3.5 text-cyan-300" /> Mesh 1.2 Gb/s
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 font-mono text-slate-300">
               <Coffee className="h-3.5 w-3.5 text-amber-300" /> {clock} GST
@@ -256,7 +191,7 @@ function ScoutTeamPage() {
         {/* Floor stats */}
         <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { k: "Scouts on floor", v: "7", icon: Activity },
+            { k: "Scouts", v: "7", icon: Activity },
             { k: "Tasks in-flight", v: "48", icon: Zap },
             { k: "Signals / hr", v: "312", icon: Radio },
             { k: "Uptime", v: "99.98%", icon: Wifi },
@@ -276,18 +211,59 @@ function ScoutTeamPage() {
           ))}
         </section>
 
-        {/* Office floor label */}
+        {/* Constellation */}
         <div className="mt-8 mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
           <span className="h-px flex-1 bg-slate-800" />
-          <span>Floor Plan · Scout Desks</span>
+          <span>Scout Leader · Team Mesh</span>
           <span className="h-px flex-1 bg-slate-800" />
         </div>
 
-        {/* Desks grid */}
-        <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {SCOUTS.map((s, idx) => (
-            <DeskCard key={s.id} scout={s} idx={idx} />
-          ))}
+        <Constellation />
+
+        {/* Roster */}
+        <div className="mt-10 mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
+          <span className="h-px flex-1 bg-slate-800" />
+          <span>Roster · Live Status</span>
+          <span className="h-px flex-1 bg-slate-800" />
+        </div>
+
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {SCOUTS.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div
+                key={s.id}
+                style={{
+                  animation: `deskIn .5s cubic-bezier(0.22,1,0.36,1) ${i * 60}ms both`,
+                }}
+                className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-3 transition hover:-translate-y-0.5 hover:border-cyan-500/40"
+              >
+                <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${s.accent}`} />
+                <div className="flex items-center gap-3">
+                  <span className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${s.accent} shadow`}>
+                    <Icon className="h-4 w-4 text-slate-950" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-white">
+                      {s.title}
+                    </div>
+                    <div className="truncate text-[11px] text-slate-400">
+                      {s.activity}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-200">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" style={{ animation: "ledPulse 1.6s ease-in-out infinite" }} />
+                    {s.status}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500">
+                    {s.role}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </section>
 
         <div aria-hidden className="h-16" />
@@ -302,116 +278,246 @@ function ScoutTeamPage() {
           0%, 100% { opacity: 1; }
           50% { opacity: .35; }
         }
-        @keyframes typing {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes orbit {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes dashFlow {
+          to { stroke-dashoffset: -60; }
+        }
+        @keyframes pulseRing {
+          0% { transform: scale(0.8); opacity: .55; }
+          100% { transform: scale(1.6); opacity: 0; }
+        }
+        @keyframes packet {
+          0% { offset-distance: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { offset-distance: 100%; opacity: 0; }
         }
       `}</style>
     </div>
   );
 }
 
-function DeskCard({ scout, idx }: { scout: Scout; idx: number }) {
-  const Icon = scout.icon;
-  const tick = useTicker(scout.activities.length, 2600 + (idx % 3) * 400);
-  const activity = scout.activities[tick];
+function Constellation() {
+  // Viewbox coordinate system
+  const W = 1000;
+  const H = 640;
+  const cx = W / 2;
+  const cy = H / 2;
+  const rx = 380; // horizontal orbit radius
+  const ry = 250; // vertical orbit radius
+
+  const nodes = SCOUTS.map((s) => {
+    const rad = ((s.angle - 90) * Math.PI) / 180; // 0deg = top
+    return {
+      ...s,
+      x: cx + rx * Math.cos(rad),
+      y: cy + ry * Math.sin(rad),
+    };
+  });
 
   return (
-    <article
-      style={{
-        animation: `deskIn .5s cubic-bezier(0.22,1,0.36,1) ${idx * 70}ms both`,
-      }}
-      className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 transition hover:-translate-y-0.5 hover:border-cyan-500/40 hover:shadow-[0_0_24px_rgba(34,211,238,0.12)]"
-    >
-      {/* desk accent stripe */}
-      <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${scout.accent}`} />
+    <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-950/80 to-slate-950/40 backdrop-blur">
+      {/* floor texture */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.18]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 50% 50%, rgba(34,211,238,0.12), transparent 60%), linear-gradient(rgba(56,189,248,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,.08) 1px, transparent 1px)",
+          backgroundSize: "100% 100%, 42px 42px, 42px 42px",
+        }}
+      />
 
-      {/* desk surface texture */}
-      <div className={`absolute inset-x-0 top-0 h-24 ${scout.desk}`} />
+      <div className="relative aspect-[1000/640] w-full">
+        {/* SVG links + rings */}
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="absolute inset-0 h-full w-full"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <defs>
+            <radialGradient id="floorGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(34,211,238,0.35)" />
+              <stop offset="70%" stopColor="rgba(34,211,238,0)" />
+            </radialGradient>
+            <linearGradient id="linkGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="rgba(34,211,238,0.9)" />
+              <stop offset="100%" stopColor="rgba(139,92,246,0.6)" />
+            </linearGradient>
+          </defs>
 
-      <div className="relative p-4">
-        {/* Agent + status LED */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
+          {/* central floor glow */}
+          <circle cx={cx} cy={cy} r={220} fill="url(#floorGlow)" />
+
+          {/* orbit rings */}
+          <ellipse
+            cx={cx}
+            cy={cy}
+            rx={rx}
+            ry={ry}
+            fill="none"
+            stroke="rgba(148,163,184,0.18)"
+            strokeDasharray="4 6"
+          />
+          <ellipse
+            cx={cx}
+            cy={cy}
+            rx={rx * 0.62}
+            ry={ry * 0.62}
+            fill="none"
+            stroke="rgba(148,163,184,0.12)"
+            strokeDasharray="2 8"
+          />
+
+          {/* connection lines leader ↔ scouts */}
+          {nodes.map((n) => (
+            <g key={n.id}>
+              <line
+                x1={cx}
+                y1={cy}
+                x2={n.x}
+                y2={n.y}
+                stroke="rgba(34,211,238,0.28)"
+                strokeWidth={1.2}
+              />
+              <line
+                x1={cx}
+                y1={cy}
+                x2={n.x}
+                y2={n.y}
+                stroke="url(#linkGrad)"
+                strokeWidth={1.6}
+                strokeDasharray="6 10"
+                style={{ animation: "dashFlow 3.2s linear infinite" }}
+              />
+            </g>
+          ))}
+
+          {/* node halos */}
+          {nodes.map((n) => (
+            <circle
+              key={`halo-${n.id}`}
+              cx={n.x}
+              cy={n.y}
+              r={44}
+              fill="rgba(34,211,238,0.05)"
+              stroke="rgba(34,211,238,0.25)"
+              strokeWidth={1}
+            />
+          ))}
+        </svg>
+
+        {/* Animated packets travelling on each link */}
+        {nodes.map((n) => {
+          const angle = Math.atan2(n.y - cy, n.x - cx);
+          const dx = n.x - cx;
+          const dy = n.y - cy;
+          return (
+            <span
+              key={`pkt-${n.id}`}
+              className="pointer-events-none absolute h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.9)]"
+              style={{
+                left: `${(cx / W) * 100}%`,
+                top: `${(cy / H) * 100}%`,
+                transform: `translate(-50%, -50%)`,
+                offsetPath: `path('M 0 0 L ${dx} ${dy}')`,
+                animation: `packet ${3 + (Math.abs(angle) % 1.5)}s linear infinite`,
+                animationDelay: `${(SCOUTS.indexOf(n) * 0.35).toFixed(2)}s`,
+              }}
+            />
+          );
+        })}
+
+        {/* Leader in the center */}
+        <div
+          className="absolute"
+          style={{
+            left: `${(cx / W) * 100}%`,
+            top: `${(cy / H) * 100}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          {/* pulse rings */}
+          <span className="pointer-events-none absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/40" style={{ animation: "pulseRing 2.6s ease-out infinite" }} />
+          <span className="pointer-events-none absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/40" style={{ animation: "pulseRing 2.6s ease-out infinite", animationDelay: "1.1s" }} />
+
+          <div className="relative flex flex-col items-center">
             <div className="relative">
-              <div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-950/70 ring-1 ring-slate-700/60`}>
-                <div className={`absolute inset-0 bg-gradient-to-br ${scout.accent} opacity-25`} />
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-cyan-500/30 via-violet-500/30 to-cyan-500/30 blur-2xl" />
+              <div className="relative grid h-28 w-28 place-items-center overflow-hidden rounded-2xl border border-cyan-400/50 bg-slate-950/80 shadow-[0_0_50px_rgba(34,211,238,0.45)] ring-1 ring-cyan-400/40">
                 <img
-                  src={agentBot}
-                  alt=""
-                  className="relative h-full w-full object-contain"
-                  loading="lazy"
+                  src={leaderBot}
+                  alt="Scout Leader"
+                  className="h-full w-full object-contain"
                   width={512}
                   height={512}
                 />
+                <span className="absolute -right-1 -top-1 grid h-7 w-7 place-items-center rounded-full border-2 border-slate-950 bg-gradient-to-br from-amber-300 to-orange-500 shadow-[0_0_12px_rgba(251,191,36,0.7)]">
+                  <Crown className="h-3.5 w-3.5 text-slate-950" />
+                </span>
               </div>
-              {/* headset LED */}
-              <span
-                className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
-                style={{ animation: "ledPulse 1.6s ease-in-out infinite" }}
-              />
             </div>
-            <div>
-              <div className="text-sm font-semibold text-white leading-tight">
-                {scout.title}
+            <div className="mt-3 rounded-full border border-cyan-400/30 bg-slate-950/80 px-3 py-1 text-center backdrop-blur">
+              <div className="text-[9px] font-medium uppercase tracking-[0.22em] text-cyan-300/80">
+                Main Agent
               </div>
-              <div className="text-[11px] uppercase tracking-wider text-slate-500">
-                {scout.role}
+              <div className="text-sm font-semibold text-white">
+                Scout Leader
               </div>
             </div>
           </div>
-          <span
-            className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${scout.accent} shadow`}
-            aria-hidden
-          >
-            <Icon className="h-4 w-4 text-slate-950" />
-          </span>
         </div>
 
-        {/* monitor / live activity */}
-        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/70 p-3">
-          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-cyan-300/70">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
-            Live
-          </div>
-          <p
-            key={tick}
-            className="mt-1.5 min-h-[2.5rem] text-xs text-slate-300"
-            style={{ animation: "typing .35s ease-out both" }}
-          >
-            {activity}
-            <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 bg-cyan-300/80 align-middle" style={{ animation: "ledPulse 1s steps(2,end) infinite" }} />
-          </p>
-        </div>
-
-        {/* metrics chips */}
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {scout.metrics.map((m) => (
+        {/* Scout nodes */}
+        {nodes.map((n, i) => {
+          const Icon = n.icon;
+          // decide label position based on side
+          const leftSide = n.x < cx;
+          return (
             <div
-              key={m.label}
-              className="rounded-lg border border-slate-800 bg-slate-900/60 px-2.5 py-2"
+              key={n.id}
+              className="absolute"
+              style={{
+                left: `${(n.x / W) * 100}%`,
+                top: `${(n.y / H) * 100}%`,
+                transform: "translate(-50%, -50%)",
+                animation: `deskIn .5s cubic-bezier(0.22,1,0.36,1) ${150 + i * 90}ms both`,
+              }}
             >
-              <div className="text-[10px] uppercase tracking-wider text-slate-500">
-                {m.label}
+              <div className={`flex items-center gap-2.5 ${leftSide ? "flex-row-reverse" : "flex-row"}`}>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/25" style={{ animation: "pulseRing 3.2s ease-out infinite", animationDelay: `${i * 0.25}s` }} />
+                  <div className={`relative h-16 w-16 overflow-hidden rounded-xl bg-slate-950/80 ring-1 ring-slate-700/70 shadow-[0_0_20px_rgba(0,0,0,0.6)]`}>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${n.accent} opacity-30`} />
+                    <img
+                      src={agentBot}
+                      alt=""
+                      className="relative h-full w-full object-contain"
+                      loading="lazy"
+                      width={512}
+                      height={512}
+                    />
+                    <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]" style={{ animation: "ledPulse 1.6s ease-in-out infinite" }} />
+                  </div>
+                  <span className={`absolute -bottom-1 ${leftSide ? "-left-1" : "-right-1"} grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br ${n.accent} ring-2 ring-slate-950`}>
+                    <Icon className="h-3 w-3 text-slate-950" />
+                  </span>
+                </div>
+                <div className={`hidden sm:block rounded-lg border border-slate-800 bg-slate-950/85 px-2.5 py-1.5 backdrop-blur ${leftSide ? "text-right" : "text-left"}`}>
+                  <div className="text-[11px] font-semibold text-white leading-tight whitespace-nowrap">
+                    {n.title}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-wider text-cyan-300/70 whitespace-nowrap">
+                    {n.role}
+                  </div>
+                </div>
               </div>
-              <div className="text-sm font-semibold text-white">{m.value}</div>
             </div>
-          ))}
-        </div>
-
-        {/* desk footer */}
-        <div className="mt-3 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-200">
-            <Activity className="h-3 w-3" /> Engaged
-          </span>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-200 transition hover:bg-cyan-400/20"
-          >
-            Visit desk <ArrowUpRight className="h-3 w-3" />
-          </button>
-        </div>
+          );
+        })}
       </div>
-    </article>
+    </div>
   );
 }
