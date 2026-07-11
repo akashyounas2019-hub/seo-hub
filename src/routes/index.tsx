@@ -220,45 +220,77 @@ function Index() {
                 >
                   <div className="overflow-hidden">
                     <div className={`mx-auto -mt-1 mb-2 h-3 w-px bg-gradient-to-b ${e.accent} opacity-70`} />
-                    <ul className="space-y-2 pt-1">
-                      {e.subs.map((s, i) => (
-                        <li
-                          key={s.name}
-                          style={{
-                            animation: isOpen
-                              ? `subIn .45s cubic-bezier(0.22,1,0.36,1) ${i * 70}ms both`
-                              : undefined,
-                          }}
-                        >
-                          <Link
-                            to="/agents/$id"
-                            params={{ id: buildSubAgentId(e.id, s.name) }}
-                            className="group/sub relative block rounded-lg border border-slate-800/80 bg-slate-950/60 p-3 transition hover:translate-x-0.5 hover:border-cyan-500/40 hover:bg-slate-900/60"
-                          >
-                            <span
-                              aria-hidden
-                              className={`absolute -left-px top-1/2 h-px w-2 -translate-y-1/2 bg-gradient-to-r ${e.accent} opacity-70`}
-                            />
-                            <div className="flex items-center gap-2">
-                              <span className="relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-900 ring-1 ring-slate-700/60">
-                                <span className={`absolute inset-0 bg-gradient-to-br ${e.accent} opacity-25`} />
-                                <img src={agentBot} alt="" className="relative h-5 w-5 object-contain" loading="lazy" />
-                              </span>
-                              <span
-                                className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${e.accent} shadow-[0_0_6px_rgba(34,211,238,0.6)]`}
-                              />
-                              <div className="text-xs font-medium text-slate-100 group-hover/sub:text-cyan-100">
-                                {s.name}
-                              </div>
-                              <ArrowUpRight className="ml-auto h-3 w-3 text-slate-500 opacity-0 transition group-hover/sub:opacity-100" />
-                            </div>
-                            <div className="mt-1 pl-8 text-[11px] text-slate-500">
-                              {s.desc}
-                            </div>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+                    {(() => {
+                      const isOnPage = e.id === "onpage";
+                      const SUB_ACCENTS = [
+                        "from-cyan-400 to-sky-500",
+                        "from-violet-400 to-fuchsia-500",
+                        "from-amber-400 to-orange-500",
+                        "from-emerald-400 to-teal-500",
+                        "from-rose-400 to-pink-500",
+                        "from-indigo-400 to-blue-500",
+                      ];
+                      const SUB_RING = [
+                        "ring-cyan-400/40 hover:border-cyan-400/60",
+                        "ring-fuchsia-400/40 hover:border-fuchsia-400/60",
+                        "ring-amber-400/40 hover:border-amber-400/60",
+                        "ring-emerald-400/40 hover:border-emerald-400/60",
+                        "ring-rose-400/40 hover:border-rose-400/60",
+                        "ring-indigo-400/40 hover:border-indigo-400/60",
+                      ];
+                      const listClass = isOnPage
+                        ? "flex flex-wrap gap-2 pt-1"
+                        : "space-y-2 pt-1";
+                      const Wrapper: "ul" = "ul";
+                      return (
+                        <Wrapper className={listClass}>
+                          {e.subs.map((s, i) => {
+                            const subAccent = isOnPage ? SUB_ACCENTS[i % SUB_ACCENTS.length] : e.accent;
+                            const subRing = isOnPage ? SUB_RING[i % SUB_RING.length] : "ring-slate-700/60 hover:border-cyan-500/40";
+                            return (
+                              <li
+                                key={s.name}
+                                className={isOnPage ? "flex-1 min-w-[140px]" : ""}
+                                style={{
+                                  animation: isOpen
+                                    ? `subIn .45s cubic-bezier(0.22,1,0.36,1) ${i * 70}ms both`
+                                    : undefined,
+                                }}
+                              >
+                                <Link
+                                  to="/agents/$id"
+                                  params={{ id: buildSubAgentId(e.id, s.name) }}
+                                  className={`group/sub relative block h-full rounded-lg border border-slate-800/80 bg-slate-950/60 p-3 transition hover:-translate-y-0.5 hover:bg-slate-900/60 ${subRing.split(" ").filter(c => c.startsWith("hover:")).join(" ")}`}
+                                >
+                                  <span
+                                    aria-hidden
+                                    className={`absolute inset-x-0 top-0 h-px rounded-t bg-gradient-to-r ${subAccent}`}
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    <span className={`relative grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-900 ring-1 ${subRing.split(" ").filter(c => c.startsWith("ring-")).join(" ")}`}>
+                                      <span className={`absolute inset-0 bg-gradient-to-br ${subAccent} opacity-30`} />
+                                      <img src={agentBot} alt="" className="relative h-5 w-5 object-contain" loading="lazy" />
+                                    </span>
+                                    <span
+                                      className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${subAccent} shadow-[0_0_6px_rgba(34,211,238,0.5)]`}
+                                    />
+                                    <div className="text-xs font-medium text-slate-100 group-hover/sub:text-cyan-100">
+                                      {s.name}
+                                    </div>
+                                    {!isOnPage && (
+                                      <ArrowUpRight className="ml-auto h-3 w-3 text-slate-500 opacity-0 transition group-hover/sub:opacity-100" />
+                                    )}
+                                  </div>
+                                  <div className={`mt-1 text-[11px] text-slate-500 ${isOnPage ? "" : "pl-8"}`}>
+                                    {s.desc}
+                                  </div>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </Wrapper>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
