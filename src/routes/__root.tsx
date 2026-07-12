@@ -161,6 +161,7 @@ function RootComponent() {
               <Outlet />
             </main>
           </div>
+          <Toaster theme="dark" position="top-right" richColors closeButton />
         </div>
       </SidebarProvider>
     </QueryClientProvider>
