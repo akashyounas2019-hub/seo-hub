@@ -400,6 +400,31 @@ function AutomationPage() {
                   </div>
                 </div>
 
+                {f.assignedAgents && f.assignedAgents.length > 0 && (
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500">Agents</span>
+                    {f.assignedAgents.slice(0, 3).map((aid) => {
+                      const a = AGENTS.find((x) => x.id === aid);
+                      if (!a) return null;
+                      const AIcon = a.icon;
+                      return (
+                        <span
+                          key={aid}
+                          className="inline-flex items-center gap-1 rounded-full border border-cyan-400/25 bg-cyan-400/5 px-2 py-0.5 text-[10px] text-cyan-200"
+                          title={a.role}
+                        >
+                          <AIcon className="h-3 w-3" /> {a.name}
+                        </span>
+                      );
+                    })}
+                    {f.assignedAgents.length > 3 && (
+                      <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] text-slate-400">
+                        +{f.assignedAgents.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-4 flex items-center justify-between">
                   <div className="text-[10px] uppercase tracking-wider text-slate-500">
                     {CATEGORIES.find((c) => c.id === f.category)?.label}
