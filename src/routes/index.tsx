@@ -383,8 +383,44 @@ function Index() {
           );
         })()}
 
+        {/* Custom agents added via Add Agent modal */}
+        {customAgents.length > 0 && (
+          <section className="mt-8">
+            <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
+              <span className="h-px flex-1 bg-slate-800" />
+              <span>Custom Agents</span>
+              <span className="h-px flex-1 bg-slate-800" />
+            </div>
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {customAgents.map((a) => {
+                const Icon = ICON_CHOICES.find((c) => c.id === a.iconId)?.icon ?? Bot;
+                return (
+                  <li key={a.id} className="group/sub relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-4 transition hover:-translate-y-0.5 hover:border-cyan-500/40 hover:bg-slate-900/70">
+                    <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${a.accent}`} />
+                    <div className="flex items-start justify-between">
+                      <div className={`relative grid h-14 w-14 place-items-center overflow-hidden rounded-xl bg-slate-950/60 ring-1 ring-slate-700/60`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${a.accent} opacity-25`} />
+                        <Icon className="relative h-6 w-6 text-white" />
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-medium text-emerald-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> New
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full bg-gradient-to-r ${a.accent}`} />
+                      <div className="text-sm font-semibold text-white leading-tight">{a.name}</div>
+                    </div>
+                    <div className="mt-1 text-[11px] uppercase tracking-wider text-slate-500">{a.role}</div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
         {/* generous breathing room below the agent graph */}
         <div aria-hidden className="h-24 sm:h-32" />
+
 
         {/* footer stats */}
         <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
