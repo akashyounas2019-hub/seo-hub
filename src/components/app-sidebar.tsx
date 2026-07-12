@@ -24,6 +24,7 @@ import {
   Wrench,
   Command,
   Rocket,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
