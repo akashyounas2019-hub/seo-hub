@@ -536,6 +536,8 @@ function AlertsPage() {
           onReopen={() => updateStatus(selected.id, "active")}
         />
       )}
+
+      {rulesOpen && <AlertRulesModal onClose={() => setRulesOpen(false)} />}
     </div>
   );
 }
