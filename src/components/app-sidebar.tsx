@@ -29,6 +29,10 @@ import {
   TestTube2,
   ScrollText,
   SlidersHorizontal,
+  X,
+  ChevronUp,
+  Sparkles,
+  Gauge,
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
