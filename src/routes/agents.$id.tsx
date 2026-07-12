@@ -580,6 +580,10 @@ function AgentDetail() {
                 </div>
               </div>
             </Card>
+
+            <MemoryCard profile={profile} setProfile={setProfile} accent={expert.accent} appendLog={appendLog} />
+
+            <LogsCard profile={profile} setProfile={setProfile} accent={expert.accent} />
           </div>
         </div>
 
