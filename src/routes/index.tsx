@@ -672,6 +672,25 @@ function ModalShell({
   );
 }
 
+const ASSIGNMENTS_KEY = "aks.assignments";
+const JOBS_KEY = "aks.jobs";
+
+function persist(key: string, entry: Record<string, unknown>) {
+  return new Promise<void>((resolve, reject) => {
+    setTimeout(() => {
+      try {
+        const raw = typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
+        const list = raw ? (JSON.parse(raw) as unknown[]) : [];
+        list.unshift({ id: crypto.randomUUID(), createdAt: new Date().toISOString(), ...entry });
+        window.localStorage.setItem(key, JSON.stringify(list.slice(0, 100)));
+        resolve();
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error("Failed to save"));
+      }
+    }, 550);
+  });
+}
+
 function AssignJobModal({
   onClose,
   customAgents,
@@ -687,9 +706,25 @@ function AssignJobModal({
   const [selected, setSelected] = useState<string[]>([]);
   const [job, setJob] = useState("");
   const [priority, setPriority] = useState<"low" | "normal" | "high">("normal");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
 
   const toggle = (id: string) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  const submit = async () => {
+    if (!job.trim() || selected.length === 0 || status === "saving") return;
+    setStatus("saving");
+    setError(null);
+    try {
+      await persist(ASSIGNMENTS_KEY, { title: job.trim(), priority, agentIds: selected });
+      setStatus("saved");
+      setTimeout(onClose, 700);
+    } catch (e) {
+      setStatus("error");
+      setError(e instanceof Error ? e.message : "Could not save assignment");
+    }
+  };
 
   return (
     <ModalShell
@@ -702,16 +737,23 @@ function AssignJobModal({
         <>
           <button
             onClick={onClose}
-            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800"
+            disabled={status === "saving"}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
-            disabled={!job.trim() || selected.length === 0}
-            onClick={onClose}
+            disabled={!job.trim() || selected.length === 0 || status === "saving" || status === "saved"}
+            onClick={submit}
             className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <ClipboardList className="h-3.5 w-3.5" /> Assign
+            {status === "saving" ? (
+              <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Assigning…</>
+            ) : status === "saved" ? (
+              <><CheckCircle2 className="h-3.5 w-3.5" /> Assigned</>
+            ) : (
+              <><ClipboardList className="h-3.5 w-3.5" /> Assign</>
+            )}
           </button>
         </>
       }
