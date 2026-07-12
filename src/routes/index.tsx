@@ -24,8 +24,12 @@ import {
   Bot,
   ShieldCheck,
   Globe,
+  Network,
+  AlertTriangle,
+  CheckCircle2,
   type LucideIcon,
 } from "lucide-react";
+
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
 import { EXPERTS, buildSubAgentId } from "@/lib/agents";
