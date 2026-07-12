@@ -61,9 +61,9 @@ const SECTIONS: Section[] = [
     label: "Off-Page SEO",
     tagline: "Authority, backlinks and brand mentions",
     icon: Link2,
-    from: "#fb7185",
-    to: "#ec4899",
-    accent: "from-rose-400 to-pink-500",
+    from: "#38bdf8",
+    to: "#6366f1",
+    accent: "from-sky-400 to-indigo-500",
     items: [
       { id: "o1", title: "Reclaim 8 unlinked brand mentions", desc: "UAE lifestyle blogs mention the brand without linking. Pitch a 1-line link add.", impact: "High", effort: "S", assigned: "Outreach Agent" },
       { id: "o2", title: "Pitch 5 UAE real-estate blogs for guest posts", desc: "High DR real-estate outlets accept 'move-in cleaning' guides.", impact: "High", effort: "M" },
@@ -239,8 +239,8 @@ function SuggestionsPage() {
             value={high}
             sub="Ship these first"
             percent={total ? (high / total) * 100 : 0}
-            from="#f87171"
-            to="#ec4899"
+            from="#fbbf24"
+            to="#f59e0b"
             icon={TrendingUp}
           />
           <KpiCard
@@ -277,8 +277,8 @@ function AutomationSuggestions() {
   const to = "#a855f7";
 
   const impactStyle: Record<Impact, string> = {
-    High: "bg-rose-400/10 text-rose-300 border-rose-400/20",
-    Medium: "bg-amber-400/10 text-amber-300 border-amber-400/20",
+    High: "bg-amber-400/10 text-amber-200 border-amber-400/25",
+    Medium: "bg-sky-400/10 text-sky-200 border-sky-400/25",
     Low: "bg-slate-500/10 text-slate-400 border-slate-500/20",
   };
 
@@ -484,8 +484,8 @@ function SuggestionRow({
   tint: string;
 }) {
   const impactStyle: Record<Impact, string> = {
-    High: "bg-rose-400/10 text-rose-300 border-rose-400/20",
-    Medium: "bg-amber-400/10 text-amber-300 border-amber-400/20",
+    High: "bg-amber-400/10 text-amber-200 border-amber-400/25",
+    Medium: "bg-sky-400/10 text-sky-200 border-sky-400/25",
     Low: "bg-slate-500/10 text-slate-400 border-slate-500/20",
   };
   const effortLabel: Record<Effort, string> = { S: "S · Quick", M: "M · Focused", L: "L · Project" };

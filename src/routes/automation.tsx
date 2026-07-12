@@ -63,7 +63,21 @@ type Flow = {
   cadence: Cadence;
   lastRun: string;
   successRate: number;
+  assignedAgents?: string[];
 };
+
+const AGENTS: { id: string; name: string; role: string; icon: typeof Bot }[] = [
+  { id: "local", name: "Local SEO Agent", role: "Dubai suburbs & GBP", icon: MapPin },
+  { id: "gbp", name: "GBP Publisher", role: "Posts, Q&A, hours", icon: Building2 },
+  { id: "review", name: "Review Agent", role: "Requests & replies", icon: Star },
+  { id: "content", name: "Content Strategist", role: "Briefs & drafts", icon: FileText },
+  { id: "meta", name: "Meta Optimizer", role: "Titles & descriptions", icon: Sparkles },
+  { id: "outreach", name: "Outreach Agent", role: "Backlinks & pitches", icon: Mail },
+  { id: "technical", name: "Technical Agent", role: "CWV, crawl, indexation", icon: Gauge },
+  { id: "research", name: "Research Agent", role: "Keywords & SERP", icon: Search },
+  { id: "reporting", name: "Reporting Agent", role: "Alerts & reports", icon: Bell },
+  { id: "translator", name: "AR/EN Translator", role: "Localization & hreflang", icon: Languages },
+];
 
 const CATEGORIES = [
   { id: "local", label: "Local SEO (Dubai)", icon: MapPin, accent: "from-cyan-400 to-sky-500" },
@@ -171,13 +185,14 @@ function AutomationPage() {
     category: string;
     cadence: Cadence;
     status: Status;
+    assignedAgents: string[];
   }) {
     const cat = CATEGORIES.find((c) => c.id === data.category) ?? CATEGORIES[0];
     if (data.id) {
       setFlows((prev) =>
         prev.map((f) =>
           f.id === data.id
-            ? { ...f, name: data.name, desc: data.desc, category: data.category, cadence: data.cadence, status: data.status, accent: cat.accent }
+            ? { ...f, name: data.name, desc: data.desc, category: data.category, cadence: data.cadence, status: data.status, accent: cat.accent, assignedAgents: data.assignedAgents }
             : f,
         ),
       );
@@ -193,6 +208,7 @@ function AutomationPage() {
         accent: cat.accent,
         lastRun: "—",
         successRate: 0,
+        assignedAgents: data.assignedAgents,
       };
       setFlows((prev) => [newFlow, ...prev]);
     }
@@ -384,6 +400,31 @@ function AutomationPage() {
                   </div>
                 </div>
 
+                {f.assignedAgents && f.assignedAgents.length > 0 && (
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] uppercase tracking-wider text-slate-500">Agents</span>
+                    {f.assignedAgents.slice(0, 3).map((aid) => {
+                      const a = AGENTS.find((x) => x.id === aid);
+                      if (!a) return null;
+                      const AIcon = a.icon;
+                      return (
+                        <span
+                          key={aid}
+                          className="inline-flex items-center gap-1 rounded-full border border-cyan-400/25 bg-cyan-400/5 px-2 py-0.5 text-[10px] text-cyan-200"
+                          title={a.role}
+                        >
+                          <AIcon className="h-3 w-3" /> {a.name}
+                        </span>
+                      );
+                    })}
+                    {f.assignedAgents.length > 3 && (
+                      <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] text-slate-400">
+                        +{f.assignedAgents.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-4 flex items-center justify-between">
                   <div className="text-[10px] uppercase tracking-wider text-slate-500">
                     {CATEGORIES.find((c) => c.id === f.category)?.label}
@@ -482,7 +523,7 @@ function Modal({ children, onClose, title }: { children: React.ReactNode; onClos
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-slate-800 bg-slate-950 p-5 shadow-2xl"
+        className="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-950 p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -504,7 +545,7 @@ function FlowEditor({
 }: {
   state: EditorState;
   onClose: () => void;
-  onSave: (data: { id?: string; name: string; desc: string; category: string; cadence: Cadence; status: Status }) => void;
+  onSave: (data: { id?: string; name: string; desc: string; category: string; cadence: Cadence; status: Status; assignedAgents: string[] }) => void;
 }) {
   if (!state) return null;
   const initial =
@@ -517,6 +558,7 @@ function FlowEditor({
           category: state.base?.category ?? CATEGORIES[0].id,
           cadence: state.base?.cadence ?? ("weekly" as Cadence),
           status: "draft" as Status,
+          assignedAgents: [] as string[],
         };
 
   const [name, setName] = useState(initial.name);
@@ -524,8 +566,25 @@ function FlowEditor({
   const [category, setCategory] = useState<string>(initial.category);
   const [cadence, setCadence] = useState<Cadence>(initial.cadence);
   const [status, setStatus] = useState<Status>(initial.status);
+  const [assignedAgents, setAssignedAgents] = useState<string[]>(
+    state.mode === "edit" ? (state.flow.assignedAgents ?? []) : [],
+  );
+  const [agentQuery, setAgentQuery] = useState("");
 
   const isEdit = state.mode === "edit";
+
+  function toggleAgent(id: string) {
+    setAssignedAgents((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  const filteredAgents = AGENTS.filter(
+    (a) =>
+      !agentQuery ||
+      a.name.toLowerCase().includes(agentQuery.toLowerCase()) ||
+      a.role.toLowerCase().includes(agentQuery.toLowerCase()),
+  );
 
   return (
     <Modal onClose={onClose} title={isEdit ? "Edit automation" : "New automation"}>
@@ -540,6 +599,7 @@ function FlowEditor({
             category,
             cadence,
             status,
+            assignedAgents,
           });
         }}
         className="space-y-3"
@@ -597,6 +657,100 @@ function FlowEditor({
             </select>
           </Field>
         </div>
+
+        <Field label={`Assigned agents${assignedAgents.length ? ` · ${assignedAgents.length} selected` : ""}`}>
+          <div className="rounded-md border border-slate-800 bg-slate-950/60 p-2">
+            <div className="relative mb-2">
+              <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+              <input
+                value={agentQuery}
+                onChange={(e) => setAgentQuery(e.target.value)}
+                placeholder="Search agents…"
+                className="w-full rounded border border-slate-800 bg-slate-900/60 py-1.5 pl-7 pr-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-cyan-400/50 focus:outline-none"
+              />
+            </div>
+            <div className="max-h-44 overflow-y-auto pr-1">
+              <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                {filteredAgents.map((a) => {
+                  const AIcon = a.icon;
+                  const selected = assignedAgents.includes(a.id);
+                  return (
+                    <li key={a.id}>
+                      <button
+                        type="button"
+                        onClick={() => toggleAgent(a.id)}
+                        className={`flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left text-xs transition ${
+                          selected
+                            ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-100"
+                            : "border-slate-800 bg-slate-900/40 text-slate-300 hover:border-slate-700 hover:bg-slate-900"
+                        }`}
+                      >
+                        <span
+                          className={`grid h-6 w-6 shrink-0 place-items-center rounded ${
+                            selected ? "bg-cyan-400/20 text-cyan-200" : "bg-slate-800 text-slate-400"
+                          }`}
+                        >
+                          <AIcon className="h-3 w-3" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium leading-tight">{a.name}</span>
+                          <span className="block truncate text-[10px] text-slate-500">{a.role}</span>
+                        </span>
+                        <span
+                          className={`grid h-4 w-4 shrink-0 place-items-center rounded border text-[10px] ${
+                            selected
+                              ? "border-cyan-400/60 bg-cyan-400/20 text-cyan-200"
+                              : "border-slate-700 text-transparent"
+                          }`}
+                          aria-hidden
+                        >
+                          ✓
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+                {filteredAgents.length === 0 && (
+                  <li className="col-span-full py-3 text-center text-[11px] text-slate-500">
+                    No agents match “{agentQuery}”.
+                  </li>
+                )}
+              </ul>
+            </div>
+            {assignedAgents.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-slate-800/70 pt-2">
+                {assignedAgents.map((id) => {
+                  const a = AGENTS.find((x) => x.id === id);
+                  if (!a) return null;
+                  return (
+                    <span
+                      key={id}
+                      className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] text-cyan-200"
+                    >
+                      {a.name}
+                      <button
+                        type="button"
+                        onClick={() => toggleAgent(id)}
+                        className="text-cyan-300/70 hover:text-cyan-100"
+                        aria-label={`Remove ${a.name}`}
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setAssignedAgents([])}
+                  className="ml-1 text-[10px] uppercase tracking-wider text-slate-500 hover:text-slate-300"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </div>
+        </Field>
+
         <div className="mt-2 flex justify-end gap-2 pt-2">
           <button
             type="button"
