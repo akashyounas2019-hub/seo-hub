@@ -277,8 +277,8 @@ function AutomationSuggestions() {
   const to = "#a855f7";
 
   const impactStyle: Record<Impact, string> = {
-    High: "bg-rose-400/10 text-rose-300 border-rose-400/20",
-    Medium: "bg-amber-400/10 text-amber-300 border-amber-400/20",
+    High: "bg-amber-400/10 text-amber-200 border-amber-400/25",
+    Medium: "bg-sky-400/10 text-sky-200 border-sky-400/25",
     Low: "bg-slate-500/10 text-slate-400 border-slate-500/20",
   };
 
