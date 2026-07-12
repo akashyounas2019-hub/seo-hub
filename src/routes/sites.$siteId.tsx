@@ -176,7 +176,7 @@ const TABS = [
 ];
 
 function SiteDetailPage() {
-  const { site } = Route.useLoaderData();
+  const { site } = Route.useLoaderData() as { site: SiteDetail };
   const [tab, setTab] = useState("Overview");
 
   return (
