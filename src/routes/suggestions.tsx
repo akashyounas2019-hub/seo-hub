@@ -61,9 +61,9 @@ const SECTIONS: Section[] = [
     label: "Off-Page SEO",
     tagline: "Authority, backlinks and brand mentions",
     icon: Link2,
-    from: "#fb7185",
-    to: "#ec4899",
-    accent: "from-rose-400 to-pink-500",
+    from: "#38bdf8",
+    to: "#6366f1",
+    accent: "from-sky-400 to-indigo-500",
     items: [
       { id: "o1", title: "Reclaim 8 unlinked brand mentions", desc: "UAE lifestyle blogs mention the brand without linking. Pitch a 1-line link add.", impact: "High", effort: "S", assigned: "Outreach Agent" },
       { id: "o2", title: "Pitch 5 UAE real-estate blogs for guest posts", desc: "High DR real-estate outlets accept 'move-in cleaning' guides.", impact: "High", effort: "M" },
