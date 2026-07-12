@@ -25,8 +25,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeoSuiteIndexRouteImport } from './routes/seo-suite.index'
 import { Route as ScoutTeamIndexRouteImport } from './routes/scout-team.index'
 import { Route as AnalyticsIndexRouteImport } from './routes/analytics.index'
+import { Route as SitesSiteIdRouteImport } from './routes/sites.$siteId'
 import { Route as SeoSuiteToolIdRouteImport } from './routes/seo-suite.$toolId'
 import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scoutId'
+import { Route as ResourcesTemplatesRouteImport } from './routes/resources.templates'
+import { Route as ResourcesSopsRouteImport } from './routes/resources.sops'
+import { Route as ResourcesPromptsRouteImport } from './routes/resources.prompts'
 import { Route as AnalyticsSearchConsoleRouteImport } from './routes/analytics.search-console'
 import { Route as AnalyticsGoogleAnalyticsRouteImport } from './routes/analytics.google-analytics'
 import { Route as AnalyticsBusinessProfileRouteImport } from './routes/analytics.business-profile'
@@ -112,6 +116,11 @@ const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
   path: '/analytics/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitesSiteIdRoute = SitesSiteIdRouteImport.update({
+  id: '/sites/$siteId',
+  path: '/sites/$siteId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SeoSuiteToolIdRoute = SeoSuiteToolIdRouteImport.update({
   id: '/seo-suite/$toolId',
   path: '/seo-suite/$toolId',
@@ -120,6 +129,21 @@ const SeoSuiteToolIdRoute = SeoSuiteToolIdRouteImport.update({
 const ScoutTeamScoutIdRoute = ScoutTeamScoutIdRouteImport.update({
   id: '/scout-team/$scoutId',
   path: '/scout-team/$scoutId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesTemplatesRoute = ResourcesTemplatesRouteImport.update({
+  id: '/resources/templates',
+  path: '/resources/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesSopsRoute = ResourcesSopsRouteImport.update({
+  id: '/resources/sops',
+  path: '/resources/sops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesPromptsRoute = ResourcesPromptsRouteImport.update({
+  id: '/resources/prompts',
+  path: '/resources/prompts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsSearchConsoleRoute = AnalyticsSearchConsoleRouteImport.update({
@@ -163,8 +187,12 @@ export interface FileRoutesByFullPath {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/resources/prompts': typeof ResourcesPromptsRoute
+  '/resources/sops': typeof ResourcesSopsRoute
+  '/resources/templates': typeof ResourcesTemplatesRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
+  '/sites/$siteId': typeof SitesSiteIdRoute
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
   '/seo-suite/': typeof SeoSuiteIndexRoute
@@ -187,8 +215,12 @@ export interface FileRoutesByTo {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/resources/prompts': typeof ResourcesPromptsRoute
+  '/resources/sops': typeof ResourcesSopsRoute
+  '/resources/templates': typeof ResourcesTemplatesRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
+  '/sites/$siteId': typeof SitesSiteIdRoute
   '/analytics': typeof AnalyticsIndexRoute
   '/scout-team': typeof ScoutTeamIndexRoute
   '/seo-suite': typeof SeoSuiteIndexRoute
@@ -212,8 +244,12 @@ export interface FileRoutesById {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/resources/prompts': typeof ResourcesPromptsRoute
+  '/resources/sops': typeof ResourcesSopsRoute
+  '/resources/templates': typeof ResourcesTemplatesRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
+  '/sites/$siteId': typeof SitesSiteIdRoute
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
   '/seo-suite/': typeof SeoSuiteIndexRoute
@@ -238,8 +274,12 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/resources/prompts'
+    | '/resources/sops'
+    | '/resources/templates'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
+    | '/sites/$siteId'
     | '/analytics/'
     | '/scout-team/'
     | '/seo-suite/'
@@ -262,8 +302,12 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/resources/prompts'
+    | '/resources/sops'
+    | '/resources/templates'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
+    | '/sites/$siteId'
     | '/analytics'
     | '/scout-team'
     | '/seo-suite'
@@ -286,8 +330,12 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/resources/prompts'
+    | '/resources/sops'
+    | '/resources/templates'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
+    | '/sites/$siteId'
     | '/analytics/'
     | '/scout-team/'
     | '/seo-suite/'
@@ -311,8 +359,12 @@ export interface RootRouteChildren {
   AnalyticsBusinessProfileRoute: typeof AnalyticsBusinessProfileRoute
   AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
   AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
+  ResourcesPromptsRoute: typeof ResourcesPromptsRoute
+  ResourcesSopsRoute: typeof ResourcesSopsRoute
+  ResourcesTemplatesRoute: typeof ResourcesTemplatesRoute
   ScoutTeamScoutIdRoute: typeof ScoutTeamScoutIdRoute
   SeoSuiteToolIdRoute: typeof SeoSuiteToolIdRoute
+  SitesSiteIdRoute: typeof SitesSiteIdRoute
   AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   ScoutTeamIndexRoute: typeof ScoutTeamIndexRoute
   SeoSuiteIndexRoute: typeof SeoSuiteIndexRoute
@@ -432,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sites/$siteId': {
+      id: '/sites/$siteId'
+      path: '/sites/$siteId'
+      fullPath: '/sites/$siteId'
+      preLoaderRoute: typeof SitesSiteIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/seo-suite/$toolId': {
       id: '/seo-suite/$toolId'
       path: '/seo-suite/$toolId'
@@ -444,6 +503,27 @@ declare module '@tanstack/react-router' {
       path: '/scout-team/$scoutId'
       fullPath: '/scout-team/$scoutId'
       preLoaderRoute: typeof ScoutTeamScoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/templates': {
+      id: '/resources/templates'
+      path: '/resources/templates'
+      fullPath: '/resources/templates'
+      preLoaderRoute: typeof ResourcesTemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/sops': {
+      id: '/resources/sops'
+      path: '/resources/sops'
+      fullPath: '/resources/sops'
+      preLoaderRoute: typeof ResourcesSopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/prompts': {
+      id: '/resources/prompts'
+      path: '/resources/prompts'
+      fullPath: '/resources/prompts'
+      preLoaderRoute: typeof ResourcesPromptsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics/search-console': {
@@ -495,8 +575,12 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsBusinessProfileRoute: AnalyticsBusinessProfileRoute,
   AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
   AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
+  ResourcesPromptsRoute: ResourcesPromptsRoute,
+  ResourcesSopsRoute: ResourcesSopsRoute,
+  ResourcesTemplatesRoute: ResourcesTemplatesRoute,
   ScoutTeamScoutIdRoute: ScoutTeamScoutIdRoute,
   SeoSuiteToolIdRoute: SeoSuiteToolIdRoute,
+  SitesSiteIdRoute: SitesSiteIdRoute,
   AnalyticsIndexRoute: AnalyticsIndexRoute,
   ScoutTeamIndexRoute: ScoutTeamIndexRoute,
   SeoSuiteIndexRoute: SeoSuiteIndexRoute,
