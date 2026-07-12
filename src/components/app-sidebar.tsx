@@ -62,38 +62,51 @@ type NavItem = {
   badge?: string;
 };
 
+// Command — daily "what's happening" surfaces
 const workspaceItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: Activity },
   { title: "Agency Health", url: "/agency-health", icon: ShieldCheck, badge: "8" },
+  { title: "Alert Manager", url: "/alerts", icon: Bell, badge: "3" },
+  { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
+];
+
+// Agents — config, sub-agents, skills, tool integrations, orchestration
+const agentItems: NavItem[] = [
   { title: "Agents", url: "/", icon: Zap, badge: "12" },
+  { title: "Build Agent", url: "/build-agent", icon: Hammer },
+  { title: "Assistant", url: "/assistant", icon: Bot },
   { title: "Assign Tasks", url: "/assign-tasks", icon: ClipboardList },
   { title: "Automation", url: "/automation", icon: Workflow },
-  { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Alert Manager", url: "/alerts", icon: Bell, badge: "3" },
 ];
 
 const scouts: { id: string; title: string; icon: LucideIcon }[] = [
+  { id: "local", title: "Local Scout · Dubai", icon: MapPin },
   { id: "keyword", title: "Keyword Scout", icon: Search },
-  { id: "content", title: "Content Scout", icon: FileText },
-  { id: "design", title: "Designing Scout", icon: Palette },
-  { id: "local", title: "Local Scout", icon: MapPin },
   { id: "competitor", title: "Competitor Scout", icon: Target },
+  { id: "content", title: "Content Scout", icon: FileText },
   { id: "audit", title: "Audit Scout", icon: ClipboardCheck },
   { id: "technical", title: "Technical Scout", icon: Wrench },
+  { id: "design", title: "Designing Scout", icon: Palette },
 ];
 
-const githubItems: NavItem[] = [
-  { title: "Repositories", url: "/github/repos", icon: Github },
-  { title: "Deployments", url: "/github/deployments", icon: Cloud },
-  { title: "SEO Sync", url: "/github/sync", icon: Radar },
+// Intelligence — analysis, QA, logs
+const intelligenceItems: NavItem[] = [
+  { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "QA Suite", url: "/qa-suite", icon: TestTube2 },
+  { title: "Logs", url: "/logs", icon: ScrollText },
+];
+
+// Integrations — external systems this console plugs into
+const integrationItems: (NavItem & { soon?: boolean })[] = [
+  { title: "Connected Sites", url: "/connected-sites", icon: Cloud },
+  { title: "Lovable Cloud", url: "/integrations/lovable", icon: Sparkles, soon: true },
+  { title: "GHL (GoHighLevel)", url: "/integrations/ghl", icon: Rocket, soon: true },
+  { title: "GitHub Repos", url: "/github/repos", icon: Github, soon: true },
+  { title: "Deployments", url: "/github/deployments", icon: Cloud, soon: true },
+  { title: "SEO Sync", url: "/github/sync", icon: Radar, soon: true },
 ];
 
 const systemItems: NavItem[] = [
-  { title: "Assistant", url: "/assistant", icon: Bot },
-  { title: "Build Agent", url: "/build-agent", icon: Hammer },
-  { title: "QA Suite", url: "/qa-suite", icon: TestTube2 },
-  { title: "Logs", url: "/logs", icon: ScrollText },
   { title: "Settings", url: "/settings", icon: SlidersHorizontal },
 ];
 
@@ -109,7 +122,9 @@ export function AppSidebar() {
 
   // Scout Team, SEO Suite always open by default so subcategories stay visible
   const [scoutOpen, setScoutOpen] = useState(true);
-  const [githubOpen, setGithubOpen] = useState(false);
+  const [agentsOpen, setAgentsOpen] = useState(true);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(true);
+  const [integrationsOpen, setIntegrationsOpen] = useState(false);
   const [seoOpen, setSeoOpen] = useState(true);
   const [systemOpen, setSystemOpen] = useState(true);
 
@@ -173,7 +188,7 @@ export function AppSidebar() {
         <SidebarGroup>
           {!collapsed && (
             <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] text-cyan-200">
-              Workspace
+              Command
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
@@ -221,6 +236,59 @@ export function AppSidebar() {
               })}
             </SidebarMenu>
           </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Agents — config, sub-agents, skills, tools */}
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
+              <button
+                type="button"
+                onClick={() => setAgentsOpen((v) => !v)}
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Zap className="h-3 w-3" />
+                  Agents
+                </span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${agentsOpen ? "" : "-rotate-90"}`} />
+              </button>
+            </SidebarGroupLabel>
+          )}
+          {(!collapsed && agentsOpen) || collapsed ? (
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {agentItems.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        className={
+                          active
+                            ? "relative bg-cyan-400 text-slate-950 font-semibold shadow-[0_0_20px_rgba(34,211,238,0.45)] hover:bg-cyan-300 hover:text-slate-950 data-[active=true]:bg-cyan-400 data-[active=true]:text-slate-950 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-slate-950"
+                            : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                        }
+                      >
+                        <Link to={item.url} className="flex items-center gap-2.5">
+                          <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-slate-950" : "text-slate-400"}`} />
+                          {!collapsed && (
+                            <>
+                              <span className={`flex-1 truncate text-[13px] ${active ? "text-slate-950 font-semibold" : ""}`}>{item.title}</span>
+                              {item.badge && (
+                                <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${active ? "bg-slate-950 text-cyan-200" : "bg-slate-800 text-slate-200 ring-1 ring-slate-700"}`}>{item.badge}</span>
+                              )}
+                            </>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          ) : null}
         </SidebarGroup>
 
         {/* Scout Team */}
@@ -401,45 +469,114 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* GitHub Cloud SEO */}
+        {/* Intelligence — analysis, QA, logs */}
         <SidebarGroup>
           {!collapsed && (
             <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
               <button
                 type="button"
-                onClick={() => setGithubOpen((v) => !v)}
+                onClick={() => setIntelligenceOpen((v) => !v)}
                 className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <Github className="h-3 w-3" />
-                  GitHub Cloud SEO
+                  <BarChart3 className="h-3 w-3" />
+                  Intelligence
                 </span>
-                <ChevronDown
-                  className={`h-3 w-3 transition-transform ${githubOpen ? "" : "-rotate-90"}`}
-                />
+                <ChevronDown className={`h-3 w-3 transition-transform ${intelligenceOpen ? "" : "-rotate-90"}`} />
               </button>
             </SidebarGroupLabel>
           )}
-          {(!collapsed && githubOpen) || collapsed ? (
+          {(!collapsed && intelligenceOpen) || collapsed ? (
             <SidebarGroupContent>
               <SidebarMenu>
-                {githubItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      className="text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
-                    >
-                      <item.icon className="h-4 w-4 text-slate-500" />
+                {intelligenceItems.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        className={
+                          active
+                            ? "relative bg-cyan-500/20 text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500"
+                            : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                        }
+                      >
+                        <Link to={item.url} className="flex items-center gap-2.5">
+                          <item.icon className={`h-4 w-4 ${active ? "text-cyan-200" : "text-slate-400"}`} />
+                          {!collapsed && <span className="truncate text-[13px]">{item.title}</span>}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          ) : null}
+        </SidebarGroup>
+
+        {/* Integrations — Lovable, GHL, GitHub, Connected Sites */}
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
+              <button
+                type="button"
+                onClick={() => setIntegrationsOpen((v) => !v)}
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Cloud className="h-3 w-3" />
+                  Integrations
+                </span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${integrationsOpen ? "" : "-rotate-90"}`} />
+              </button>
+            </SidebarGroupLabel>
+          )}
+          {(!collapsed && integrationsOpen) || collapsed ? (
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {integrationItems.map((item) => {
+                  const isRealRoute = !item.soon;
+                  const active = isRealRoute && isActive(item.url);
+                  const content = (
+                    <>
+                      <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-cyan-200" : "text-slate-500"}`} />
                       {!collapsed && (
                         <>
                           <span className="flex-1 truncate text-[13px]">{item.title}</span>
-                          <span className="rounded-md border border-slate-700 bg-slate-900 px-1.5 py-px text-[9px] uppercase tracking-wider text-slate-500">
-                            Soon
-                          </span>
+                          {item.soon && (
+                            <span className="rounded-md border border-slate-700 bg-slate-900 px-1.5 py-px text-[9px] uppercase tracking-wider text-slate-500">
+                              Soon
+                            </span>
+                          )}
                         </>
                       )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                    </>
+                  );
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      {isRealRoute ? (
+                        <SidebarMenuButton
+                          asChild
+                          isActive={active}
+                          className={
+                            active
+                              ? "bg-cyan-500/20 text-white font-medium ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white"
+                              : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                          }
+                        >
+                          <Link to={item.url} className="flex items-center gap-2.5">
+                            {content}
+                          </Link>
+                        </SidebarMenuButton>
+                      ) : (
+                        <SidebarMenuButton className="text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100">
+                          {content}
+                        </SidebarMenuButton>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           ) : null}
