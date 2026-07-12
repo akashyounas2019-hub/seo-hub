@@ -91,6 +91,8 @@ const CONNECTOR_CLASSES: { left: string; right: string }[] = [
 function Index() {
   const [open, setOpen] = useState<string | null>("onpage");
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [showAdd, setShowAdd] = useState(false);
+  const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -101,6 +103,11 @@ function Index() {
     }, 200);
     return () => clearTimeout(t);
   }, [open]);
+
+  const totalSubs = EXPERTS.reduce((a, e) => a + e.subs.length, 0);
+  const totalAgents = 1 /* leader */ + EXPERTS.length + totalSubs + customAgents.length;
+  const working = Math.round(totalAgents * 0.72);
+  const offline = totalAgents - working;
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200 relative overflow-hidden">
@@ -120,54 +127,103 @@ function Index() {
 
       <div className="relative mx-auto max-w-7xl px-6 py-10">
         {/* Header */}
-        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
+        <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-slate-900/60 ring-1 ring-cyan-400/30 shadow-[0_0_30px_rgba(34,211,238,0.35)]">
               <img src={agentBot} alt="" className="h-full w-full object-contain" loading="lazy" width={512} height={512} />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-semibold tracking-tight text-white">
-                AKS Agent Console
-              </h1>
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                Fleet Control
+              </div>
+              <h1 className="truncate text-xl font-semibold tracking-tight text-white">Agents</h1>
               <p className="truncate text-xs text-slate-400">
-                Hierarchical SEO Agent Orchestration
+                Orchestrate the AKS SEO agent hierarchy
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
-            </span>
-            <span className="text-cyan-200">All agents online</span>
-          </div>
         </header>
 
-        {/* Leader */}
-        <section className="mt-12 flex flex-col items-center">
-          <div className="relative">
-            <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
-            <div className="relative flex items-center gap-4 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-6 py-5 backdrop-blur">
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
-                <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
+        {/* Summary cards */}
+        <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {[
+            { k: "Total Agents", v: totalAgents, sub: "in fleet", a: "from-cyan-400 to-blue-500", i: Users },
+            { k: "Working", v: working, sub: "active jobs", a: "from-emerald-400 to-teal-500", i: Zap, pulse: true },
+            { k: "Offline", v: offline, sub: "idle / paused", a: "from-rose-400 to-orange-500", i: PowerOff },
+          ].map((s) => (
+            <div key={s.k} className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+              <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${s.a}`} />
+              <div className="flex items-start justify-between">
+                <div className={`inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${s.a} text-slate-950 shadow`}>
+                  <s.i className="h-4 w-4" />
+                </div>
+                {s.pulse && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                  </span>
+                )}
               </div>
-              <div>
-                <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
-                  Main Agent
+              <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-500">{s.k}</div>
+              <div className="mt-0.5 flex items-baseline gap-1.5">
+                <span className="text-2xl font-semibold tabular-nums text-white">{s.v}</span>
+                <span className="text-[11px] text-slate-500">{s.sub}</span>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* Leader + horizontal actions */}
+        <section className="mt-8 flex flex-col items-center">
+          <div className="relative w-full">
+            <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
+            <div className="relative flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 backdrop-blur">
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
+                  <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
                 </div>
-                <div className="text-xl font-semibold text-white">
-                  AKS SEO Team Leader
+                <div className="min-w-0">
+                  <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                    Main Agent
+                  </div>
+                  <div className="truncate text-lg font-semibold text-white">AKS SEO Team Leader</div>
+                  <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    </span>
+                    All agents online
+                  </div>
                 </div>
-                <div className="text-xs text-slate-400">
-                  Orchestrates 5 experts · 20 sub-agents
-                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setShowAdd(true)}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-2 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:brightness-110"
+                >
+                  <UserPlus className="h-3.5 w-3.5" /> Add Agent
+                </button>
+                <Link
+                  to="/automation"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-400/20"
+                >
+                  <ClipboardList className="h-3.5 w-3.5" /> Assign Job
+                </Link>
+                <Link
+                  to="/automation"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-[12px] font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-white"
+                >
+                  <Sparkles className="h-3.5 w-3.5" /> New Job
+                </Link>
               </div>
             </div>
           </div>
 
           {/* leader trunk drops down into the connector row of the grid */}
-          <div className="mx-auto mt-2 h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+          <div className="mx-auto mt-4 h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
         </section>
+
 
         {/* Experts grid */}
         <section className="grid grid-cols-1 gap-x-5 gap-y-0 sm:grid-cols-2 lg:grid-cols-5">
