@@ -451,6 +451,7 @@ function AutomationSuggestions() {
               <div className="flex items-center gap-2 md:flex-col md:items-end md:gap-1.5">
                 <div className="text-[11px] text-slate-500 md:text-right">{a.nextRun}</div>
                 <button
+                  onClick={() => toast.success(`Queued "${a.title}" — ${a.agent} scheduled ${a.cadence.toLowerCase()}`)}
                   className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-200 hover:bg-cyan-400/20"
                 >
                   <PlayCircle className="h-3.5 w-3.5" /> Automate
