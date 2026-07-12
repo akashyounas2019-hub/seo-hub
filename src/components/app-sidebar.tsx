@@ -62,38 +62,51 @@ type NavItem = {
   badge?: string;
 };
 
+// Command — daily "what's happening" surfaces
 const workspaceItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: Activity },
   { title: "Agency Health", url: "/agency-health", icon: ShieldCheck, badge: "8" },
+  { title: "Alert Manager", url: "/alerts", icon: Bell, badge: "3" },
+  { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
+];
+
+// Agents — config, sub-agents, skills, tool integrations, orchestration
+const agentItems: NavItem[] = [
   { title: "Agents", url: "/", icon: Zap, badge: "12" },
+  { title: "Build Agent", url: "/build-agent", icon: Hammer },
+  { title: "Assistant", url: "/assistant", icon: Bot },
   { title: "Assign Tasks", url: "/assign-tasks", icon: ClipboardList },
   { title: "Automation", url: "/automation", icon: Workflow },
-  { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Alert Manager", url: "/alerts", icon: Bell, badge: "3" },
 ];
 
 const scouts: { id: string; title: string; icon: LucideIcon }[] = [
+  { id: "local", title: "Local Scout · Dubai", icon: MapPin },
   { id: "keyword", title: "Keyword Scout", icon: Search },
-  { id: "content", title: "Content Scout", icon: FileText },
-  { id: "design", title: "Designing Scout", icon: Palette },
-  { id: "local", title: "Local Scout", icon: MapPin },
   { id: "competitor", title: "Competitor Scout", icon: Target },
+  { id: "content", title: "Content Scout", icon: FileText },
   { id: "audit", title: "Audit Scout", icon: ClipboardCheck },
   { id: "technical", title: "Technical Scout", icon: Wrench },
+  { id: "design", title: "Designing Scout", icon: Palette },
 ];
 
-const githubItems: NavItem[] = [
-  { title: "Repositories", url: "/github/repos", icon: Github },
-  { title: "Deployments", url: "/github/deployments", icon: Cloud },
-  { title: "SEO Sync", url: "/github/sync", icon: Radar },
+// Intelligence — analysis, QA, logs
+const intelligenceItems: NavItem[] = [
+  { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "QA Suite", url: "/qa-suite", icon: TestTube2 },
+  { title: "Logs", url: "/logs", icon: ScrollText },
+];
+
+// Integrations — external systems this console plugs into
+const integrationItems: (NavItem & { soon?: boolean })[] = [
+  { title: "Connected Sites", url: "/connected-sites", icon: Cloud },
+  { title: "Lovable Cloud", url: "/integrations/lovable", icon: Sparkles, soon: true },
+  { title: "GHL (GoHighLevel)", url: "/integrations/ghl", icon: Rocket, soon: true },
+  { title: "GitHub Repos", url: "/github/repos", icon: Github, soon: true },
+  { title: "Deployments", url: "/github/deployments", icon: Cloud, soon: true },
+  { title: "SEO Sync", url: "/github/sync", icon: Radar, soon: true },
 ];
 
 const systemItems: NavItem[] = [
-  { title: "Assistant", url: "/assistant", icon: Bot },
-  { title: "Build Agent", url: "/build-agent", icon: Hammer },
-  { title: "QA Suite", url: "/qa-suite", icon: TestTube2 },
-  { title: "Logs", url: "/logs", icon: ScrollText },
   { title: "Settings", url: "/settings", icon: SlidersHorizontal },
 ];
 
