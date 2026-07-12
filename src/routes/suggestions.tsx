@@ -242,9 +242,42 @@ function SuggestionsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800">
-              <Filter className="h-4 w-4" /> Filter
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setFilterOpen((v) => !v)}
+                className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition ${
+                  impactFilter !== "all" || filterOpen
+                    ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-100"
+                    : "border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800"
+                }`}
+              >
+                <Filter className="h-4 w-4" /> Filter
+                {impactFilter !== "all" && (
+                  <span className="ml-1 rounded-full bg-cyan-400/25 px-1.5 text-[10px] font-semibold text-cyan-100">{impactFilter}</span>
+                )}
+              </button>
+              {filterOpen && (
+                <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-52 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/95 shadow-xl backdrop-blur">
+                  <div className="border-b border-slate-800 px-3 py-2 text-[10px] uppercase tracking-wider text-slate-500">Impact</div>
+                  {(["all", "High", "Medium", "Low"] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => {
+                        setImpactFilter(v);
+                        setFilterOpen(false);
+                        if (v !== "all") toast.success(`Filtered by ${v} impact`);
+                      }}
+                      className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs transition ${
+                        impactFilter === v ? "bg-cyan-400/10 text-cyan-100" : "text-slate-300 hover:bg-slate-900"
+                      }`}
+                    >
+                      <span>{v === "all" ? "All impacts" : `${v} impact`}</span>
+                      {impactFilter === v && <span className="text-cyan-300">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               type="button"
               onClick={handleGenerate}
