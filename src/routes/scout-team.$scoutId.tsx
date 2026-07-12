@@ -256,9 +256,9 @@ function ScoutProfilePage() {
               <BlogWriterWizard accent={scout.accent} />
             </div>
           ) : (
-          <div key={tab.id} className="grid gap-4 p-5 lg:grid-cols-3" style={{ animation: "fadeInUp .35s ease both" }}>
-            {/* Primary panel */}
-            <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+          <div key={tab.id} className="p-5 space-y-4" style={{ animation: "fadeInUp .35s ease both" }}>
+            {/* Primary workspace — full width */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">
@@ -270,7 +270,7 @@ function ScoutProfilePage() {
                     </span>
                     <h2 className="text-lg font-semibold text-white">{tab.label}</h2>
                   </div>
-                  <p className="mt-2 max-w-xl text-sm text-slate-400">{tab.summary}</p>
+                  <p className="mt-2 max-w-2xl text-sm text-slate-400">{tab.summary}</p>
                 </div>
                 <button className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-200 hover:bg-cyan-400/20">
                   <Sparkles className="h-3.5 w-3.5" /> Ask scout
@@ -295,7 +295,7 @@ function ScoutProfilePage() {
                 ))}
               </div>
 
-              {/* Signal chart (decorative) */}
+              {/* Signal chart */}
               <div className="mt-5 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/50 p-4">
                 <div className="mb-3 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-500">
                   <span>Signal · last 24h</span>
@@ -303,9 +303,14 @@ function ScoutProfilePage() {
                 </div>
                 <SignalChart accent={scout.accent} seed={scout.id + tab.id} />
               </div>
+
+              {/* Keyword Scout advanced features */}
+              {scout.id === "keyword" && (
+                <KeywordScoutAdvanced tabId={tab.id} accent={scout.accent} />
+              )}
             </div>
 
-            {/* Activity feed */}
+            {/* Activity feed — full width, below tabs */}
             <aside className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -322,14 +327,14 @@ function ScoutProfilePage() {
                 </span>
               </div>
 
-              <ol className="mt-4 space-y-3">
+              <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {tab.activity.map((a, i) => (
-                  <li key={i} className="relative pl-5">
-                    <span className={`absolute left-0 top-1.5 h-2 w-2 rounded-full bg-gradient-to-br ${scout.accent}`} />
-                    <div className="text-[11px] uppercase tracking-wider text-slate-500">
+                  <li key={i} className="relative rounded-lg border border-slate-800 bg-slate-950/50 p-3 pl-5">
+                    <span className={`absolute left-2 top-3.5 h-2 w-2 rounded-full bg-gradient-to-br ${scout.accent}`} />
+                    <div className="text-[10px] uppercase tracking-wider text-slate-500">
                       {a.time} ago
                     </div>
-                    <div className="text-sm text-slate-200">{a.text}</div>
+                    <div className="mt-1 text-sm text-slate-200">{a.text}</div>
                   </li>
                 ))}
               </ol>
