@@ -107,7 +107,7 @@ export function AppSidebar() {
   const [scoutOpen, setScoutOpen] = useState(true);
   const [githubOpen, setGithubOpen] = useState(false);
   const [seoOpen, setSeoOpen] = useState(true);
-  const [systemOpen, setSystemOpen] = useState(currentPath.startsWith("/settings"));
+  const [systemOpen, setSystemOpen] = useState(true);
 
   return (
     <Sidebar
