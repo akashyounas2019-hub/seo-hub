@@ -11,6 +11,14 @@ import {
   PlayCircle,
   Settings2,
   Download,
+  Upload,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Languages,
+  ListChecks,
+  Globe2,
+  BarChart3,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import { SCOUTS, getScout, type Scout } from "@/lib/scouts";
