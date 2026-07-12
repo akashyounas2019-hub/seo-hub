@@ -191,6 +191,12 @@
   }
 }
 
+/* Prevent tables and wide content from breaking layout */
+@media (max-width: 768px) {
+  table { display: block; overflow-x: auto; white-space: nowrap; }
+}
+
+
 /* Custom scrollbar for the sidebar */
 [data-sidebar="sidebar"],
 [data-sidebar="content"] {
