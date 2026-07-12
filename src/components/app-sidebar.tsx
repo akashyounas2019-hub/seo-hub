@@ -345,8 +345,8 @@ export function AppSidebar() {
                             isActive={active}
                             className={
                               active
-                                ? "bg-cyan-500/10 text-cyan-100 data-[active=true]:bg-cyan-500/10 data-[active=true]:text-cyan-100"
-                                : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                                ? "bg-cyan-500/20 text-white font-medium ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white"
+                                : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                             }
                           >
                             <Link
@@ -355,7 +355,7 @@ export function AppSidebar() {
                               className="flex items-center gap-2"
                             >
                               <Icon
-                                className={`h-3.5 w-3.5 ${active ? "text-cyan-300" : "text-slate-500"}`}
+                                className={`h-3.5 w-3.5 ${active ? "text-cyan-200" : "text-slate-400"}`}
                               />
                               <span className="truncate text-[12px]">{t.title}</span>
                             </Link>
