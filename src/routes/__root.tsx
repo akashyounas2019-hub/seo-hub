@@ -14,7 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "sonner";
-import { Globe, Search, BarChart3, Zap, Link2, CheckCircle2, AlertCircle, ExternalLink, X } from "lucide-react";
+import { Globe, Search, BarChart3, Zap, Link2, CheckCircle2, AlertCircle, ExternalLink, X, BookOpen, MessageSquareQuote, LayoutTemplate, ChevronDown, FolderOpen } from "lucide-react";
 
 function NotFoundComponent() {
   return (
@@ -147,6 +147,8 @@ function RootComponent() {
                   Connected Sites
                   <span className="ml-1 rounded-full bg-cyan-400/20 px-1.5 text-[10px] font-semibold text-cyan-100">{CONNECTED_SITES.length}</span>
                 </Link>
+
+                <ResourcesMenu />
 
                 <button className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-2.5 sm:px-3 py-1 text-[11px] font-semibold text-slate-950 shadow-[0_0_16px_rgba(34,211,238,0.35)] hover:brightness-110 shrink-0">
                   <span className="sm:hidden">+ New</span>
