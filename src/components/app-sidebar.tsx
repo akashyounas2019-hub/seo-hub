@@ -398,7 +398,7 @@ export function AppSidebar() {
                               className="flex items-center gap-2"
                             >
                               <Icon
-                                className={`h-3.5 w-3.5 ${active ? "text-cyan-200" : "text-slate-400"}`}
+                                className={`h-3.5 w-3.5 shrink-0 ${active ? "text-cyan-200" : "text-cyan-300/90"}`}
                               />
                               <span className="truncate text-[12px]">{t.title}</span>
                             </Link>
