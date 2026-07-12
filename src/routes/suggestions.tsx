@@ -239,8 +239,8 @@ function SuggestionsPage() {
             value={high}
             sub="Ship these first"
             percent={total ? (high / total) * 100 : 0}
-            from="#f87171"
-            to="#ec4899"
+            from="#fbbf24"
+            to="#f59e0b"
             icon={TrendingUp}
           />
           <KpiCard
