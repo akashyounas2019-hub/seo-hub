@@ -24,6 +24,7 @@ import {
   Wrench,
   Command,
   Rocket,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
@@ -283,6 +284,44 @@ export function AppSidebar() {
                     })}
                   </SidebarMenuSub>
                 )}
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Team */}
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] text-cyan-300/60">
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="h-3 w-3" /> Team
+              </span>
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={currentPath === "/team"}
+                  className={
+                    currentPath === "/team"
+                      ? "relative bg-cyan-400 text-slate-950 font-semibold data-[active=true]:bg-cyan-400 data-[active=true]:text-slate-950 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-slate-950"
+                      : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                  }
+                >
+                  <Link to="/team" className="flex items-center gap-2.5">
+                    <Users className={`h-4 w-4 ${currentPath === "/team" ? "text-slate-950" : "text-cyan-300"}`} />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 text-[13px]">SEO Team Roster</span>
+                        <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-1.5 py-px text-[9px] uppercase tracking-wider text-cyan-200">
+                          8
+                        </span>
+                      </>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

@@ -11,6 +11,14 @@ import {
   PlayCircle,
   Settings2,
   Download,
+  Upload,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Languages,
+  ListChecks,
+  Globe2,
+  BarChart3,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import { SCOUTS, getScout, type Scout } from "@/lib/scouts";
@@ -248,9 +256,9 @@ function ScoutProfilePage() {
               <BlogWriterWizard accent={scout.accent} />
             </div>
           ) : (
-          <div key={tab.id} className="grid gap-4 p-5 lg:grid-cols-3" style={{ animation: "fadeInUp .35s ease both" }}>
-            {/* Primary panel */}
-            <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+          <div key={tab.id} className="p-5 space-y-4" style={{ animation: "fadeInUp .35s ease both" }}>
+            {/* Primary workspace — full width */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">
@@ -262,7 +270,7 @@ function ScoutProfilePage() {
                     </span>
                     <h2 className="text-lg font-semibold text-white">{tab.label}</h2>
                   </div>
-                  <p className="mt-2 max-w-xl text-sm text-slate-400">{tab.summary}</p>
+                  <p className="mt-2 max-w-2xl text-sm text-slate-400">{tab.summary}</p>
                 </div>
                 <button className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-200 hover:bg-cyan-400/20">
                   <Sparkles className="h-3.5 w-3.5" /> Ask scout
@@ -287,7 +295,7 @@ function ScoutProfilePage() {
                 ))}
               </div>
 
-              {/* Signal chart (decorative) */}
+              {/* Signal chart */}
               <div className="mt-5 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/50 p-4">
                 <div className="mb-3 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-500">
                   <span>Signal · last 24h</span>
@@ -295,9 +303,14 @@ function ScoutProfilePage() {
                 </div>
                 <SignalChart accent={scout.accent} seed={scout.id + tab.id} />
               </div>
+
+              {/* Keyword Scout advanced features */}
+              {scout.id === "keyword" && (
+                <KeywordScoutAdvanced tabId={tab.id} accent={scout.accent} />
+              )}
             </div>
 
-            {/* Activity feed */}
+            {/* Activity feed — full width, below tabs */}
             <aside className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -314,14 +327,14 @@ function ScoutProfilePage() {
                 </span>
               </div>
 
-              <ol className="mt-4 space-y-3">
+              <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {tab.activity.map((a, i) => (
-                  <li key={i} className="relative pl-5">
-                    <span className={`absolute left-0 top-1.5 h-2 w-2 rounded-full bg-gradient-to-br ${scout.accent}`} />
-                    <div className="text-[11px] uppercase tracking-wider text-slate-500">
+                  <li key={i} className="relative rounded-lg border border-slate-800 bg-slate-950/50 p-3 pl-5">
+                    <span className={`absolute left-2 top-3.5 h-2 w-2 rounded-full bg-gradient-to-br ${scout.accent}`} />
+                    <div className="text-[10px] uppercase tracking-wider text-slate-500">
                       {a.time} ago
                     </div>
-                    <div className="text-sm text-slate-200">{a.text}</div>
+                    <div className="mt-1 text-sm text-slate-200">{a.text}</div>
                   </li>
                 ))}
               </ol>
@@ -450,6 +463,261 @@ function SignalChart({ accent, seed }: { accent: string; seed: string }) {
       />
       {/* accent tag for compiler awareness (kept out of DOM) */}
       <title>{accent}</title>
+    </svg>
+  );
+}
+
+/* ---------------- Keyword Scout Advanced ---------------- */
+
+type RankRow = {
+  kw: string;
+  vol: number;
+  prev: number;
+  curr: number;
+  trend: number[];
+};
+
+const EN_ROWS: RankRow[] = [
+  { kw: "office movers dubai", vol: 8100, prev: 12, curr: 6, trend: [14, 13, 12, 10, 8, 7, 6] },
+  { kw: "villa relocation UAE", vol: 3600, prev: 22, curr: 18, trend: [25, 24, 22, 21, 20, 19, 18] },
+  { kw: "packing services marina", vol: 1900, prev: 8, curr: 4, trend: [10, 9, 8, 6, 5, 5, 4] },
+  { kw: "corporate move dubai", vol: 2700, prev: 15, curr: 15, trend: [16, 15, 15, 15, 15, 15, 15] },
+  { kw: "storage dubai monthly", vol: 5400, prev: 6, curr: 9, trend: [5, 5, 6, 7, 8, 9, 9] },
+];
+
+const AR_ROWS: RankRow[] = [
+  { kw: "نقل اثاث دبي", vol: 12100, prev: 9, curr: 5, trend: [11, 10, 9, 8, 7, 6, 5] },
+  { kw: "شركة نقل عفش دبي مارينا", vol: 4400, prev: 18, curr: 12, trend: [20, 19, 18, 15, 14, 13, 12] },
+  { kw: "تخزين اثاث الامارات", vol: 2900, prev: 24, curr: 20, trend: [28, 26, 24, 23, 22, 21, 20] },
+  { kw: "افضل شركة نقل عفش", vol: 8800, prev: 11, curr: 11, trend: [12, 12, 11, 11, 11, 11, 11] },
+  { kw: "نقل مكاتب دبي", vol: 3300, prev: 14, curr: 8, trend: [17, 16, 14, 12, 10, 9, 8] },
+];
+
+function KeywordScoutAdvanced({ tabId, accent }: { tabId: string; accent: string }) {
+  if (tabId === "ranker") {
+    return <RankTracker rows={EN_ROWS} accent={accent} title="Rank Tracker · EN market" />;
+  }
+  if (tabId === "researcher") {
+    return <ResearchGrid accent={accent} />;
+  }
+  if (tabId === "mapping" || tabId === "clustering" || tabId === "competitor-kw") {
+    return <KeywordLists accent={accent} />;
+  }
+  return null;
+}
+
+function ResearchGrid({ accent }: { accent: string }) {
+  const cards = [
+    { title: "Seed Explorer", desc: "Expand a seed into 500+ variants across intent buckets.", value: "1,284", label: "variants" },
+    { title: "Question Mining", desc: "PAA, forums, and 'People also search' harvested nightly.", value: "312", label: "questions" },
+    { title: "SERP Intent Split", desc: "Classify every keyword by info / nav / txn / local intent.", value: "58/42", label: "info · txn" },
+    { title: "Difficulty Grid", desc: "Live KD scores banded by winnability for this domain.", value: "312", label: "KD < 40" },
+    { title: "Localised Volume", desc: "UAE / KSA / EG / GCC volume side-by-side per keyword.", value: "7", label: "markets" },
+    { title: "Entity Extraction", desc: "Auto-tag entities, brands and neighbourhoods from copy.", value: "94%", label: "coverage" },
+  ];
+  return (
+    <div className="mt-6">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">Advanced research</div>
+          <div className="text-sm font-semibold text-white">Keyword intelligence modules</div>
+        </div>
+        <button className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] text-cyan-200 hover:bg-cyan-400/20">
+          <Sparkles className="h-3.5 w-3.5" /> New research run
+        </button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c) => (
+          <div key={c.title} className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60 p-4 transition hover:-translate-y-0.5 hover:border-cyan-400/40">
+            <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+            <div className="flex items-start justify-between">
+              <div className="text-sm font-semibold text-white">{c.title}</div>
+              <span className={`grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br ${accent}`}>
+                <BarChart3 className="h-3.5 w-3.5 text-slate-950" />
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">{c.desc}</p>
+            <div className="mt-3 flex items-baseline gap-1.5">
+              <span className="text-xl font-semibold text-white">{c.value}</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500">{c.label}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function KeywordLists({ accent }: { accent: string }) {
+  const lists = [
+    { name: "EN · Movers & Storage", kws: 428, updated: "2m", coverage: "82%" },
+    { name: "AR · نقل الاثاث دبي", kws: 312, updated: "6m", coverage: "74%", rtl: true },
+    { name: "Local · Marina + JLT", kws: 96, updated: "1h", coverage: "91%" },
+    { name: "Competitor Gaps", kws: 247, updated: "12m", coverage: "38%" },
+  ];
+  return (
+    <div className="mt-6">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">Keyword Lists</div>
+          <div className="text-sm font-semibold text-white">Curated lists ready for briefs & tracking</div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-2.5 py-1.5 text-[11px] text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
+            <Download className="h-3.5 w-3.5" /> Export CSV
+          </button>
+          <button className={`inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r ${accent} px-3 py-1.5 text-[11px] font-semibold text-slate-950 shadow hover:brightness-110`}>
+            <Upload className="h-3.5 w-3.5" /> Import CSV
+          </button>
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {lists.map((l) => (
+          <div key={l.name} className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+            <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+            <div className="flex items-center gap-1.5">
+              {l.rtl ? <Languages className="h-3.5 w-3.5 text-emerald-300" /> : <Globe2 className="h-3.5 w-3.5 text-cyan-300" />}
+              <div className="truncate text-sm font-semibold text-white" dir={l.rtl ? "rtl" : undefined}>{l.name}</div>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-md border border-slate-800 bg-slate-900/50 p-2">
+                <div className="text-[9px] uppercase text-slate-500">KWs</div>
+                <div className="text-sm font-semibold text-white">{l.kws}</div>
+              </div>
+              <div className="rounded-md border border-slate-800 bg-slate-900/50 p-2">
+                <div className="text-[9px] uppercase text-slate-500">Coverage</div>
+                <div className="text-sm font-semibold text-white">{l.coverage}</div>
+              </div>
+              <div className="rounded-md border border-slate-800 bg-slate-900/50 p-2">
+                <div className="text-[9px] uppercase text-slate-500">Updated</div>
+                <div className="text-sm font-semibold text-white">{l.updated}</div>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-1.5">
+              <button className="flex-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
+                Open
+              </button>
+              <button className="flex-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 text-[11px] text-cyan-200 hover:bg-cyan-400/20">
+                <ListChecks className="mx-auto h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Arabic tracking table */}
+      <div className="mt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.22em] text-emerald-300/80">
+              <span className="inline-flex items-center gap-1.5"><Languages className="h-3 w-3" /> Arabic Keyword Tracking</span>
+            </div>
+            <div className="text-sm font-semibold text-white">Live positions · AR market (UAE)</div>
+          </div>
+          <button className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-200 hover:bg-emerald-500/20">
+            <Upload className="h-3.5 w-3.5" /> Import AR CSV
+          </button>
+        </div>
+        <RankTable rows={AR_ROWS} accent={accent} rtl />
+      </div>
+    </div>
+  );
+}
+
+function RankTracker({ rows, accent, title }: { rows: RankRow[]; accent: string; title: string }) {
+  const totals = {
+    tracked: rows.length,
+    up: rows.filter((r) => r.curr < r.prev).length,
+    down: rows.filter((r) => r.curr > r.prev).length,
+    flat: rows.filter((r) => r.curr === r.prev).length,
+  };
+  return (
+    <div className="mt-6 space-y-4">
+      <div className="grid gap-3 sm:grid-cols-4">
+        {[
+          { k: "Tracked", v: totals.tracked, tone: "text-white" },
+          { k: "Movers up", v: totals.up, tone: "text-emerald-300" },
+          { k: "Movers down", v: totals.down, tone: "text-rose-300" },
+          { k: "Flat", v: totals.flat, tone: "text-slate-300" },
+        ].map((s) => (
+          <div key={s.k} className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+            <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+            <div className="text-[10px] uppercase tracking-wider text-slate-500">{s.k}</div>
+            <div className={`mt-1 text-2xl font-semibold ${s.tone}`}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-sm font-semibold text-white">{title}</div>
+          <div className="flex items-center gap-2">
+            <button className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-[11px] text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
+              <Download className="h-3.5 w-3.5" /> Export
+            </button>
+            <button className={`inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r ${accent} px-2.5 py-1 text-[11px] font-semibold text-slate-950 hover:brightness-110`}>
+              <Upload className="h-3.5 w-3.5" /> Import CSV
+            </button>
+          </div>
+        </div>
+        <RankTable rows={rows} accent={accent} />
+      </div>
+    </div>
+  );
+}
+
+function RankTable({ rows, accent, rtl }: { rows: RankRow[]; accent: string; rtl?: boolean }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60">
+      <div className="grid grid-cols-[minmax(180px,1.7fr)_repeat(4,1fr)_1.4fr] gap-2 border-b border-slate-800 bg-slate-900/40 px-3 py-2 text-[10px] uppercase tracking-wider text-slate-500">
+        <div>Keyword</div>
+        <div className="text-right">Volume</div>
+        <div className="text-right">Prev</div>
+        <div className="text-right">Curr</div>
+        <div className="text-right">Δ</div>
+        <div className="text-right">Trend · 7d</div>
+      </div>
+      <ul>
+        {rows.map((r) => {
+          const delta = r.prev - r.curr; // positive = improved
+          const Icon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
+          const tone = delta > 0 ? "text-emerald-300" : delta < 0 ? "text-rose-300" : "text-slate-400";
+          return (
+            <li key={r.kw} className="grid grid-cols-[minmax(180px,1.7fr)_repeat(4,1fr)_1.4fr] items-center gap-2 border-b border-slate-800/60 px-3 py-2.5 text-sm last:border-0 hover:bg-slate-900/40">
+              <div className="truncate text-slate-100" dir={rtl ? "rtl" : undefined}>{r.kw}</div>
+              <div className="text-right font-mono text-slate-300">{r.vol.toLocaleString()}</div>
+              <div className="text-right font-mono text-slate-400">{r.prev}</div>
+              <div className="text-right font-mono font-semibold text-white">{r.curr}</div>
+              <div className={`flex items-center justify-end gap-1 font-mono ${tone}`}>
+                <Icon className="h-3.5 w-3.5" />
+                {delta === 0 ? "0" : Math.abs(delta)}
+              </div>
+              <div className="flex justify-end">
+                <MiniSpark values={r.trend} accent={accent} />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function MiniSpark({ values, accent: _accent }: { values: number[]; accent: string }) {
+  const W = 96;
+  const H = 28;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = Math.max(1, max - min);
+  // rank: lower is better → invert
+  const pts = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * W;
+    const y = ((v - min) / range) * (H - 4) + 2;
+    return `${x},${y}`;
+  });
+  const d = "M " + pts.join(" L ");
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+      <path d={d} fill="none" stroke="rgba(34,211,238,0.9)" strokeWidth={1.4} strokeLinecap="round" />
     </svg>
   );
 }
