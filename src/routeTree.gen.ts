@@ -15,6 +15,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as QaSuiteRouteImport } from './routes/qa-suite'
 import { Route as LogsRouteImport } from './routes/logs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ConnectedSitesRouteImport } from './routes/connected-sites'
 import { Route as BuildAgentRouteImport } from './routes/build-agent'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AssistantRouteImport } from './routes/assistant'
@@ -60,6 +61,11 @@ const LogsRoute = LogsRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectedSitesRoute = ConnectedSitesRouteImport.update({
+  id: '/connected-sites',
+  path: '/connected-sites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BuildAgentRoute = BuildAgentRouteImport.update({
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
   '/build-agent': typeof BuildAgentRoute
+  '/connected-sites': typeof ConnectedSitesRoute
   '/dashboard': typeof DashboardRoute
   '/logs': typeof LogsRoute
   '/qa-suite': typeof QaSuiteRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
   '/build-agent': typeof BuildAgentRoute
+  '/connected-sites': typeof ConnectedSitesRoute
   '/dashboard': typeof DashboardRoute
   '/logs': typeof LogsRoute
   '/qa-suite': typeof QaSuiteRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
   '/build-agent': typeof BuildAgentRoute
+  '/connected-sites': typeof ConnectedSitesRoute
   '/dashboard': typeof DashboardRoute
   '/logs': typeof LogsRoute
   '/qa-suite': typeof QaSuiteRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/automation'
     | '/build-agent'
+    | '/connected-sites'
     | '/dashboard'
     | '/logs'
     | '/qa-suite'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/automation'
     | '/build-agent'
+    | '/connected-sites'
     | '/dashboard'
     | '/logs'
     | '/qa-suite'
@@ -276,6 +287,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/automation'
     | '/build-agent'
+    | '/connected-sites'
     | '/dashboard'
     | '/logs'
     | '/qa-suite'
@@ -301,6 +313,7 @@ export interface RootRouteChildren {
   AssistantRoute: typeof AssistantRoute
   AutomationRoute: typeof AutomationRoute
   BuildAgentRoute: typeof BuildAgentRoute
+  ConnectedSitesRoute: typeof ConnectedSitesRoute
   DashboardRoute: typeof DashboardRoute
   LogsRoute: typeof LogsRoute
   QaSuiteRoute: typeof QaSuiteRoute
@@ -360,6 +373,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connected-sites': {
+      id: '/connected-sites'
+      path: '/connected-sites'
+      fullPath: '/connected-sites'
+      preLoaderRoute: typeof ConnectedSitesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/build-agent': {
@@ -485,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssistantRoute: AssistantRoute,
   AutomationRoute: AutomationRoute,
   BuildAgentRoute: BuildAgentRoute,
+  ConnectedSitesRoute: ConnectedSitesRoute,
   DashboardRoute: DashboardRoute,
   LogsRoute: LogsRoute,
   QaSuiteRoute: QaSuiteRoute,
