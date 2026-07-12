@@ -831,6 +831,22 @@ function NewJobModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [when, setWhen] = useState("now");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!title.trim() || status === "saving") return;
+    setStatus("saving");
+    setError(null);
+    try {
+      await persist(JOBS_KEY, { title: title.trim(), description: desc.trim(), schedule: when });
+      setStatus("saved");
+      setTimeout(onClose, 700);
+    } catch (e) {
+      setStatus("error");
+      setError(e instanceof Error ? e.message : "Could not create job");
+    }
+  };
 
   return (
     <ModalShell
@@ -843,21 +859,34 @@ function NewJobModal({ onClose }: { onClose: () => void }) {
         <>
           <button
             onClick={onClose}
-            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800"
+            disabled={status === "saving"}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
-            disabled={!title.trim()}
-            onClick={onClose}
+            disabled={!title.trim() || status === "saving" || status === "saved"}
+            onClick={submit}
             className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Sparkles className="h-3.5 w-3.5" /> Create Job
+            {status === "saving" ? (
+              <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Creating…</>
+            ) : status === "saved" ? (
+              <><CheckCircle2 className="h-3.5 w-3.5" /> Created</>
+            ) : (
+              <><Sparkles className="h-3.5 w-3.5" /> Create Job</>
+            )}
           </button>
         </>
       }
     >
       <div className="space-y-4">
+        {status === "error" && (
+          <div className="flex items-start gap-2 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-200">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>{error ?? "Something went wrong. Please try again."}</span>
+          </div>
+        )}
         <div>
           <label className="text-[10px] uppercase tracking-wider text-slate-500">Job title</label>
           <input
