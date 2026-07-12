@@ -393,3 +393,81 @@ function Stat({
     </div>
   );
 }
+
+function ResourcesMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const items: { to: "/resources/sops" | "/resources/prompts" | "/resources/templates"; label: string; desc: string; icon: typeof BookOpen }[] = [
+    { to: "/resources/sops", label: "SOPs", desc: "Playbooks for repeatable ops", icon: BookOpen },
+    { to: "/resources/prompts", label: "Prompts", desc: "Reusable AI prompt library", icon: MessageSquareQuote },
+    { to: "/resources/templates", label: "Templates", desc: "Page & email skeletons", icon: LayoutTemplate },
+  ];
+
+  return (
+    <div className="relative shrink-0" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className={`hidden md:inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition ${
+          open
+            ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-100"
+            : "border-slate-700 bg-slate-900/60 text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+        }`}
+      >
+        <FolderOpen className="h-3 w-3" />
+        Resources
+        <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-[calc(100%+8px)] z-40 w-64 overflow-hidden rounded-2xl border border-cyan-500/25 bg-slate-950/95 shadow-[0_20px_60px_-15px_rgba(34,211,238,0.35)] backdrop-blur-xl"
+        >
+          <div className="h-1 w-full bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500" />
+          <div className="px-4 py-3 border-b border-slate-800/80">
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">Team knowledge</div>
+            <div className="text-sm font-semibold text-white">Resources</div>
+          </div>
+          <ul className="p-2">
+            {items.map((it) => {
+              const Icon = it.icon;
+              return (
+                <li key={it.to}>
+                  <Link
+                    to={it.to}
+                    onClick={() => setOpen(false)}
+                    className="flex items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-slate-900"
+                  >
+                    <span className="mt-0.5 grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-950">
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[12.5px] font-semibold text-white">{it.label}</span>
+                      <span className="block text-[11px] text-slate-400">{it.desc}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
