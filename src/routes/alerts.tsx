@@ -884,3 +884,69 @@ function suggestActions(alert: Alert): string[] {
       ];
   }
 }
+
+function AlertRulesModal({ onClose }: { onClose: () => void }) {
+  const [rules, setRules] = useState([
+    { id: "r1", name: "Local rank drop > 3 positions", enabled: true, channel: "Slack + Email" },
+    { id: "r2", name: "NAP inconsistency detected", enabled: true, channel: "Email" },
+    { id: "r3", name: "LCP regression > 1s", enabled: true, channel: "Slack" },
+    { id: "r4", name: "New review below 3★", enabled: true, channel: "Slack + WhatsApp" },
+    { id: "r5", name: "SSL expires in < 30 days", enabled: true, channel: "Email" },
+    { id: "r6", name: "Toxic backlink spike (>10 / 24h)", enabled: false, channel: "Email" },
+  ]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-800 bg-[#0a0d16] shadow-2xl"
+      >
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-400 to-blue-500" />
+        <div className="flex items-start justify-between border-b border-slate-800 p-5">
+          <div>
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">Notification routing</div>
+            <h2 className="mt-1 text-base font-semibold text-white">Alert Rules</h2>
+            <p className="mt-1 text-xs text-slate-400">Toggle which signals fire alerts and where they route.</p>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <ul className="max-h-[60vh] divide-y divide-slate-800 overflow-y-auto">
+          {rules.map((r) => (
+            <li key={r.id} className="flex items-center justify-between gap-3 px-5 py-3">
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-white">{r.name}</div>
+                <div className="mt-0.5 text-[11px] text-slate-500">Route: {r.channel}</div>
+              </div>
+              <button
+                onClick={() => {
+                  setRules((prev) => prev.map((x) => (x.id === r.id ? { ...x, enabled: !x.enabled } : x)));
+                  toast.success(`Rule ${r.enabled ? "disabled" : "enabled"}`);
+                }}
+                className={`relative h-5 w-9 shrink-0 rounded-full transition ${r.enabled ? "bg-cyan-400" : "bg-slate-700"}`}
+                aria-pressed={r.enabled}
+              >
+                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${r.enabled ? "left-4" : "left-0.5"}`} />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="flex items-center justify-end gap-2 border-t border-slate-800 p-4">
+          <button onClick={onClose} className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800">
+            Close
+          </button>
+          <button
+            onClick={() => {
+              toast.success("Alert rules saved");
+              onClose();
+            }}
+            className="rounded-md bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300"
+          >
+            Save changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
