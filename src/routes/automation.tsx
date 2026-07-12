@@ -523,7 +523,7 @@ function Modal({ children, onClose, title }: { children: React.ReactNode; onClos
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-slate-800 bg-slate-950 p-5 shadow-2xl"
+        className="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-950 p-5 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
