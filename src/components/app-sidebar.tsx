@@ -238,6 +238,59 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Agents — config, sub-agents, skills, tools */}
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
+              <button
+                type="button"
+                onClick={() => setAgentsOpen((v) => !v)}
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Zap className="h-3 w-3" />
+                  Agents
+                </span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${agentsOpen ? "" : "-rotate-90"}`} />
+              </button>
+            </SidebarGroupLabel>
+          )}
+          {(!collapsed && agentsOpen) || collapsed ? (
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {agentItems.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        className={
+                          active
+                            ? "relative bg-cyan-400 text-slate-950 font-semibold shadow-[0_0_20px_rgba(34,211,238,0.45)] hover:bg-cyan-300 hover:text-slate-950 data-[active=true]:bg-cyan-400 data-[active=true]:text-slate-950 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-slate-950"
+                            : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                        }
+                      >
+                        <Link to={item.url} className="flex items-center gap-2.5">
+                          <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-slate-950" : "text-slate-400"}`} />
+                          {!collapsed && (
+                            <>
+                              <span className={`flex-1 truncate text-[13px] ${active ? "text-slate-950 font-semibold" : ""}`}>{item.title}</span>
+                              {item.badge && (
+                                <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${active ? "bg-slate-950 text-cyan-200" : "bg-slate-800 text-slate-200 ring-1 ring-slate-700"}`}>{item.badge}</span>
+                              )}
+                            </>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          ) : null}
+        </SidebarGroup>
+
         {/* Scout Team */}
         <SidebarGroup>
           {!collapsed && (
