@@ -122,7 +122,9 @@ export function AppSidebar() {
 
   // Scout Team, SEO Suite always open by default so subcategories stay visible
   const [scoutOpen, setScoutOpen] = useState(true);
-  const [githubOpen, setGithubOpen] = useState(false);
+  const [agentsOpen, setAgentsOpen] = useState(true);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(true);
+  const [integrationsOpen, setIntegrationsOpen] = useState(false);
   const [seoOpen, setSeoOpen] = useState(true);
   const [systemOpen, setSystemOpen] = useState(true);
 
