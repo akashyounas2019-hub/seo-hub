@@ -138,7 +138,15 @@ function RootComponent() {
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.9)]" />
                   Agent active
                 </span>
-                <ConnectedSitesMenu />
+                <Link
+                  to="/connected-sites"
+                  className="hidden lg:inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-[11px] text-slate-300 shrink-0 transition hover:border-cyan-400/40 hover:text-cyan-200"
+                >
+                  <Globe className="h-3 w-3" />
+                  Connected Sites
+                  <span className="ml-1 rounded-full bg-cyan-400/20 px-1.5 text-[10px] font-semibold text-cyan-100">{CONNECTED_SITES.length}</span>
+                </Link>
+
                 <button className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-2.5 sm:px-3 py-1 text-[11px] font-semibold text-slate-950 shadow-[0_0_16px_rgba(34,211,238,0.35)] hover:brightness-110 shrink-0">
                   <span className="sm:hidden">+ New</span>
                   <span className="hidden sm:inline">+ New Website</span>
