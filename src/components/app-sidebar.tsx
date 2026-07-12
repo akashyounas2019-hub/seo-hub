@@ -162,7 +162,7 @@ export function AppSidebar() {
         {/* Workspace */}
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] text-cyan-300/60">
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] text-cyan-200">
               Workspace
             </SidebarGroupLabel>
           )}
@@ -220,7 +220,7 @@ export function AppSidebar() {
               <button
                 type="button"
                 onClick={() => setScoutOpen((v) => !v)}
-                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-300/60 hover:text-cyan-200"
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <Radar className="h-3 w-3" />
@@ -292,7 +292,7 @@ export function AppSidebar() {
         {/* Team */}
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] text-cyan-300/60">
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] text-cyan-200">
               <span className="inline-flex items-center gap-1.5">
                 <Users className="h-3 w-3" /> Team
               </span>
@@ -334,7 +334,7 @@ export function AppSidebar() {
               <button
                 type="button"
                 onClick={() => setSeoOpen((v) => !v)}
-                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-300/60 hover:text-cyan-200"
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <Rocket className="h-3 w-3" />
@@ -433,7 +433,7 @@ export function AppSidebar() {
               <button
                 type="button"
                 onClick={() => setGithubOpen((v) => !v)}
-                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-300/60 hover:text-cyan-200"
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <Github className="h-3 w-3" />
@@ -477,7 +477,7 @@ export function AppSidebar() {
               <button
                 type="button"
                 onClick={() => setSystemOpen((v) => !v)}
-                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-300/60 hover:text-cyan-200"
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
               >
                 <span className="inline-flex items-center gap-1.5">
                   <Settings className="h-3 w-3" />
