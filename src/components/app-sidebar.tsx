@@ -275,7 +275,7 @@ export function AppSidebar() {
                             }
                           >
                             <Link to="/scout-team/$scoutId" params={{ scoutId: s.id }} className="flex items-center gap-2">
-                              <s.icon className={`h-3.5 w-3.5 ${active ? "text-cyan-200" : "text-slate-400"}`} />
+                              <s.icon className={`h-3.5 w-3.5 shrink-0 ${active ? "text-cyan-200" : "text-cyan-300/90"}`} />
                               <span className="truncate text-[12px]">{s.title}</span>
                             </Link>
                           </SidebarMenuSubButton>
