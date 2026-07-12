@@ -333,9 +333,15 @@ function SuggestionsPage() {
 
         {/* Sections */}
         <div className="mt-8 space-y-6">
-          {sections.map((s) => (
-            <SectionBlock key={s.id} section={s} flashId={flashId} />
-          ))}
+          {sections
+            .map((s) =>
+              impactFilter === "all"
+                ? s
+                : { ...s, items: s.items.filter((i) => i.impact === impactFilter) },
+            )
+            .map((s) => (
+              <SectionBlock key={s.id} section={s} flashId={flashId} />
+            ))}
           <AutomationSuggestions />
         </div>
 
