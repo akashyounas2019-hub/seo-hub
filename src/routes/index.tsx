@@ -203,6 +203,22 @@ function Index() {
 
         {/* Unified Command Container — Leader merged with Fleet */}
         <section className="mt-8 rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950/80 to-slate-900/30 p-5 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+          {/* Container header */}
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Network className="h-4 w-4 text-cyan-300" />
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                  Command Hierarchy
+                </div>
+                <h2 className="text-sm font-semibold text-white">Specialist Agent Fleet</h2>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+              {EXPERTS.length} experts · {totalSubs} sub-agents
+            </span>
+          </div>
+
           {/* Leader row */}
           <div className="flex flex-col items-center">
             <div className="relative w-full max-w-2xl">
@@ -235,25 +251,11 @@ function Index() {
               </div>
             </div>
 
-            {/* Continuous trunk from leader down into the fleet bus */}
-            <div className="mx-auto h-10 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+            {/* Continuous trunk from leader straight into the T-connector bus below */}
+            <div className="mx-auto h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
           </div>
 
-          {/* Fleet header */}
-          <div className="mb-2 mt-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Network className="h-4 w-4 text-cyan-300" />
-              <div>
-                <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
-                  Reporting to the Leader
-                </div>
-                <h2 className="text-sm font-semibold text-white">Specialist Agent Fleet</h2>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-              {EXPERTS.length} experts · {totalSubs} sub-agents
-            </span>
-          </div>
+
 
 
           {/* Experts grid */}
