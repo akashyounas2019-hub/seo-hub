@@ -222,7 +222,7 @@ export function AppSidebar() {
         {/* Scout Team */}
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel asChild>
+            <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
               <button
                 type="button"
                 onClick={() => setScoutOpen((v) => !v)}
@@ -336,7 +336,7 @@ export function AppSidebar() {
         {/* SEO Suite — Advanced */}
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel asChild>
+            <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
               <button
                 type="button"
                 onClick={() => setSeoOpen((v) => !v)}
@@ -435,7 +435,7 @@ export function AppSidebar() {
         {/* GitHub Cloud SEO */}
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel asChild>
+            <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
               <button
                 type="button"
                 onClick={() => setGithubOpen((v) => !v)}
@@ -479,7 +479,7 @@ export function AppSidebar() {
         {/* System */}
         <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel asChild>
+            <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
               <button
                 type="button"
                 onClick={() => setSystemOpen((v) => !v)}
