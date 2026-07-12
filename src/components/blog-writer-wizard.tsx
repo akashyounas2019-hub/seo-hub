@@ -1087,3 +1087,118 @@ function ReviewStep({
     </div>
   );
 }
+
+/* ---------------- Audit Step ---------------- */
+
+function AuditStep({ state, accent }: StepProps) {
+  const wordCount = state.outline.length * 220 + 480;
+  const audits = [
+    { group: "SEO", icon: ShieldCheck, items: [
+      { ok: state.primaryKeyword.length > 2, label: `Primary keyword present (${state.primaryKeyword || "—"})` },
+      { ok: state.secondaryKeywords.length >= 3, label: `≥ 3 secondary keywords (${state.secondaryKeywords.length})` },
+      { ok: state.entities.length >= 3, label: `Named entities covered (${state.entities.length})` },
+      { ok: state.meta.length >= 50 && state.meta.length <= 160, label: `Meta description length OK (${state.meta.length})` },
+    ]},
+    { group: "Structure", icon: ListOrdered, items: [
+      { ok: state.outline.length >= 4, label: `Outline has 4+ sections (${state.outline.length})` },
+      { ok: state.outline.some((o) => o.type === "H3"), label: "At least one H3 sub-section" },
+      { ok: state.media.every((m) => m.alt.length > 0), label: "All media has alt text" },
+    ]},
+    { group: "Quality", icon: FileSearch, items: [
+      { ok: wordCount >= 1000, label: `Estimated word count ≥ 1000 (${wordCount})` },
+      { ok: state.cta.length > 4, label: "Clear call-to-action" },
+      { ok: state.topic.length <= 70, label: `Title within 70 chars (${state.topic.length})` },
+    ]},
+  ];
+  const scores = audits.map((g) => ({
+    group: g.group,
+    icon: g.icon,
+    pct: Math.round((g.items.filter((i) => i.ok).length / g.items.length) * 100),
+  }));
+  const overall = Math.round(scores.reduce((a, s) => a + s.pct, 0) / scores.length);
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+      <div className="space-y-4">
+        <div className={`relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60 p-5`}>
+          <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">Overall audit score</div>
+              <div className="mt-1 text-3xl font-semibold text-white">{overall}<span className="text-base text-slate-500">/100</span></div>
+            </div>
+            <div className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${accent} text-slate-950 shadow`}>
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+          </div>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-800">
+            <div className={`h-full bg-gradient-to-r ${accent}`} style={{ width: `${overall}%` }} />
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {scores.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.group} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-500">
+                    <Icon className="h-3.5 w-3.5 text-cyan-300" /> {s.group}
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-white">{s.pct}%</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {audits.map((g) => {
+          const Icon = g.icon;
+          return (
+            <div key={g.group} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+              <div className="flex items-center gap-2">
+                <span className={`grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br ${accent}`}>
+                  <Icon className="h-3.5 w-3.5 text-slate-950" />
+                </span>
+                <div className="text-sm font-semibold text-white">{g.group}</div>
+              </div>
+              <ul className="mt-3 space-y-2">
+                {g.items.map((i) => (
+                  <li key={i.label} className="flex items-start gap-2 text-xs">
+                    <span className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full ${i.ok ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                      {i.ok ? "✓" : "!"}
+                    </span>
+                    <span className={i.ok ? "text-slate-200" : "text-rose-200"}>{i.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+
+      <aside className="space-y-3">
+        <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.04] p-4">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-amber-200/90">
+            <AlertTriangle className="h-3.5 w-3.5" /> Reviewer notes
+          </div>
+          <ul className="mt-2 space-y-2 text-xs text-slate-300">
+            <li>· Tighten intro — remove filler in the first two sentences.</li>
+            <li>· Add one internal link to /services/office-relocation.</li>
+            <li>· Cite Ejari and DEWA transfer flows with source links.</li>
+          </ul>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+          <div className="text-[10px] uppercase tracking-wider text-cyan-300/70">Originality</div>
+          <div className="mt-2 text-2xl font-semibold text-white">97%<span className="text-sm text-slate-500"> unique</span></div>
+          <div className="mt-1 text-[11px] text-slate-500">3 matched fragments across the web · none flagged as risky.</div>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+          <div className="text-[10px] uppercase tracking-wider text-cyan-300/70">Readability</div>
+          <div className="mt-2 text-2xl font-semibold text-white">{state.reading}</div>
+          <div className="mt-1 text-[11px] text-slate-500">Target audience: {state.audience}</div>
+        </div>
+        <button className={`w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r ${accent} px-3.5 py-2 text-xs font-semibold text-slate-950 shadow hover:brightness-110`}>
+          <Sparkles className="h-4 w-4" /> Re-run full audit
+        </button>
+      </aside>
+    </div>
+  );
+}
