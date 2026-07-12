@@ -461,6 +461,8 @@ function Index() {
           }}
         />
       )}
+      {showAssign && <AssignJobModal onClose={() => setShowAssign(false)} customAgents={customAgents} />}
+      {showNewJob && <NewJobModal onClose={() => setShowNewJob(false)} />}
 
       <style>{`
         @keyframes subIn {
