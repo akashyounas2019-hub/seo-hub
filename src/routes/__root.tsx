@@ -149,7 +149,7 @@ function RootComponent() {
                 </button>
               </div>
             </header>
-            <main className="flex-1 min-w-0">
+            <main className="flex-1 min-w-0 p-5">
               <Outlet />
             </main>
           </div>
