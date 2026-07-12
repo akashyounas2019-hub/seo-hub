@@ -547,3 +547,156 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+const USAGE_KEY = "aks.sidebar.usage";
+type UsageMode = "expanded" | "collapsed" | "hidden";
+
+function UsagePanel() {
+  const [mode, setMode] = useState<UsageMode>(() => {
+    if (typeof window === "undefined") return "expanded";
+    const v = window.localStorage.getItem(USAGE_KEY) as UsageMode | null;
+    return v ?? "expanded";
+  });
+  const set = (m: UsageMode) => {
+    setMode(m);
+    try {
+      window.localStorage.setItem(USAGE_KEY, m);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  if (mode === "hidden") {
+    return (
+      <div className="m-1.5">
+        <button
+          type="button"
+          onClick={() => set("expanded")}
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-cyan-500/25 bg-slate-950/60 px-2 py-1.5 text-[10.5px] font-medium uppercase tracking-[0.16em] text-cyan-300/80 hover:border-cyan-400/50 hover:text-cyan-100"
+          aria-label="Show usage panel"
+        >
+          <Gauge className="h-3 w-3" />
+          Show usage
+        </button>
+      </div>
+    );
+  }
+
+  const collapsed = mode === "collapsed";
+
+  return (
+    <div className="m-1.5 overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-br from-slate-950 via-slate-950 to-blue-950/40">
+      {/* Header — always visible */}
+      <div className="flex items-center gap-2 px-3 pt-3">
+        <div className="relative">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 p-px">
+            <div className="grid h-full w-full place-items-center rounded-full bg-slate-950 text-[10px] font-bold text-cyan-200">
+              AK
+            </div>
+          </div>
+          <span
+            className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-slate-950 bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.9)]"
+            style={{ animation: "ledPulse 1.6s ease-in-out infinite" }}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[12px] font-semibold text-white">Ahmed K.</div>
+          <div className="truncate text-[10px] text-cyan-300/70">Operator · Dubai</div>
+        </div>
+        <div className="flex shrink-0 items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => set(collapsed ? "expanded" : "collapsed")}
+            className="grid h-6 w-6 place-items-center rounded-md text-slate-400 hover:bg-slate-800/70 hover:text-cyan-200"
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? "Expand usage panel" : "Collapse usage panel"}
+          >
+            <ChevronUp className={`h-3.5 w-3.5 transition-transform ${collapsed ? "rotate-180" : ""}`} />
+          </button>
+          <button
+            type="button"
+            onClick={() => set("hidden")}
+            className="grid h-6 w-6 place-items-center rounded-md text-slate-400 hover:bg-slate-800/70 hover:text-rose-200"
+            aria-label="Dismiss usage panel"
+            title="Dismiss"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Body — collapses */}
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+          collapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
+        }`}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="px-3 pb-3 pt-2.5 space-y-2.5">
+            <UsageBar label="Credits" value={62} tone="cyan" detail="6.2k / 10k" />
+            <UsageBar label="Agent hours" value={41} tone="emerald" detail="82 / 200 h" />
+            <UsageBar label="Storage" value={78} tone="amber" detail="7.8 / 10 GB" />
+            <button
+              type="button"
+              className="mt-1 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-[0_0_14px_rgba(34,211,238,0.35)] hover:brightness-110"
+            >
+              <Sparkles className="h-3 w-3" />
+              Upgrade plan
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Collapsed compact bar */}
+      {collapsed && (
+        <div className="border-t border-slate-800/70 px-3 py-1.5">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-slate-500">Usage</span>
+            <span className="font-mono text-cyan-200">62%</span>
+          </div>
+          <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-800">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.7)]"
+              style={{ width: "62%" }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UsageBar({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string;
+  value: number;
+  detail: string;
+  tone: "cyan" | "emerald" | "amber";
+}) {
+  const bar = {
+    cyan: "from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.6)]",
+    emerald: "from-emerald-400 to-teal-500 shadow-[0_0_8px_rgba(52,211,153,0.55)]",
+    amber: "from-amber-400 to-orange-500 shadow-[0_0_8px_rgba(251,191,36,0.55)]",
+  }[tone];
+  const text = {
+    cyan: "text-cyan-200",
+    emerald: "text-emerald-200",
+    amber: "text-amber-200",
+  }[tone];
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-slate-400">{label}</span>
+        <span className={`font-mono ${text}`}>{value}%</span>
+      </div>
+      <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-800/80">
+        <div className={`h-full rounded-full bg-gradient-to-r ${bar}`} style={{ width: `${value}%` }} />
+      </div>
+      <div className="mt-0.5 text-[9.5px] text-slate-500">{detail}</div>
+    </div>
+  );
+}
