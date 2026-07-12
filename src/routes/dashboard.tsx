@@ -111,7 +111,11 @@ function DashboardPage() {
             const up = s.d >= 0;
             const good = s.invertColors ? !up : up;
             return (
-              <div key={s.k} className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+              <Link
+                key={s.k}
+                to={s.href}
+                className="group relative block overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-4 transition hover:-translate-y-0.5 hover:border-cyan-400/40 hover:bg-slate-900/70 hover:shadow-[0_0_24px_-8px_rgba(34,211,238,0.35)]"
+              >
                 <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${s.accent}`} />
                 <div className="flex items-start justify-between">
                   <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br ${s.accent} text-slate-950`}>
@@ -124,8 +128,11 @@ function DashboardPage() {
                 </div>
                 <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-500">{s.k}</div>
                 <div className="mt-0.5 text-2xl font-semibold tabular-nums text-white">{s.v}</div>
-                <div className="mt-1 text-[10px] text-slate-500">via {s.src}</div>
-              </div>
+                <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
+                  <span>via {s.src}</span>
+                  <span className="inline-flex items-center gap-0.5 text-cyan-300 opacity-0 transition group-hover:opacity-100">Open <ArrowUpRight className="h-2.5 w-2.5" /></span>
+                </div>
+              </Link>
             );
           })}
         </section>
