@@ -12,8 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as SuggestionsRouteImport } from './routes/suggestions'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as QaSuiteRouteImport } from './routes/qa-suite'
+import { Route as LogsRouteImport } from './routes/logs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as BuildAgentRouteImport } from './routes/build-agent'
 import { Route as AutomationRouteImport } from './routes/automation'
+import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as AssignTasksRouteImport } from './routes/assign-tasks'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AgencyHealthRouteImport } from './routes/agency-health'
@@ -43,14 +47,34 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QaSuiteRoute = QaSuiteRouteImport.update({
+  id: '/qa-suite',
+  path: '/qa-suite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogsRoute = LogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BuildAgentRoute = BuildAgentRouteImport.update({
+  id: '/build-agent',
+  path: '/build-agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AutomationRoute = AutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssistantRoute = AssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssignTasksRoute = AssignTasksRouteImport.update({
@@ -126,8 +150,12 @@ export interface FileRoutesByFullPath {
   '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
   '/assign-tasks': typeof AssignTasksRoute
+  '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
+  '/build-agent': typeof BuildAgentRoute
   '/dashboard': typeof DashboardRoute
+  '/logs': typeof LogsRoute
+  '/qa-suite': typeof QaSuiteRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/team': typeof TeamRoute
@@ -146,8 +174,12 @@ export interface FileRoutesByTo {
   '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
   '/assign-tasks': typeof AssignTasksRoute
+  '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
+  '/build-agent': typeof BuildAgentRoute
   '/dashboard': typeof DashboardRoute
+  '/logs': typeof LogsRoute
+  '/qa-suite': typeof QaSuiteRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/team': typeof TeamRoute
@@ -167,8 +199,12 @@ export interface FileRoutesById {
   '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
   '/assign-tasks': typeof AssignTasksRoute
+  '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
+  '/build-agent': typeof BuildAgentRoute
   '/dashboard': typeof DashboardRoute
+  '/logs': typeof LogsRoute
+  '/qa-suite': typeof QaSuiteRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/team': typeof TeamRoute
@@ -189,8 +225,12 @@ export interface FileRouteTypes {
     | '/agency-health'
     | '/alerts'
     | '/assign-tasks'
+    | '/assistant'
     | '/automation'
+    | '/build-agent'
     | '/dashboard'
+    | '/logs'
+    | '/qa-suite'
     | '/settings'
     | '/suggestions'
     | '/team'
@@ -209,8 +249,12 @@ export interface FileRouteTypes {
     | '/agency-health'
     | '/alerts'
     | '/assign-tasks'
+    | '/assistant'
     | '/automation'
+    | '/build-agent'
     | '/dashboard'
+    | '/logs'
+    | '/qa-suite'
     | '/settings'
     | '/suggestions'
     | '/team'
@@ -229,8 +273,12 @@ export interface FileRouteTypes {
     | '/agency-health'
     | '/alerts'
     | '/assign-tasks'
+    | '/assistant'
     | '/automation'
+    | '/build-agent'
     | '/dashboard'
+    | '/logs'
+    | '/qa-suite'
     | '/settings'
     | '/suggestions'
     | '/team'
@@ -250,8 +298,12 @@ export interface RootRouteChildren {
   AgencyHealthRoute: typeof AgencyHealthRoute
   AlertsRoute: typeof AlertsRoute
   AssignTasksRoute: typeof AssignTasksRoute
+  AssistantRoute: typeof AssistantRoute
   AutomationRoute: typeof AutomationRoute
+  BuildAgentRoute: typeof BuildAgentRoute
   DashboardRoute: typeof DashboardRoute
+  LogsRoute: typeof LogsRoute
+  QaSuiteRoute: typeof QaSuiteRoute
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   TeamRoute: typeof TeamRoute
@@ -289,6 +341,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/qa-suite': {
+      id: '/qa-suite'
+      path: '/qa-suite'
+      fullPath: '/qa-suite'
+      preLoaderRoute: typeof QaSuiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs': {
+      id: '/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -296,11 +362,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/build-agent': {
+      id: '/build-agent'
+      path: '/build-agent'
+      fullPath: '/build-agent'
+      preLoaderRoute: typeof BuildAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/automation': {
       id: '/automation'
       path: '/automation'
       fullPath: '/automation'
       preLoaderRoute: typeof AutomationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assistant': {
+      id: '/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assign-tasks': {
@@ -402,8 +482,12 @@ const rootRouteChildren: RootRouteChildren = {
   AgencyHealthRoute: AgencyHealthRoute,
   AlertsRoute: AlertsRoute,
   AssignTasksRoute: AssignTasksRoute,
+  AssistantRoute: AssistantRoute,
   AutomationRoute: AutomationRoute,
+  BuildAgentRoute: BuildAgentRoute,
   DashboardRoute: DashboardRoute,
+  LogsRoute: LogsRoute,
+  QaSuiteRoute: QaSuiteRoute,
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   TeamRoute: TeamRoute,

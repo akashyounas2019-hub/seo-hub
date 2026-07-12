@@ -14,7 +14,6 @@ import {
   Github,
   Cloud,
   ShieldCheck,
-  KeyRound,
   Search,
   FileText,
   Palette,
@@ -25,6 +24,11 @@ import {
   Command,
   Rocket,
   Users,
+  Bot,
+  Hammer,
+  TestTube2,
+  ScrollText,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
@@ -82,9 +86,11 @@ const githubItems: NavItem[] = [
 ];
 
 const systemItems: NavItem[] = [
-  { title: "Settings", url: "/settings", icon: Settings },
-  { title: "Security", url: "/settings/security", icon: ShieldCheck },
-  { title: "API Keys", url: "/settings/keys", icon: KeyRound },
+  { title: "Assistant", url: "/assistant", icon: Bot },
+  { title: "Build Agent", url: "/build-agent", icon: Hammer },
+  { title: "QA Suite", url: "/qa-suite", icon: TestTube2 },
+  { title: "Logs", url: "/logs", icon: ScrollText },
+  { title: "Settings", url: "/settings", icon: SlidersHorizontal },
 ];
 
 export function AppSidebar() {
@@ -101,7 +107,7 @@ export function AppSidebar() {
   const [scoutOpen, setScoutOpen] = useState(true);
   const [githubOpen, setGithubOpen] = useState(false);
   const [seoOpen, setSeoOpen] = useState(true);
-  const [systemOpen, setSystemOpen] = useState(currentPath.startsWith("/settings"));
+  const [systemOpen, setSystemOpen] = useState(true);
 
   return (
     <Sidebar
