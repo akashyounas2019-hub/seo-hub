@@ -154,18 +154,18 @@ function Index() {
             >
               <UserPlus className="h-3.5 w-3.5" /> Add Agent
             </button>
-            <Link
-              to="/automation"
+            <button
+              onClick={() => setShowAssign(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-400/20"
             >
               <ClipboardList className="h-3.5 w-3.5" /> Assign Job
-            </Link>
-            <Link
-              to="/automation"
+            </button>
+            <button
+              onClick={() => setShowNewJob(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-[12px] font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-white"
             >
               <Sparkles className="h-3.5 w-3.5" /> New Job
-            </Link>
+            </button>
           </div>
         </header>
 
