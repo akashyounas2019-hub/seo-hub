@@ -458,12 +458,12 @@ export function AppSidebar() {
                         isActive={active}
                         className={
                           active
-                            ? "bg-cyan-500/10 text-cyan-100 data-[active=true]:bg-cyan-500/10"
-                            : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                            ? "relative bg-cyan-500/20 text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500"
+                            : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                         }
                       >
                         <Link to={item.url} className="flex items-center gap-2.5">
-                          <item.icon className={`h-4 w-4 ${active ? "text-cyan-300" : "text-slate-500"}`} />
+                          <item.icon className={`h-4 w-4 ${active ? "text-cyan-200" : "text-slate-400"}`} />
                           {!collapsed && <span className="truncate text-[13px]">{item.title}</span>}
                         </Link>
                       </SidebarMenuButton>
