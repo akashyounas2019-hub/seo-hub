@@ -300,7 +300,6 @@ function SuggestionsPage() {
           {sections.map((s) => (
             <SectionBlock key={s.id} section={s} flashId={flashId} />
           ))}
-          ))}
           <AutomationSuggestions />
         </div>
 
