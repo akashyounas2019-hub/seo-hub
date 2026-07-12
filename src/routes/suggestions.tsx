@@ -558,6 +558,17 @@ function SectionBlock({ section, flashId }: { section: Section; flashId?: string
   );
 }
 
+const AGENT_POOL = [
+  "Outreach Agent",
+  "Local Agent",
+  "Content Strategist",
+  "Meta Optimizer",
+  "Technical Agent",
+  "Blog Writer",
+  "GBP Publisher",
+  "Review Agent",
+];
+
 function SuggestionRow({
   item,
   accent,
@@ -569,6 +580,9 @@ function SuggestionRow({
   tint: string;
   isNew?: boolean;
 }) {
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assigned, setAssigned] = useState<string | undefined>(item.assigned);
+
   const impactStyle: Record<Impact, string> = {
     High: "bg-amber-400/10 text-amber-200 border-amber-400/25",
     Medium: "bg-sky-400/10 text-sky-200 border-sky-400/25",
@@ -603,7 +617,7 @@ function SuggestionRow({
             <span className="inline-flex items-center gap-1 rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
               {effortLabel[item.effort]}
             </span>
-            {item.assigned && (
+            {assigned && (
               <span
                 className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider"
                 style={{
@@ -612,19 +626,69 @@ function SuggestionRow({
                   border: `1px solid color-mix(in oklab, ${tint} 22%, transparent)`,
                 }}
               >
-                <Users className="h-3 w-3" /> {item.assigned}
+                <Users className="h-3 w-3" /> {assigned}
               </span>
             )}
           </div>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={() => toast.success(`Reviewing: ${item.title}`, { description: item.assigned ? `Assigned to ${item.assigned}` : "Unassigned — pick an agent from Assign Tasks." })}
-        className="mt-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] font-medium text-slate-300 transition group-hover:border-cyan-400/40 group-hover:text-cyan-200"
-      >
-        Review <ArrowUpRight className="h-3 w-3" />
-      </button>
+      <div className="relative mt-1 flex shrink-0 items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setAssignOpen((v) => !v)}
+          className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+            assignOpen || assigned
+              ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-100"
+              : "border-slate-700 bg-slate-900/60 text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+          }`}
+        >
+          <Users className="h-3 w-3" /> {assigned ? "Reassign" : "Assign"}
+        </button>
+        <button
+          type="button"
+          onClick={() => toast.success(`Reviewing: ${item.title}`, { description: assigned ? `Assigned to ${assigned}` : "Unassigned — pick an agent." })}
+          className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] font-medium text-slate-300 transition group-hover:border-cyan-400/40 group-hover:text-cyan-200"
+        >
+          Review <ArrowUpRight className="h-3 w-3" />
+        </button>
+        {assignOpen && (
+          <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/95 shadow-xl backdrop-blur">
+            <div className="border-b border-slate-800 px-3 py-2 text-[10px] uppercase tracking-wider text-slate-500">
+              Assign to agent
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              {AGENT_POOL.map((a) => (
+                <button
+                  key={a}
+                  onClick={() => {
+                    setAssigned(a);
+                    setAssignOpen(false);
+                    toast.success(`Assigned to ${a}`, { description: item.title });
+                  }}
+                  className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs transition ${
+                    assigned === a ? "bg-cyan-400/10 text-cyan-100" : "text-slate-300 hover:bg-slate-900"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2"><Bot className="h-3 w-3" /> {a}</span>
+                  {assigned === a && <span className="text-cyan-300">✓</span>}
+                </button>
+              ))}
+            </div>
+            {assigned && (
+              <button
+                onClick={() => {
+                  setAssigned(undefined);
+                  setAssignOpen(false);
+                  toast(`Unassigned "${item.title}"`);
+                }}
+                className="w-full border-t border-slate-800 px-3 py-2 text-left text-[11px] text-rose-300 hover:bg-rose-500/10"
+              >
+                Clear assignment
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </li>
   );
 }

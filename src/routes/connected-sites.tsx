@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   Globe,
   Search,
@@ -16,6 +17,9 @@ import {
   Activity,
   Filter,
   ArrowUpRight,
+  Trash2,
+  Power,
+  PowerOff,
   type LucideIcon,
 } from "lucide-react";
 
@@ -151,23 +155,39 @@ function statusMeta(s: IntegrationStatus) {
 function ConnectedSitesPage() {
   const [filter, setFilter] = useState<"all" | "healthy" | "attention" | "onboarding">("all");
   const [query, setQuery] = useState("");
+  const [sites, setSites] = useState<Site[]>(SITES);
+  const [disabled, setDisabled] = useState<Record<string, boolean>>({});
 
   const filtered = useMemo(() => {
-    return SITES.filter((s) => (filter === "all" ? true : s.health === filter)).filter((s) =>
+    return sites.filter((s) => (filter === "all" ? true : s.health === filter)).filter((s) =>
       query.trim() === "" ? true : (s.label + s.domain).toLowerCase().includes(query.toLowerCase())
     );
-  }, [filter, query]);
+  }, [filter, query, sites]);
 
   const totals = useMemo(() => {
-    const all = SITES.flatMap((s) => s.integrations);
+    const all = sites.flatMap((s) => s.integrations);
     return {
-      sites: SITES.length,
+      sites: sites.length,
       live: all.filter((i) => i.status === "connected").length,
       action: all.filter((i) => i.status === "action").length,
       off: all.filter((i) => i.status === "disconnected").length,
-      avgScore: Math.round(SITES.reduce((a, s) => a + s.score, 0) / SITES.length),
+      avgScore: sites.length ? Math.round(sites.reduce((a, s) => a + s.score, 0) / sites.length) : 0,
     };
-  }, []);
+  }, [sites]);
+
+  const handleDelete = (id: string, label: string) => {
+    if (!confirm(`Remove "${label}" from connected sites?`)) return;
+    setSites((prev) => prev.filter((s) => s.id !== id));
+    toast.success(`Removed ${label}`);
+  };
+
+  const handleToggle = (id: string, label: string) => {
+    setDisabled((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      toast(next[id] ? `Paused sync for ${label}` : `Resumed sync for ${label}`);
+      return next;
+    });
+  };
 
   return (
     <div className="min-h-full space-y-6 text-slate-200">
@@ -193,7 +213,10 @@ function ConnectedSitesPage() {
             <button className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:border-cyan-400/40 hover:text-cyan-100">
               <Settings2 className="h-3.5 w-3.5" /> Bulk manage
             </button>
-            <button className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-3.5 py-1.5 text-[12px] font-semibold text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.4)] hover:brightness-110">
+            <button
+              onClick={() => toast.success("Connect a new site — flow coming soon")}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-3.5 py-1.5 text-[12px] font-semibold text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.4)] hover:brightness-110"
+            >
               <Plus className="h-3.5 w-3.5" /> Connect new site
             </button>
           </div>
@@ -241,7 +264,13 @@ function ConnectedSitesPage() {
       {/* Site cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {filtered.map((site) => (
-          <SiteCard key={site.id} site={site} />
+          <SiteCard
+            key={site.id}
+            site={site}
+            paused={!!disabled[site.id]}
+            onDelete={() => handleDelete(site.id, site.label)}
+            onToggle={() => handleToggle(site.id, site.label)}
+          />
         ))}
         {filtered.length === 0 && (
           <div className="col-span-full rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-6 py-10 text-center text-[13px] text-slate-500">
@@ -281,7 +310,17 @@ function Stat({
   );
 }
 
-function SiteCard({ site }: { site: Site }) {
+function SiteCard({
+  site,
+  paused,
+  onDelete,
+  onToggle,
+}: {
+  site: Site;
+  paused: boolean;
+  onDelete: () => void;
+  onToggle: () => void;
+}) {
   const healthMeta =
     site.health === "healthy"
       ? { dot: "bg-emerald-400", label: "Healthy", pill: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200" }
@@ -292,7 +331,7 @@ function SiteCard({ site }: { site: Site }) {
   const indexPct = Math.round((site.indexed / Math.max(1, site.pages)) * 100);
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition hover:border-cyan-400/40 hover:shadow-[0_0_30px_-10px_rgba(34,211,238,0.4)]">
+    <article className={`group relative overflow-hidden rounded-2xl border bg-slate-950/70 p-4 transition hover:shadow-[0_0_30px_-10px_rgba(34,211,238,0.4)] ${paused ? "border-slate-800 opacity-70" : "border-slate-800 hover:border-cyan-400/40"}`}>
       <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl opacity-0 transition group-hover:opacity-100" />
 
       {/* Header */}
@@ -301,6 +340,11 @@ function SiteCard({ site }: { site: Site }) {
           <div className="flex items-center gap-2">
             <span className={`h-1.5 w-1.5 rounded-full ${healthMeta.dot} shadow-[0_0_8px_currentColor]`} />
             <h2 className="truncate text-[14px] font-semibold text-white">{site.label}</h2>
+            {paused && (
+              <span className="rounded-full border border-slate-700 bg-slate-900 px-1.5 py-px text-[9px] uppercase tracking-wider text-slate-400">
+                Paused
+              </span>
+            )}
           </div>
           <a
             href={`https://${site.domain}`}
@@ -312,9 +356,31 @@ function SiteCard({ site }: { site: Site }) {
           </a>
           <div className="mt-0.5 text-[11px] text-slate-500">{site.location} · Synced {site.lastSync}</div>
         </div>
-        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${healthMeta.pill}`}>
-          {healthMeta.label}
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${healthMeta.pill}`}>
+            {healthMeta.label}
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onToggle}
+              title={paused ? "Resume sync" : "Pause sync"}
+              className={`grid h-6 w-6 place-items-center rounded-md border text-[11px] transition ${
+                paused
+                  ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20"
+                  : "border-slate-700 bg-slate-900/60 text-slate-400 hover:border-amber-400/40 hover:text-amber-200"
+              }`}
+            >
+              {paused ? <Power className="h-3 w-3" /> : <PowerOff className="h-3 w-3" />}
+            </button>
+            <button
+              onClick={onDelete}
+              title="Remove site"
+              className="grid h-6 w-6 place-items-center rounded-md border border-slate-700 bg-slate-900/60 text-slate-400 transition hover:border-rose-400/40 hover:text-rose-300"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* Metrics */}
@@ -371,17 +437,20 @@ function SiteCard({ site }: { site: Site }) {
 
       {/* Footer actions */}
       <footer className="relative mt-3 flex items-center justify-between border-t border-slate-800/80 pt-3">
-        <Link
-          to="/"
+        <a
+          href={`https://${site.domain}`}
+          target="_blank"
+          rel="noreferrer"
           className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-cyan-200"
         >
-          <Activity className="h-3 w-3" /> Open workspace
-        </Link>
+          <Activity className="h-3 w-3" /> Open site
+        </a>
         <Link
-          to="/"
+          to="/sites/$siteId"
+          params={{ siteId: site.id }}
           className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-100 hover:bg-cyan-400/20"
         >
-          Site details <ArrowUpRight className="h-3 w-3" />
+          See details <ArrowUpRight className="h-3 w-3" />
         </Link>
       </footer>
     </article>
