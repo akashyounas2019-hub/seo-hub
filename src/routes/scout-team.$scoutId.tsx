@@ -23,6 +23,7 @@ import {
 import agentBot from "@/assets/agent-bot.png";
 import { SCOUTS, getScout, type Scout } from "@/lib/scouts";
 import { BlogWriterWizard } from "@/components/blog-writer-wizard";
+import { ContentStudioWorkspace } from "@/components/content-studio-workspace";
 
 export const Route = createFileRoute("/scout-team/$scoutId")({
   head: ({ params }) => {
@@ -263,7 +264,11 @@ function ScoutProfilePage() {
           </div>
 
           {/* Tab body */}
-          {tab.id === "blog-writer" ? (
+          {scout.id === "content" ? (
+            <div key={tab.id} className="p-5" style={{ animation: "fadeInUp .35s ease both" }}>
+              <ContentStudioWorkspace accent={scout.accent} initialTab={tab.id as "studio" | "writing" | "pipeline" | "quality" | "gmb"} />
+            </div>
+          ) : tab.id === "blog-writer" ? (
             <div key={tab.id} className="p-5" style={{ animation: "fadeInUp .35s ease both" }}>
               <BlogWriterWizard accent={scout.accent} />
             </div>
