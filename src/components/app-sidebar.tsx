@@ -97,10 +97,10 @@ export function AppSidebar() {
       ? currentPath === "/" || currentPath.startsWith("/agents")
       : currentPath === path || currentPath.startsWith(path + "/");
 
-  const scoutOpenDefault = currentPath.startsWith("/scout-team");
-  const [scoutOpen, setScoutOpen] = useState(scoutOpenDefault);
+  // Scout Team, SEO Suite always open by default so subcategories stay visible
+  const [scoutOpen, setScoutOpen] = useState(true);
   const [githubOpen, setGithubOpen] = useState(false);
-  const [seoOpen, setSeoOpen] = useState(currentPath.startsWith("/seo-suite"));
+  const [seoOpen, setSeoOpen] = useState(true);
   const [systemOpen, setSystemOpen] = useState(currentPath.startsWith("/settings"));
 
   return (
@@ -275,7 +275,7 @@ export function AppSidebar() {
                             }
                           >
                             <Link to="/scout-team/$scoutId" params={{ scoutId: s.id }} className="flex items-center gap-2">
-                              <s.icon className={`h-3.5 w-3.5 ${active ? "text-cyan-200" : "text-slate-400"}`} />
+                              <s.icon className={`h-3.5 w-3.5 shrink-0 ${active ? "text-cyan-200" : "text-cyan-300/90"}`} />
                               <span className="truncate text-[12px]">{s.title}</span>
                             </Link>
                           </SidebarMenuSubButton>
@@ -398,7 +398,7 @@ export function AppSidebar() {
                               className="flex items-center gap-2"
                             >
                               <Icon
-                                className={`h-3.5 w-3.5 ${active ? "text-cyan-200" : "text-slate-400"}`}
+                                className={`h-3.5 w-3.5 shrink-0 ${active ? "text-cyan-200" : "text-cyan-300/90"}`}
                               />
                               <span className="truncate text-[12px]">{t.title}</span>
                             </Link>

@@ -95,6 +95,8 @@ function Index() {
   const [open, setOpen] = useState<string | null>("onpage");
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [showAdd, setShowAdd] = useState(false);
+  const [showAssign, setShowAssign] = useState(false);
+  const [showNewJob, setShowNewJob] = useState(false);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
 
   useEffect(() => {
@@ -152,18 +154,18 @@ function Index() {
             >
               <UserPlus className="h-3.5 w-3.5" /> Add Agent
             </button>
-            <Link
-              to="/automation"
+            <button
+              onClick={() => setShowAssign(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-400/20"
             >
               <ClipboardList className="h-3.5 w-3.5" /> Assign Job
-            </Link>
-            <Link
-              to="/automation"
+            </button>
+            <button
+              onClick={() => setShowNewJob(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-[12px] font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-white"
             >
               <Sparkles className="h-3.5 w-3.5" /> New Job
-            </Link>
+            </button>
           </div>
         </header>
 
@@ -235,108 +237,121 @@ function Index() {
           <div className="mx-auto mt-4 h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
         </section>
 
-
-
-
-        {/* Experts grid */}
-        <section className="grid grid-cols-1 gap-x-5 gap-y-0 sm:grid-cols-2 lg:grid-cols-5">
-          {EXPERTS.map((e, idx) => {
-            const Icon = e.icon;
-            const isOpen = open === e.id;
-            const conn = CONNECTOR_CLASSES[idx];
-            return (
-              <div
-                key={e.id}
-                ref={(el) => {
-                  cardRefs.current[e.id] = el;
-                }}
-                className="flex scroll-mt-24 flex-col"
-              >
-                {/* T-connector: solid horizontal bus halves + accent vertical drop */}
-                <div className="relative h-8 w-full">
-                  <div className={`absolute top-1/2 left-0 right-1/2 h-px -translate-y-1/2 bg-cyan-400 ${conn.left}`} />
-                  <div className={`absolute top-1/2 left-1/2 right-0 h-px -translate-y-1/2 bg-cyan-400 ${conn.right}`} />
-                  <div
-                    className={`absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-gradient-to-b ${e.accent} ${isOpen ? "opacity-100" : "opacity-70"} transition-opacity duration-500`}
-                  />
+        {/* Fleet container — clearly separates the rest of the hierarchy from the leader */}
+        <section className="mt-4 rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950/80 to-slate-900/30 p-5 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Network className="h-4 w-4 text-cyan-300" />
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                  Reporting to the Leader
                 </div>
-
-                <button
-                  onClick={() => setOpen(isOpen ? null : e.id)}
-                  aria-expanded={isOpen}
-                  className={`group relative overflow-hidden rounded-xl border text-left transition-all duration-300 ease-out ${
-                    isOpen
-                      ? "-translate-y-0.5 border-cyan-400/60 bg-slate-900/80 shadow-[0_0_40px_rgba(34,211,238,0.25)] ring-1 ring-cyan-400/30"
-                      : "border-slate-800 bg-slate-900/40 hover:-translate-y-0.5 hover:border-cyan-500/40 hover:bg-slate-900/70 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]"
-                  }`}
-                >
-                  <div
-                    className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${e.accent} transition-opacity duration-300 ${
-                      isOpen ? "opacity-100" : "opacity-60"
-                    }`}
-                  />
-                  <div className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-950/60 ring-1 transition-all duration-300 ${
-                          isOpen
-                            ? "scale-110 ring-cyan-400/60 shadow-[0_0_20px_rgba(34,211,238,0.4)]"
-                            : "ring-slate-700/60 group-hover:scale-105 group-hover:ring-cyan-500/40"
-                        }`}
-                      >
-                        <div className={`absolute inset-0 bg-gradient-to-br ${e.accent} opacity-20`} />
-                        <img
-                          src={agentBot}
-                          alt=""
-                          className="relative h-full w-full object-contain"
-                          loading="lazy"
-                          width={512}
-                          height={512}
-                        />
-                      </div>
-                      <div
-                        className={`relative grid h-6 w-6 place-items-center rounded-full border transition-all duration-300 ${
-                          isOpen
-                            ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.5)]"
-                            : "border-slate-700 bg-slate-900/60 text-slate-400 group-hover:border-cyan-500/40 group-hover:text-cyan-300"
-                        }`}
-                      >
-                        <Plus className={`absolute h-3.5 w-3.5 transition-all duration-300 ${isOpen ? "rotate-90 opacity-0 scale-50" : "rotate-0 opacity-100 scale-100"}`} />
-                        <Minus className={`absolute h-3.5 w-3.5 transition-all duration-300 ${isOpen ? "rotate-0 opacity-100 scale-100" : "-rotate-90 opacity-0 scale-50"}`} />
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-md bg-gradient-to-br ${e.accent} shadow`}>
-                        <Icon className="h-3.5 w-3.5 text-slate-950" />
-                      </span>
-                      <div className="text-sm font-semibold text-white leading-tight">
-                        {e.title}
-                      </div>
-                    </div>
-                    <div className="mt-1 text-[11px] uppercase tracking-wider text-slate-500">
-                      {e.tag}
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-[11px] text-cyan-300/80">
-                        <Activity className="h-3 w-3" />
-                        {e.subs.length} sub-agents
-                      </div>
-                      <Link
-                        to="/agents/$id"
-                        params={{ id: e.id }}
-                        onClick={(ev) => ev.stopPropagation()}
-                        className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-200 transition hover:bg-cyan-400/20"
-                      >
-                        Profile <ArrowUpRight className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  </div>
-                </button>
-
-                {/* inline sub-agents removed — all experts render sub-agents in the full-width strip below */}
+                <h2 className="text-sm font-semibold text-white">Specialist Agent Fleet</h2>
               </div>
-            );
-          })}
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+              {EXPERTS.length} experts · {totalSubs} sub-agents
+            </span>
+          </div>
+
+          {/* Experts grid */}
+          <section className="grid grid-cols-1 gap-x-5 gap-y-0 sm:grid-cols-2 lg:grid-cols-5">
+            {EXPERTS.map((e, idx) => {
+              const Icon = e.icon;
+              const isOpen = open === e.id;
+              const conn = CONNECTOR_CLASSES[idx];
+              return (
+                <div
+                  key={e.id}
+                  ref={(el) => {
+                    cardRefs.current[e.id] = el;
+                  }}
+                  className="flex scroll-mt-24 flex-col"
+                >
+                  {/* T-connector: solid horizontal bus halves + accent vertical drop */}
+                  <div className="relative h-8 w-full">
+                    <div className={`absolute top-1/2 left-0 right-1/2 h-px -translate-y-1/2 bg-cyan-400 ${conn.left}`} />
+                    <div className={`absolute top-1/2 left-1/2 right-0 h-px -translate-y-1/2 bg-cyan-400 ${conn.right}`} />
+                    <div
+                      className={`absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-gradient-to-b ${e.accent} ${isOpen ? "opacity-100" : "opacity-70"} transition-opacity duration-500`}
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => setOpen(isOpen ? null : e.id)}
+                    aria-expanded={isOpen}
+                    className={`group relative overflow-hidden rounded-xl border text-left transition-all duration-300 ease-out ${
+                      isOpen
+                        ? "-translate-y-0.5 border-cyan-400/60 bg-slate-900/80 shadow-[0_0_40px_rgba(34,211,238,0.25)] ring-1 ring-cyan-400/30"
+                        : "border-slate-800 bg-slate-900/40 hover:-translate-y-0.5 hover:border-cyan-500/40 hover:bg-slate-900/70 hover:shadow-[0_0_20px_rgba(34,211,238,0.1)]"
+                    }`}
+                  >
+                    <div
+                      className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${e.accent} transition-opacity duration-300 ${
+                        isOpen ? "opacity-100" : "opacity-60"
+                      }`}
+                    />
+                    <div className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div
+                          className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-950/60 ring-1 transition-all duration-300 ${
+                            isOpen
+                              ? "scale-110 ring-cyan-400/60 shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+                              : "ring-slate-700/60 group-hover:scale-105 group-hover:ring-cyan-500/40"
+                          }`}
+                        >
+                          <div className={`absolute inset-0 bg-gradient-to-br ${e.accent} opacity-20`} />
+                          <img
+                            src={agentBot}
+                            alt=""
+                            className="relative h-full w-full object-contain"
+                            loading="lazy"
+                            width={512}
+                            height={512}
+                          />
+                        </div>
+                        <div
+                          className={`relative grid h-6 w-6 place-items-center rounded-full border transition-all duration-300 ${
+                            isOpen
+                              ? "border-cyan-400/60 bg-cyan-400/15 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.5)]"
+                              : "border-slate-700 bg-slate-900/60 text-slate-400 group-hover:border-cyan-500/40 group-hover:text-cyan-300"
+                          }`}
+                        >
+                          <Plus className={`absolute h-3.5 w-3.5 transition-all duration-300 ${isOpen ? "rotate-90 opacity-0 scale-50" : "rotate-0 opacity-100 scale-100"}`} />
+                          <Minus className={`absolute h-3.5 w-3.5 transition-all duration-300 ${isOpen ? "rotate-0 opacity-100 scale-100" : "-rotate-90 opacity-0 scale-50"}`} />
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-md bg-gradient-to-br ${e.accent} shadow`}>
+                          <Icon className="h-3.5 w-3.5 text-slate-950" />
+                        </span>
+                        <div className="text-sm font-semibold text-white leading-tight">
+                          {e.title}
+                        </div>
+                      </div>
+                      <div className="mt-1 text-[11px] uppercase tracking-wider text-slate-500">
+                        {e.tag}
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-[11px] text-cyan-300/80">
+                          <Activity className="h-3 w-3" />
+                          {e.subs.length} sub-agents
+                        </div>
+                        <Link
+                          to="/agents/$id"
+                          params={{ id: e.id }}
+                          onClick={(ev) => ev.stopPropagation()}
+                          className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-cyan-200 transition hover:bg-cyan-400/20"
+                        >
+                          Profile <ArrowUpRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              );
+            })}
+          </section>
         </section>
 
         {/* Full-width horizontal sub-agent strip for the currently open expert */}
@@ -446,6 +461,8 @@ function Index() {
           }}
         />
       )}
+      {showAssign && <AssignJobModal onClose={() => setShowAssign(false)} customAgents={customAgents} />}
+      {showNewJob && <NewJobModal onClose={() => setShowNewJob(false)} />}
 
       <style>{`
         @keyframes subIn {
@@ -595,5 +612,248 @@ function AddAgentModal({
         </div>
       </form>
     </div>
+  );
+}
+
+function ModalShell({
+  title,
+  kicker,
+  accent = "from-cyan-400 to-blue-500",
+  icon: Icon,
+  onClose,
+  children,
+  footer,
+}: {
+  title: string;
+  kicker: string;
+  accent?: string;
+  icon: LucideIcon;
+  onClose: () => void;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-cyan-500/25 bg-slate-950 shadow-2xl"
+      >
+        <div className={`h-1 w-full bg-gradient-to-r ${accent}`} />
+        <div className="flex items-start justify-between border-b border-slate-800 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-slate-900 ring-1 ring-cyan-400/30">
+              <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-25`} />
+              <Icon className="relative h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                {kicker}
+              </div>
+              <h2 className="text-base font-semibold text-white">{title}</h2>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>
+        <div className="flex items-center justify-end gap-2 border-t border-slate-800 bg-slate-950/60 px-5 py-3">
+          {footer}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AssignJobModal({
+  onClose,
+  customAgents,
+}: {
+  onClose: () => void;
+  customAgents: CustomAgent[];
+}) {
+  const allAgents = [
+    { id: "leader", name: "AKS SEO Team Leader" },
+    ...EXPERTS.map((e) => ({ id: e.id, name: e.title })),
+    ...customAgents.map((a) => ({ id: a.id, name: a.name })),
+  ];
+  const [selected, setSelected] = useState<string[]>([]);
+  const [job, setJob] = useState("");
+  const [priority, setPriority] = useState<"low" | "normal" | "high">("normal");
+
+  const toggle = (id: string) =>
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  return (
+    <ModalShell
+      onClose={onClose}
+      title="Assign Job"
+      kicker="Fleet · Task Allocation"
+      icon={ClipboardList}
+      accent="from-cyan-400 to-sky-500"
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!job.trim() || selected.length === 0}
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ClipboardList className="h-3.5 w-3.5" /> Assign
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Task title</label>
+          <input
+            autoFocus
+            value={job}
+            onChange={(e) => setJob(e.target.value)}
+            placeholder="e.g. Audit homepage meta tags"
+            className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Priority</label>
+          <div className="mt-2 flex gap-2">
+            {(["low", "normal", "high"] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPriority(p)}
+                className={`rounded-md border px-3 py-1.5 text-[12px] font-medium capitalize transition ${
+                  priority === p
+                    ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-100"
+                    : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-white"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">
+            Assign to agent(s) · {selected.length} selected
+          </label>
+          <div className="mt-2 max-h-52 space-y-1 overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/40 p-2">
+            {allAgents.map((a) => {
+              const on = selected.includes(a.id);
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => toggle(a.id)}
+                  className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-[12px] transition ${
+                    on
+                      ? "bg-cyan-400/15 text-cyan-100 ring-1 ring-inset ring-cyan-400/30"
+                      : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Bot className="h-3.5 w-3.5 text-cyan-300" />
+                    {a.name}
+                  </span>
+                  {on && <CheckCircle2 className="h-3.5 w-3.5 text-cyan-300" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
+function NewJobModal({ onClose }: { onClose: () => void }) {
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [when, setWhen] = useState("now");
+
+  return (
+    <ModalShell
+      onClose={onClose}
+      title="New Job"
+      kicker="Fleet · Create"
+      icon={Sparkles}
+      accent="from-violet-400 to-fuchsia-500"
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!title.trim()}
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Create Job
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Job title</label>
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Q4 backlink outreach sprint"
+            className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Description</label>
+          <textarea
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            placeholder="Scope, goals, target URLs…"
+            rows={4}
+            className="mt-1 w-full resize-none rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Schedule</label>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {[
+              { id: "now", label: "Start now" },
+              { id: "queue", label: "Queue" },
+              { id: "schedule", label: "Schedule" },
+            ].map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => setWhen(o.id)}
+                className={`rounded-md border px-3 py-2 text-[12px] font-medium transition ${
+                  when === o.id
+                    ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-100"
+                    : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-white"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ModalShell>
   );
 }
