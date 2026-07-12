@@ -318,12 +318,13 @@ export function AppSidebar() {
                   isActive={currentPath === "/seo-suite"}
                   className={
                     currentPath === "/seo-suite"
-                      ? "relative bg-gradient-to-r from-cyan-500/25 via-cyan-500/10 to-transparent text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:from-cyan-500/25 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                      ? "relative bg-cyan-400 text-slate-950 font-semibold data-[active=true]:bg-cyan-400 data-[active=true]:text-slate-950 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-slate-950"
                       : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                   }
                 >
                   <Link to="/seo-suite" className="flex items-center gap-2.5">
-                    <Rocket className="h-4 w-4 text-cyan-300" />
+                    <Rocket className={`h-4 w-4 ${currentPath === "/seo-suite" ? "text-slate-950" : "text-cyan-300"}`} />
+
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-[13px]">Optimisation Hub</span>
