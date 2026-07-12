@@ -386,14 +386,15 @@ function AlertsPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() =>
-                setAlerts((prev) => prev.map((a) => (a.status === "active" ? { ...a, status: "acknowledged" } : a)))
-              }
+              onClick={acknowledgeAll}
               className="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
             >
               <BellOff className="h-4 w-4" /> Acknowledge all
             </button>
-            <button className="inline-flex items-center gap-2 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 hover:bg-cyan-400/20">
+            <button
+              onClick={() => setRulesOpen(true)}
+              className="inline-flex items-center gap-2 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 hover:bg-cyan-400/20"
+            >
               <Zap className="h-4 w-4" /> Alert rules
             </button>
           </div>
