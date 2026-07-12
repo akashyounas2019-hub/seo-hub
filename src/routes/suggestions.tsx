@@ -181,14 +181,48 @@ const AUTOMATIONS: Automation[] = [
   },
 ];
 
+const GENERATED_POOL: { sectionId: Section["id"]; item: Omit<Suggestion, "id"> }[] = [
+  { sectionId: "onpage", item: { title: "Add 'People Also Ask' section to top 10 blog posts", desc: "Mine PAA from GSC and integrate as H3 blocks to capture featured snippets.", impact: "High", effort: "M" } },
+  { sectionId: "technical", item: { title: "Enable HTTP/3 on origin", desc: "Reduce handshake overhead for mobile users on flaky connections.", impact: "Medium", effort: "S" } },
+  { sectionId: "offpage", item: { title: "Sponsor 2 UAE community newsletters", desc: "Niche audience overlap · earn contextual DR55+ links with brand lift.", impact: "High", effort: "M" } },
+  { sectionId: "onpage", item: { title: "Add author bios with sameAs to 24 posts", desc: "E-E-A-T signals; link to LinkedIn + industry profiles.", impact: "Medium", effort: "S" } },
+  { sectionId: "technical", item: { title: "Prerender critical listing pages", desc: "Cut TTFB from 1.4s → 200ms on cached edge nodes.", impact: "High", effort: "L" } },
+  { sectionId: "offpage", item: { title: "Reclaim 3 stolen image citations", desc: "Reverse-image search revealed uncredited use; request attribution links.", impact: "Medium", effort: "S" } },
+];
+
 function SuggestionsPage() {
-  const total = SECTIONS.reduce((n, s) => n + s.items.length, 0);
-  const assigned = SECTIONS.reduce((n, s) => n + s.items.filter((i) => i.assigned).length, 0);
-  const high = SECTIONS.reduce((n, s) => n + s.items.filter((i) => i.impact === "High").length, 0);
-  const quickWins = SECTIONS.reduce(
+  const [sections, setSections] = useState<Section[]>(SECTIONS);
+  const [generating, setGenerating] = useState(false);
+  const [genCursor, setGenCursor] = useState(0);
+  const [flashId, setFlashId] = useState<string | null>(null);
+
+  const total = sections.reduce((n, s) => n + s.items.length, 0);
+  const assigned = sections.reduce((n, s) => n + s.items.filter((i) => i.assigned).length, 0);
+  const high = sections.reduce((n, s) => n + s.items.filter((i) => i.impact === "High").length, 0);
+  const quickWins = sections.reduce(
     (n, s) => n + s.items.filter((i) => i.effort === "S" && i.impact !== "Low").length,
     0,
   );
+
+  const handleGenerate = () => {
+    if (generating) return;
+    setGenerating(true);
+    const pick = GENERATED_POOL[genCursor % GENERATED_POOL.length];
+    const newId = `gen-${Date.now()}`;
+    setTimeout(() => {
+      setSections((prev) =>
+        prev.map((s) =>
+          s.id === pick.sectionId
+            ? { ...s, items: [{ id: newId, ...pick.item }, ...s.items] }
+            : s,
+        ),
+      );
+      setGenCursor((c) => c + 1);
+      setFlashId(newId);
+      setGenerating(false);
+      setTimeout(() => setFlashId((v) => (v === newId ? null : v)), 2400);
+    }, 500);
+  };
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
@@ -208,8 +242,15 @@ function SuggestionsPage() {
             <button className="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800">
               <Filter className="h-4 w-4" /> Filter
             </button>
-            <button className="inline-flex items-center gap-2 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 hover:bg-cyan-400/20">
-              <Sparkles className="h-4 w-4" /> Generate new
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={generating}
+              aria-busy={generating}
+              className="inline-flex items-center gap-2 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Sparkles className={`h-4 w-4 ${generating ? "animate-spin" : ""}`} />
+              {generating ? "Generating…" : "Generate new"}
             </button>
           </div>
         </div>
