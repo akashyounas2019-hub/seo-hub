@@ -203,36 +203,17 @@ function Index() {
 
         {/* Unified Command Container — Leader merged with Fleet */}
         <section className="mt-8 rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950/80 to-slate-900/30 p-5 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-          {/* Container header */}
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Network className="h-4 w-4 text-cyan-300" />
-              <div>
-                <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
-                  Command Hierarchy
-                </div>
-                <h2 className="text-sm font-semibold text-white">Specialist Agent Fleet</h2>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-              {EXPERTS.length} experts · {totalSubs} sub-agents
-            </span>
-          </div>
-
-          {/* Leader row */}
+          {/* Leader row — centered stack */}
           <div className="flex flex-col items-center">
             <div className="relative w-full max-w-2xl">
               <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
-              <div className="relative flex items-center gap-4 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 backdrop-blur">
+              <div className="relative flex flex-col items-center gap-3 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-5 text-center backdrop-blur">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
                   <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
-                    Main Agent
-                  </div>
-                  <div className="truncate text-lg font-semibold text-white">AKS SEO Team Leader</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                <div className="min-w-0">
+                  <div className="text-lg font-semibold text-white">AKS SEO Team Leader</div>
+                  <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
                       <span className="relative flex h-1.5 w-1.5">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -244,7 +225,7 @@ function Index() {
                       <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Healthy
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                      <Network className="h-3 w-3 text-cyan-300" /> {EXPERTS.length} experts · {totalSubs} sub-agents
+                      <Network className="h-3 w-3 text-cyan-300" /> {EXPERTS.length} experts
                     </span>
                   </div>
                 </div>
@@ -254,6 +235,7 @@ function Index() {
             {/* Continuous trunk from leader straight into the T-connector bus below */}
             <div className="mx-auto h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
           </div>
+
 
 
 
