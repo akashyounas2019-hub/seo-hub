@@ -14,6 +14,7 @@ import { Route as SuggestionsRouteImport } from './routes/suggestions'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AutomationRouteImport } from './routes/automation'
+import { Route as AssignTasksRouteImport } from './routes/assign-tasks'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AgencyHealthRouteImport } from './routes/agency-health'
 import { Route as IndexRouteImport } from './routes/index'
@@ -50,6 +51,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const AutomationRoute = AutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssignTasksRoute = AssignTasksRouteImport.update({
+  id: '/assign-tasks',
+  path: '/assign-tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AlertsRoute = AlertsRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
+  '/assign-tasks': typeof AssignTasksRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
+  '/assign-tasks': typeof AssignTasksRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
+  '/assign-tasks': typeof AssignTasksRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
   '/settings': typeof SettingsRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agency-health'
     | '/alerts'
+    | '/assign-tasks'
     | '/automation'
     | '/dashboard'
     | '/settings'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agency-health'
     | '/alerts'
+    | '/assign-tasks'
     | '/automation'
     | '/dashboard'
     | '/settings'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agency-health'
     | '/alerts'
+    | '/assign-tasks'
     | '/automation'
     | '/dashboard'
     | '/settings'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgencyHealthRoute: typeof AgencyHealthRoute
   AlertsRoute: typeof AlertsRoute
+  AssignTasksRoute: typeof AssignTasksRoute
   AutomationRoute: typeof AutomationRoute
   DashboardRoute: typeof DashboardRoute
   SettingsRoute: typeof SettingsRoute
@@ -288,6 +301,13 @@ declare module '@tanstack/react-router' {
       path: '/automation'
       fullPath: '/automation'
       preLoaderRoute: typeof AutomationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assign-tasks': {
+      id: '/assign-tasks'
+      path: '/assign-tasks'
+      fullPath: '/assign-tasks'
+      preLoaderRoute: typeof AssignTasksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/alerts': {
@@ -381,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgencyHealthRoute: AgencyHealthRoute,
   AlertsRoute: AlertsRoute,
+  AssignTasksRoute: AssignTasksRoute,
   AutomationRoute: AutomationRoute,
   DashboardRoute: DashboardRoute,
   SettingsRoute: SettingsRoute,
