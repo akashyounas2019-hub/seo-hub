@@ -282,6 +282,20 @@ export const SCOUTS: Scout[] = [
       "Translate briefs into on-brand layouts, components, and asset kits ready for build.",
     tabs: [
       {
+        id: "researcher",
+        label: "Design Researcher",
+        icon: Layers,
+        summary: "Scout ~10 high-performing sites in your market, capture every section, and mix-and-match the best layouts.",
+        metrics: [
+          { label: "Runs (7d)", value: "0" },
+          { label: "Sections captured", value: "0" },
+          { label: "Selected", value: "0" },
+        ],
+        activity: [
+          { time: "—", text: "No research runs yet. Start one to scout ~10 reference sites." },
+        ],
+      },
+      {
         id: "prototypes",
         label: "Layout Prototypes",
         icon: Layers,
@@ -297,6 +311,7 @@ export const SCOUTS: Scout[] = [
           { time: "yday", text: "Merged prototype library with tokens v2" },
         ],
       },
+
       {
         id: "system",
         label: "Visual System",
