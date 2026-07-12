@@ -95,6 +95,8 @@ function Index() {
   const [open, setOpen] = useState<string | null>("onpage");
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [showAdd, setShowAdd] = useState(false);
+  const [showAssign, setShowAssign] = useState(false);
+  const [showNewJob, setShowNewJob] = useState(false);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
 
   useEffect(() => {
