@@ -545,7 +545,7 @@ function FlowEditor({
 }: {
   state: EditorState;
   onClose: () => void;
-  onSave: (data: { id?: string; name: string; desc: string; category: string; cadence: Cadence; status: Status }) => void;
+  onSave: (data: { id?: string; name: string; desc: string; category: string; cadence: Cadence; status: Status; assignedAgents: string[] }) => void;
 }) {
   if (!state) return null;
   const initial =
