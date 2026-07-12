@@ -333,6 +333,7 @@ function AlertsPage() {
   const [status, setStatus] = useState<Status | "all">("all");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Alert | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return alerts.filter((a) => {
