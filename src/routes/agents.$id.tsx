@@ -140,6 +140,16 @@ function AgentDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  const appendLog = (kind: LogEntry["kind"], message: string) => {
+    setProfile((p) => ({
+      ...p,
+      logs: [
+        { id: crypto.randomUUID(), ts: new Date().toISOString(), kind, message },
+        ...(p.logs ?? []),
+      ].slice(0, 200),
+    }));
+  };
+
   const submitTask = () => {
     if (!taskTitle.trim()) return;
     const task: Task = {
@@ -151,23 +161,38 @@ function AgentDetail() {
       priority,
     };
     setProfile((p) => ({ ...p, tasks: [task, ...p.tasks] }));
+    appendLog("assignment", `Scheduled "${task.title}" → ${task.assignee} (${task.priority ?? "medium"})`);
     setTaskTitle("");
     setDue("");
   };
 
-  const toggleTask = (tid: string) =>
+  const toggleTask = (tid: string) => {
+    let nextStatus: Task["status"] = "done";
+    let title = "";
     setProfile((p) => ({
       ...p,
-      tasks: p.tasks.map((t) =>
-        t.id === tid ? { ...t, status: t.status === "done" ? "pending" : "done" } : t
-      ),
+      tasks: p.tasks.map((t) => {
+        if (t.id === tid) {
+          nextStatus = t.status === "done" ? "pending" : "done";
+          title = t.title;
+          return { ...t, status: nextStatus };
+        }
+        return t;
+      }),
     }));
+    if (title) appendLog("task", `${nextStatus === "done" ? "Completed" : "Reopened"} "${title}"`);
+  };
 
-  const removeTask = (tid: string) =>
-    setProfile((p) => ({ ...p, tasks: p.tasks.filter((t) => t.id !== tid) }));
+  const removeTask = (tid: string) => {
+    const t = profile.tasks.find((x) => x.id === tid);
+    setProfile((p) => ({ ...p, tasks: p.tasks.filter((tt) => tt.id !== tid) }));
+    if (t) appendLog("task", `Removed "${t.title}"`);
+  };
 
-  const updateSettings = (patch: Partial<AgentSettings>) =>
+  const updateSettings = (patch: Partial<AgentSettings>) => {
     setProfile((p) => ({ ...p, settings: { ...p.settings, ...patch } }));
+    appendLog("system", `Settings updated · ${Object.keys(patch).join(", ")}`);
+  };
 
   // Add sub-agent (only on expert page). Updates parentProfile.extraSubs.
   const [newSubName, setNewSubName] = useState("");
