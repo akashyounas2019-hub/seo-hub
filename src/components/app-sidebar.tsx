@@ -469,45 +469,114 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* GitHub Cloud SEO */}
+        {/* Intelligence — analysis, QA, logs */}
         <SidebarGroup>
           {!collapsed && (
             <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
               <button
                 type="button"
-                onClick={() => setGithubOpen((v) => !v)}
+                onClick={() => setIntelligenceOpen((v) => !v)}
                 className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <Github className="h-3 w-3" />
-                  GitHub Cloud SEO
+                  <BarChart3 className="h-3 w-3" />
+                  Intelligence
                 </span>
-                <ChevronDown
-                  className={`h-3 w-3 transition-transform ${githubOpen ? "" : "-rotate-90"}`}
-                />
+                <ChevronDown className={`h-3 w-3 transition-transform ${intelligenceOpen ? "" : "-rotate-90"}`} />
               </button>
             </SidebarGroupLabel>
           )}
-          {(!collapsed && githubOpen) || collapsed ? (
+          {(!collapsed && intelligenceOpen) || collapsed ? (
             <SidebarGroupContent>
               <SidebarMenu>
-                {githubItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      className="text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
-                    >
-                      <item.icon className="h-4 w-4 text-slate-500" />
+                {intelligenceItems.map((item) => {
+                  const active = isActive(item.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        className={
+                          active
+                            ? "relative bg-cyan-500/20 text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500"
+                            : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                        }
+                      >
+                        <Link to={item.url} className="flex items-center gap-2.5">
+                          <item.icon className={`h-4 w-4 ${active ? "text-cyan-200" : "text-slate-400"}`} />
+                          {!collapsed && <span className="truncate text-[13px]">{item.title}</span>}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          ) : null}
+        </SidebarGroup>
+
+        {/* Integrations — Lovable, GHL, GitHub, Connected Sites */}
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">
+              <button
+                type="button"
+                onClick={() => setIntegrationsOpen((v) => !v)}
+                className="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.2em] text-cyan-200 hover:text-cyan-100"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Cloud className="h-3 w-3" />
+                  Integrations
+                </span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${integrationsOpen ? "" : "-rotate-90"}`} />
+              </button>
+            </SidebarGroupLabel>
+          )}
+          {(!collapsed && integrationsOpen) || collapsed ? (
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {integrationItems.map((item) => {
+                  const isRealRoute = !item.soon;
+                  const active = isRealRoute && isActive(item.url);
+                  const content = (
+                    <>
+                      <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-cyan-200" : "text-slate-500"}`} />
                       {!collapsed && (
                         <>
                           <span className="flex-1 truncate text-[13px]">{item.title}</span>
-                          <span className="rounded-md border border-slate-700 bg-slate-900 px-1.5 py-px text-[9px] uppercase tracking-wider text-slate-500">
-                            Soon
-                          </span>
+                          {item.soon && (
+                            <span className="rounded-md border border-slate-700 bg-slate-900 px-1.5 py-px text-[9px] uppercase tracking-wider text-slate-500">
+                              Soon
+                            </span>
+                          )}
                         </>
                       )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                    </>
+                  );
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      {isRealRoute ? (
+                        <SidebarMenuButton
+                          asChild
+                          isActive={active}
+                          className={
+                            active
+                              ? "bg-cyan-500/20 text-white font-medium ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white"
+                              : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                          }
+                        >
+                          <Link to={item.url} className="flex items-center gap-2.5">
+                            {content}
+                          </Link>
+                        </SidebarMenuButton>
+                      ) : (
+                        <SidebarMenuButton className="text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100">
+                          {content}
+                        </SidebarMenuButton>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           ) : null}
