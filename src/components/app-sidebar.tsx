@@ -97,10 +97,10 @@ export function AppSidebar() {
       ? currentPath === "/" || currentPath.startsWith("/agents")
       : currentPath === path || currentPath.startsWith(path + "/");
 
-  const scoutOpenDefault = currentPath.startsWith("/scout-team");
-  const [scoutOpen, setScoutOpen] = useState(scoutOpenDefault);
+  // Scout Team, SEO Suite always open by default so subcategories stay visible
+  const [scoutOpen, setScoutOpen] = useState(true);
   const [githubOpen, setGithubOpen] = useState(false);
-  const [seoOpen, setSeoOpen] = useState(currentPath.startsWith("/seo-suite"));
+  const [seoOpen, setSeoOpen] = useState(true);
   const [systemOpen, setSystemOpen] = useState(currentPath.startsWith("/settings"));
 
   return (
