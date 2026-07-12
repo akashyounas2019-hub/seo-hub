@@ -76,7 +76,7 @@ const SCOUTS: Scout[] = [
     title: "Designing Scout",
     role: "Visual Systems",
     icon: Palette,
-    accent: "from-pink-400 to-rose-500",
+    accent: "from-indigo-400 to-blue-500",
     activity: "Prototyping hero layout",
     status: "Sketching",
     angle: 102.8,
