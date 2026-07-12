@@ -63,7 +63,21 @@ type Flow = {
   cadence: Cadence;
   lastRun: string;
   successRate: number;
+  assignedAgents?: string[];
 };
+
+const AGENTS: { id: string; name: string; role: string; icon: typeof Bot }[] = [
+  { id: "local", name: "Local SEO Agent", role: "Dubai suburbs & GBP", icon: MapPin },
+  { id: "gbp", name: "GBP Publisher", role: "Posts, Q&A, hours", icon: Building2 },
+  { id: "review", name: "Review Agent", role: "Requests & replies", icon: Star },
+  { id: "content", name: "Content Strategist", role: "Briefs & drafts", icon: FileText },
+  { id: "meta", name: "Meta Optimizer", role: "Titles & descriptions", icon: Sparkles },
+  { id: "outreach", name: "Outreach Agent", role: "Backlinks & pitches", icon: Mail },
+  { id: "technical", name: "Technical Agent", role: "CWV, crawl, indexation", icon: Gauge },
+  { id: "research", name: "Research Agent", role: "Keywords & SERP", icon: Search },
+  { id: "reporting", name: "Reporting Agent", role: "Alerts & reports", icon: Bell },
+  { id: "translator", name: "AR/EN Translator", role: "Localization & hreflang", icon: Languages },
+];
 
 const CATEGORIES = [
   { id: "local", label: "Local SEO (Dubai)", icon: MapPin, accent: "from-cyan-400 to-sky-500" },
