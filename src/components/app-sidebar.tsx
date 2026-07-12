@@ -14,7 +14,6 @@ import {
   Github,
   Cloud,
   ShieldCheck,
-  KeyRound,
   Search,
   FileText,
   Palette,
@@ -25,6 +24,11 @@ import {
   Command,
   Rocket,
   Users,
+  Bot,
+  Hammer,
+  TestTube2,
+  ScrollText,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
