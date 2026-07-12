@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Lightbulb,
   ArrowUpRight,
@@ -195,6 +196,8 @@ function SuggestionsPage() {
   const [generating, setGenerating] = useState(false);
   const [genCursor, setGenCursor] = useState(0);
   const [flashId, setFlashId] = useState<string | null>(null);
+  const [impactFilter, setImpactFilter] = useState<Impact | "all">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const total = sections.reduce((n, s) => n + s.items.length, 0);
   const assigned = sections.reduce((n, s) => n + s.items.filter((i) => i.assigned).length, 0);
@@ -239,9 +242,42 @@ function SuggestionsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800">
-              <Filter className="h-4 w-4" /> Filter
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setFilterOpen((v) => !v)}
+                className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition ${
+                  impactFilter !== "all" || filterOpen
+                    ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-100"
+                    : "border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800"
+                }`}
+              >
+                <Filter className="h-4 w-4" /> Filter
+                {impactFilter !== "all" && (
+                  <span className="ml-1 rounded-full bg-cyan-400/25 px-1.5 text-[10px] font-semibold text-cyan-100">{impactFilter}</span>
+                )}
+              </button>
+              {filterOpen && (
+                <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-52 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/95 shadow-xl backdrop-blur">
+                  <div className="border-b border-slate-800 px-3 py-2 text-[10px] uppercase tracking-wider text-slate-500">Impact</div>
+                  {(["all", "High", "Medium", "Low"] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => {
+                        setImpactFilter(v);
+                        setFilterOpen(false);
+                        if (v !== "all") toast.success(`Filtered by ${v} impact`);
+                      }}
+                      className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs transition ${
+                        impactFilter === v ? "bg-cyan-400/10 text-cyan-100" : "text-slate-300 hover:bg-slate-900"
+                      }`}
+                    >
+                      <span>{v === "all" ? "All impacts" : `${v} impact`}</span>
+                      {impactFilter === v && <span className="text-cyan-300">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               type="button"
               onClick={handleGenerate}
@@ -297,9 +333,15 @@ function SuggestionsPage() {
 
         {/* Sections */}
         <div className="mt-8 space-y-6">
-          {sections.map((s) => (
-            <SectionBlock key={s.id} section={s} flashId={flashId} />
-          ))}
+          {sections
+            .map((s) =>
+              impactFilter === "all"
+                ? s
+                : { ...s, items: s.items.filter((i) => i.impact === impactFilter) },
+            )
+            .map((s) => (
+              <SectionBlock key={s.id} section={s} flashId={flashId} />
+            ))}
           <AutomationSuggestions />
         </div>
 
@@ -409,6 +451,7 @@ function AutomationSuggestions() {
               <div className="flex items-center gap-2 md:flex-col md:items-end md:gap-1.5">
                 <div className="text-[11px] text-slate-500 md:text-right">{a.nextRun}</div>
                 <button
+                  onClick={() => toast.success(`Queued "${a.title}" — ${a.agent} scheduled ${a.cadence.toLowerCase()}`)}
                   className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-200 hover:bg-cyan-400/20"
                 >
                   <PlayCircle className="h-3.5 w-3.5" /> Automate
@@ -575,12 +618,13 @@ function SuggestionRow({
           </div>
         </div>
       </div>
-      <Link
-        to="/suggestions"
+      <button
+        type="button"
+        onClick={() => toast.success(`Reviewing: ${item.title}`, { description: item.assigned ? `Assigned to ${item.assigned}` : "Unassigned — pick an agent from Assign Tasks." })}
         className="mt-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] font-medium text-slate-300 transition group-hover:border-cyan-400/40 group-hover:text-cyan-200"
       >
         Review <ArrowUpRight className="h-3 w-3" />
-      </Link>
+      </button>
     </li>
   );
 }
