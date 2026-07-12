@@ -759,6 +759,12 @@ function AssignJobModal({
       }
     >
       <div className="space-y-4">
+        {status === "error" && (
+          <div className="flex items-start gap-2 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-200">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>{error ?? "Something went wrong. Please try again."}</span>
+          </div>
+        )}
         <div>
           <label className="text-[10px] uppercase tracking-wider text-slate-500">Task title</label>
           <input
