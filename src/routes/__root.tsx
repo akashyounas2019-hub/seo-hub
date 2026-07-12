@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Toaster } from "sonner";
 import { Globe, Search, BarChart3, Zap, Link2, CheckCircle2, AlertCircle, ExternalLink, X } from "lucide-react";
 
 function NotFoundComponent() {
