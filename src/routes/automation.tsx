@@ -558,6 +558,7 @@ function FlowEditor({
           category: state.base?.category ?? CATEGORIES[0].id,
           cadence: state.base?.cadence ?? ("weekly" as Cadence),
           status: "draft" as Status,
+          assignedAgents: [] as string[],
         };
 
   const [name, setName] = useState(initial.name);
@@ -565,8 +566,25 @@ function FlowEditor({
   const [category, setCategory] = useState<string>(initial.category);
   const [cadence, setCadence] = useState<Cadence>(initial.cadence);
   const [status, setStatus] = useState<Status>(initial.status);
+  const [assignedAgents, setAssignedAgents] = useState<string[]>(
+    state.mode === "edit" ? (state.flow.assignedAgents ?? []) : [],
+  );
+  const [agentQuery, setAgentQuery] = useState("");
 
   const isEdit = state.mode === "edit";
+
+  function toggleAgent(id: string) {
+    setAssignedAgents((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  const filteredAgents = AGENTS.filter(
+    (a) =>
+      !agentQuery ||
+      a.name.toLowerCase().includes(agentQuery.toLowerCase()) ||
+      a.role.toLowerCase().includes(agentQuery.toLowerCase()),
+  );
 
   return (
     <Modal onClose={onClose} title={isEdit ? "Edit automation" : "New automation"}>
@@ -581,6 +599,7 @@ function FlowEditor({
             category,
             cadence,
             status,
+            assignedAgents,
           });
         }}
         className="space-y-3"
