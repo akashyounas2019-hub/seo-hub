@@ -14,6 +14,11 @@ import {
   Gauge,
   Power,
   UserPlus,
+  Brain,
+  ScrollText,
+  Pin,
+  PinOff,
+  Eraser,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import {
@@ -29,6 +34,8 @@ import {
   type AgentSettings,
   type Task,
   type Sub,
+  type LogEntry,
+  type MemoryNote,
 } from "@/lib/agents";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -133,6 +140,16 @@ function AgentDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  const appendLog = (kind: LogEntry["kind"], message: string) => {
+    setProfile((p) => ({
+      ...p,
+      logs: [
+        { id: crypto.randomUUID(), ts: new Date().toISOString(), kind, message },
+        ...(p.logs ?? []),
+      ].slice(0, 200),
+    }));
+  };
+
   const submitTask = () => {
     if (!taskTitle.trim()) return;
     const task: Task = {
@@ -144,23 +161,38 @@ function AgentDetail() {
       priority,
     };
     setProfile((p) => ({ ...p, tasks: [task, ...p.tasks] }));
+    appendLog("assignment", `Scheduled "${task.title}" → ${task.assignee} (${task.priority ?? "medium"})`);
     setTaskTitle("");
     setDue("");
   };
 
-  const toggleTask = (tid: string) =>
+  const toggleTask = (tid: string) => {
+    let nextStatus: Task["status"] = "done";
+    let title = "";
     setProfile((p) => ({
       ...p,
-      tasks: p.tasks.map((t) =>
-        t.id === tid ? { ...t, status: t.status === "done" ? "pending" : "done" } : t
-      ),
+      tasks: p.tasks.map((t) => {
+        if (t.id === tid) {
+          nextStatus = t.status === "done" ? "pending" : "done";
+          title = t.title;
+          return { ...t, status: nextStatus };
+        }
+        return t;
+      }),
     }));
+    if (title) appendLog("task", `${nextStatus === "done" ? "Completed" : "Reopened"} "${title}"`);
+  };
 
-  const removeTask = (tid: string) =>
-    setProfile((p) => ({ ...p, tasks: p.tasks.filter((t) => t.id !== tid) }));
+  const removeTask = (tid: string) => {
+    const t = profile.tasks.find((x) => x.id === tid);
+    setProfile((p) => ({ ...p, tasks: p.tasks.filter((tt) => tt.id !== tid) }));
+    if (t) appendLog("task", `Removed "${t.title}"`);
+  };
 
-  const updateSettings = (patch: Partial<AgentSettings>) =>
+  const updateSettings = (patch: Partial<AgentSettings>) => {
     setProfile((p) => ({ ...p, settings: { ...p.settings, ...patch } }));
+    appendLog("system", `Settings updated · ${Object.keys(patch).join(", ")}`);
+  };
 
   // Add sub-agent (only on expert page). Updates parentProfile.extraSubs.
   const [newSubName, setNewSubName] = useState("");
@@ -548,6 +580,10 @@ function AgentDetail() {
                 </div>
               </div>
             </Card>
+
+            <MemoryCard profile={profile} setProfile={setProfile} accent={expert.accent} appendLog={appendLog} />
+
+            <LogsCard profile={profile} setProfile={setProfile} accent={expert.accent} />
           </div>
         </div>
 
@@ -682,5 +718,228 @@ function ToggleChip({
         />
       </span>
     </button>
+  );
+}
+
+function MemoryCard({
+  profile,
+  setProfile,
+  accent,
+  appendLog,
+}: {
+  profile: AgentProfile;
+  setProfile: React.Dispatch<React.SetStateAction<AgentProfile>>;
+  accent: string;
+  appendLog: (kind: LogEntry["kind"], message: string) => void;
+}) {
+  const [note, setNote] = useState("");
+
+  const addNote = () => {
+    const text = note.trim();
+    if (!text) return;
+    const entry: MemoryNote = {
+      id: crypto.randomUUID(),
+      ts: new Date().toISOString(),
+      text,
+    };
+    setProfile((p) => ({ ...p, notes: [entry, ...(p.notes ?? [])] }));
+    appendLog("memory", `Learned: "${text.length > 60 ? text.slice(0, 57) + "…" : text}"`);
+    setNote("");
+  };
+
+  const togglePin = (nid: string) => {
+    setProfile((p) => ({
+      ...p,
+      notes: (p.notes ?? []).map((n) => (n.id === nid ? { ...n, pinned: !n.pinned } : n)),
+    }));
+  };
+
+  const removeNote = (nid: string) => {
+    setProfile((p) => ({ ...p, notes: (p.notes ?? []).filter((n) => n.id !== nid) }));
+  };
+
+  const notes = [...(profile.notes ?? [])].sort((a, b) => {
+    if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+    return b.ts.localeCompare(a.ts);
+  });
+
+  return (
+    <Card title={`Memory (${notes.length})`} icon={<Brain className="h-4 w-4" />} accent={accent}>
+      <div className="space-y-4">
+        <div>
+          <Label className="mb-1 block text-[11px] text-slate-400">Long-term memory</Label>
+          <Textarea
+            value={profile.memory ?? ""}
+            onChange={(e) => setProfile((p) => ({ ...p, memory: e.target.value }))}
+            placeholder="Persistent playbook: tone, policies, do's & don'ts the agent should retain across sessions…"
+            className="min-h-[110px] resize-none border-slate-800 bg-slate-900/60 text-slate-100"
+          />
+          <p className="mt-1 text-[11px] text-slate-500">
+            Injected as system context on every task the agent runs. Auto-saved locally.
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+          <Label className="mb-1 block text-[11px] text-slate-400">Teach a new fact</Label>
+          <div className="flex gap-2">
+            <Input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addNote();
+                }
+              }}
+              placeholder="e.g. Client prefers 'schedule a clean' over 'book a service'"
+              className="border-slate-800 bg-slate-900/60"
+            />
+            <Button
+              onClick={addNote}
+              className={`shrink-0 bg-gradient-to-r ${accent} text-slate-950 hover:opacity-90`}
+            >
+              <Plus className="mr-1 h-4 w-4" /> Remember
+            </Button>
+          </div>
+
+          <ul className="mt-3 max-h-[240px] space-y-1.5 overflow-auto pr-1">
+            {notes.length === 0 && (
+              <li className="rounded-md border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-[11px] text-slate-500">
+                No memories yet. Teach the agent something it should remember.
+              </li>
+            )}
+            {notes.map((n) => (
+              <li
+                key={n.id}
+                className={`flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs ${
+                  n.pinned
+                    ? "border-cyan-400/30 bg-cyan-400/5"
+                    : "border-slate-800 bg-slate-950/50"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => togglePin(n.id)}
+                  className={`mt-0.5 rounded p-0.5 ${n.pinned ? "text-cyan-200" : "text-slate-500 hover:text-cyan-200"}`}
+                  aria-label={n.pinned ? "Unpin memory" : "Pin memory"}
+                >
+                  {n.pinned ? <Pin className="h-3 w-3" /> : <PinOff className="h-3 w-3" />}
+                </button>
+                <div className="min-w-0 flex-1">
+                  <div className="text-slate-100">{n.text}</div>
+                  <div className="mt-0.5 text-[10px] text-slate-500">
+                    {new Date(n.ts).toLocaleString()}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeNote(n.id)}
+                  aria-label="Forget"
+                  className="rounded p-1 text-slate-500 hover:bg-slate-800 hover:text-rose-300"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function LogsCard({
+  profile,
+  setProfile,
+  accent,
+}: {
+  profile: AgentProfile;
+  setProfile: React.Dispatch<React.SetStateAction<AgentProfile>>;
+  accent: string;
+}) {
+  const [filter, setFilter] = useState<"all" | LogEntry["kind"]>("all");
+  const logs = (profile.logs ?? []).filter((l) => filter === "all" || l.kind === filter);
+
+  const kindStyle: Record<LogEntry["kind"], string> = {
+    task: "bg-emerald-400/10 text-emerald-200 border-emerald-400/25",
+    system: "bg-slate-500/10 text-slate-300 border-slate-500/25",
+    memory: "bg-violet-400/10 text-violet-200 border-violet-400/25",
+    assignment: "bg-cyan-400/10 text-cyan-200 border-cyan-400/25",
+  };
+
+  const clear = () => {
+    setProfile((p) => ({
+      ...p,
+      logs: [
+        {
+          id: crypto.randomUUID(),
+          ts: new Date().toISOString(),
+          kind: "system",
+          message: "Logs cleared by operator.",
+        },
+      ],
+    }));
+  };
+
+  return (
+    <Card
+      title={`Logs (${profile.logs?.length ?? 0})`}
+      icon={<ScrollText className="h-4 w-4" />}
+      accent={accent}
+      action={
+        <div className="flex items-center gap-1.5">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as typeof filter)}
+            className="h-7 rounded-md border border-slate-800 bg-slate-900/60 px-1.5 text-[11px] text-slate-200"
+          >
+            <option value="all">All</option>
+            <option value="task">Tasks</option>
+            <option value="assignment">Assignments</option>
+            <option value="memory">Memory</option>
+            <option value="system">System</option>
+          </select>
+          <button
+            type="button"
+            onClick={clear}
+            className="inline-flex items-center gap-1 rounded-md border border-slate-800 bg-slate-900/60 px-2 py-1 text-[11px] text-slate-300 hover:border-rose-400/40 hover:text-rose-200"
+            aria-label="Clear logs"
+          >
+            <Eraser className="h-3 w-3" /> Clear
+          </button>
+        </div>
+      }
+    >
+      <div className="flex items-center gap-2 pb-2 text-[11px] text-slate-500">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+        </span>
+        Live · updates in real time as the agent works
+      </div>
+      <ol className="max-h-[360px] space-y-1.5 overflow-auto pr-1">
+        {logs.length === 0 && (
+          <li className="rounded-md border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-[11px] text-slate-500">
+            No log entries match this filter.
+          </li>
+        )}
+        {logs.map((l) => (
+          <li
+            key={l.id}
+            className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 rounded-md border border-slate-800 bg-slate-950/60 px-2.5 py-2 text-xs"
+          >
+            <span
+              className={`mt-0.5 inline-flex items-center rounded-full border px-1.5 py-px text-[9px] uppercase tracking-wider ${kindStyle[l.kind]}`}
+            >
+              {l.kind}
+            </span>
+            <span className="min-w-0 break-words text-slate-200">{l.message}</span>
+            <time className="whitespace-nowrap text-[10px] font-mono text-slate-500">
+              {new Date(l.ts).toLocaleTimeString()}
+            </time>
+          </li>
+        ))}
+      </ol>
+    </Card>
   );
 }

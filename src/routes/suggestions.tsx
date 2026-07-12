@@ -181,14 +181,48 @@ const AUTOMATIONS: Automation[] = [
   },
 ];
 
+const GENERATED_POOL: { sectionId: Section["id"]; item: Omit<Suggestion, "id"> }[] = [
+  { sectionId: "onpage", item: { title: "Add 'People Also Ask' section to top 10 blog posts", desc: "Mine PAA from GSC and integrate as H3 blocks to capture featured snippets.", impact: "High", effort: "M" } },
+  { sectionId: "technical", item: { title: "Enable HTTP/3 on origin", desc: "Reduce handshake overhead for mobile users on flaky connections.", impact: "Medium", effort: "S" } },
+  { sectionId: "offpage", item: { title: "Sponsor 2 UAE community newsletters", desc: "Niche audience overlap · earn contextual DR55+ links with brand lift.", impact: "High", effort: "M" } },
+  { sectionId: "onpage", item: { title: "Add author bios with sameAs to 24 posts", desc: "E-E-A-T signals; link to LinkedIn + industry profiles.", impact: "Medium", effort: "S" } },
+  { sectionId: "technical", item: { title: "Prerender critical listing pages", desc: "Cut TTFB from 1.4s → 200ms on cached edge nodes.", impact: "High", effort: "L" } },
+  { sectionId: "offpage", item: { title: "Reclaim 3 stolen image citations", desc: "Reverse-image search revealed uncredited use; request attribution links.", impact: "Medium", effort: "S" } },
+];
+
 function SuggestionsPage() {
-  const total = SECTIONS.reduce((n, s) => n + s.items.length, 0);
-  const assigned = SECTIONS.reduce((n, s) => n + s.items.filter((i) => i.assigned).length, 0);
-  const high = SECTIONS.reduce((n, s) => n + s.items.filter((i) => i.impact === "High").length, 0);
-  const quickWins = SECTIONS.reduce(
+  const [sections, setSections] = useState<Section[]>(SECTIONS);
+  const [generating, setGenerating] = useState(false);
+  const [genCursor, setGenCursor] = useState(0);
+  const [flashId, setFlashId] = useState<string | null>(null);
+
+  const total = sections.reduce((n, s) => n + s.items.length, 0);
+  const assigned = sections.reduce((n, s) => n + s.items.filter((i) => i.assigned).length, 0);
+  const high = sections.reduce((n, s) => n + s.items.filter((i) => i.impact === "High").length, 0);
+  const quickWins = sections.reduce(
     (n, s) => n + s.items.filter((i) => i.effort === "S" && i.impact !== "Low").length,
     0,
   );
+
+  const handleGenerate = () => {
+    if (generating) return;
+    setGenerating(true);
+    const pick = GENERATED_POOL[genCursor % GENERATED_POOL.length];
+    const newId = `gen-${Date.now()}`;
+    setTimeout(() => {
+      setSections((prev) =>
+        prev.map((s) =>
+          s.id === pick.sectionId
+            ? { ...s, items: [{ id: newId, ...pick.item }, ...s.items] }
+            : s,
+        ),
+      );
+      setGenCursor((c) => c + 1);
+      setFlashId(newId);
+      setGenerating(false);
+      setTimeout(() => setFlashId((v) => (v === newId ? null : v)), 2400);
+    }, 500);
+  };
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
@@ -208,8 +242,15 @@ function SuggestionsPage() {
             <button className="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800">
               <Filter className="h-4 w-4" /> Filter
             </button>
-            <button className="inline-flex items-center gap-2 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 hover:bg-cyan-400/20">
-              <Sparkles className="h-4 w-4" /> Generate new
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={generating}
+              aria-busy={generating}
+              className="inline-flex items-center gap-2 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Sparkles className={`h-4 w-4 ${generating ? "animate-spin" : ""}`} />
+              {generating ? "Generating…" : "Generate new"}
             </button>
           </div>
         </div>
@@ -256,8 +297,8 @@ function SuggestionsPage() {
 
         {/* Sections */}
         <div className="mt-8 space-y-6">
-          {SECTIONS.map((s) => (
-            <SectionBlock key={s.id} section={s} />
+          {sections.map((s) => (
+            <SectionBlock key={s.id} section={s} flashId={flashId} />
           ))}
           <AutomationSuggestions />
         </div>
@@ -397,7 +438,7 @@ function AutomationSuggestions() {
   );
 }
 
-function SectionBlock({ section }: { section: Section }) {
+function SectionBlock({ section, flashId }: { section: Section; flashId?: string | null }) {
   const [expanded, setExpanded] = useState(false);
   const Icon = section.icon;
   const previewCount = 3;
@@ -451,7 +492,7 @@ function SectionBlock({ section }: { section: Section }) {
       {/* Items */}
       <ul className="divide-y divide-slate-800/70">
         {items.map((item) => (
-          <SuggestionRow key={item.id} item={item} accent={section.accent} tint={section.from} />
+          <SuggestionRow key={item.id} item={item} accent={section.accent} tint={section.from} isNew={flashId === item.id} />
         ))}
       </ul>
 
@@ -478,10 +519,12 @@ function SuggestionRow({
   item,
   accent,
   tint,
+  isNew,
 }: {
   item: Suggestion;
   accent: string;
   tint: string;
+  isNew?: boolean;
 }) {
   const impactStyle: Record<Impact, string> = {
     High: "bg-amber-400/10 text-amber-200 border-amber-400/25",
@@ -491,7 +534,7 @@ function SuggestionRow({
   const effortLabel: Record<Effort, string> = { S: "S · Quick", M: "M · Focused", L: "L · Project" };
 
   return (
-    <li className="group relative flex items-start justify-between gap-4 px-5 py-4 transition hover:bg-slate-900/60">
+    <li className={`group relative flex items-start justify-between gap-4 px-5 py-4 transition hover:bg-slate-900/60 ${isNew ? "bg-cyan-400/5 ring-1 ring-inset ring-cyan-400/30" : ""}`}>
       <div className="flex min-w-0 items-start gap-3">
         <div
           className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${accent} text-slate-950`}
@@ -499,7 +542,14 @@ function SuggestionRow({
           <Lightbulb className="h-3.5 w-3.5" />
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-medium text-white leading-snug">{item.title}</div>
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-medium text-white leading-snug">{item.title}</div>
+            {isNew && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/40 bg-cyan-400/15 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-100">
+                <Sparkles className="h-2.5 w-2.5" /> New
+              </span>
+            )}
+          </div>
           <div className="mt-0.5 text-xs text-slate-400">{item.desc}</div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <span

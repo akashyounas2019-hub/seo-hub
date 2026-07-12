@@ -434,30 +434,7 @@ function Index() {
         {/* generous breathing room below the agent graph */}
         <div aria-hidden className="h-24 sm:h-32" />
 
-
-        {/* footer stats */}
-        <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { k: "Experts", v: "5" },
-            { k: "Sub-agents", v: "20" },
-            { k: "Avg. latency", v: "1.2s" },
-            { k: "Tasks / day", v: "348" },
-          ].map((s) => (
-            <div
-              key={s.k}
-              className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3"
-            >
-              <div className="text-[11px] uppercase tracking-wider text-slate-500">
-                {s.k}
-              </div>
-              <div className="mt-1 text-lg font-semibold text-white">
-                {s.v}
-              </div>
-            </div>
-          ))}
-        </section>
-
-        <div aria-hidden className="h-16" />
+        <div aria-hidden className="h-8" />
       </div>
 
       {showAdd && (
