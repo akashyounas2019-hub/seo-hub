@@ -14,6 +14,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AutomationRouteImport } from './routes/automation'
 import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AgencyHealthRouteImport } from './routes/agency-health'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeoSuiteIndexRouteImport } from './routes/seo-suite.index'
 import { Route as ScoutTeamIndexRouteImport } from './routes/scout-team.index'
@@ -48,6 +49,11 @@ const AutomationRoute = AutomationRouteImport.update({
 const AlertsRoute = AlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgencyHealthRoute = AgencyHealthRouteImport.update({
+  id: '/agency-health',
+  path: '/agency-health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -105,6 +111,7 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agency-health': typeof AgencyHealthRoute
   '/alerts': typeof AlertsRoute
   '/automation': typeof AutomationRoute
   '/dashboard': typeof DashboardRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agency-health'
     | '/alerts'
     | '/automation'
     | '/dashboard'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agency-health'
     | '/alerts'
     | '/automation'
     | '/dashboard'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/agency-health'
     | '/alerts'
     | '/automation'
     | '/dashboard'
@@ -211,6 +223,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgencyHealthRoute: typeof AgencyHealthRoute
   AlertsRoute: typeof AlertsRoute
   AutomationRoute: typeof AutomationRoute
   DashboardRoute: typeof DashboardRoute
@@ -262,6 +275,13 @@ declare module '@tanstack/react-router' {
       path: '/alerts'
       fullPath: '/alerts'
       preLoaderRoute: typeof AlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agency-health': {
+      id: '/agency-health'
+      path: '/agency-health'
+      fullPath: '/agency-health'
+      preLoaderRoute: typeof AgencyHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -339,6 +359,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgencyHealthRoute: AgencyHealthRoute,
   AlertsRoute: AlertsRoute,
   AutomationRoute: AutomationRoute,
   DashboardRoute: DashboardRoute,
