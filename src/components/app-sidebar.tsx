@@ -176,24 +176,24 @@ export function AppSidebar() {
                       isActive={active}
                       className={
                         active
-                          ? "relative bg-gradient-to-r from-cyan-500/25 via-cyan-500/10 to-transparent text-white font-semibold ring-1 ring-inset ring-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:from-cyan-500/30 hover:text-white data-[active=true]:from-cyan-500/25 data-[active=true]:text-white data-[active=true]:font-semibold before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                          ? "relative bg-cyan-400 text-slate-950 font-semibold shadow-[0_0_20px_rgba(34,211,238,0.45)] hover:bg-cyan-300 hover:text-slate-950 data-[active=true]:bg-cyan-400 data-[active=true]:text-slate-950 data-[active=true]:font-semibold before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-slate-950"
                           : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                       }
                     >
                       <Link to={item.url} className="flex items-center gap-2.5">
                         <item.icon
                           className={`h-4 w-4 shrink-0 transition ${
-                            active ? "text-cyan-200" : "text-slate-400 group-hover/menu-item:text-cyan-300"
+                            active ? "text-slate-950" : "text-slate-400 group-hover/menu-item:text-cyan-300"
                           }`}
                         />
                         {!collapsed && (
                           <>
-                            <span className={`flex-1 truncate text-[13px] ${active ? "text-white" : ""}`}>{item.title}</span>
+                            <span className={`flex-1 truncate text-[13px] ${active ? "text-slate-950 font-semibold" : ""}`}>{item.title}</span>
                             {item.badge && (
                               <span
                                 className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${
                                   active
-                                    ? "bg-cyan-400/30 text-white ring-1 ring-cyan-300/60"
+                                    ? "bg-slate-950 text-cyan-200 ring-1 ring-slate-950/50"
                                     : "bg-slate-800 text-slate-200 ring-1 ring-slate-700"
                                 }`}
                               >
@@ -204,6 +204,7 @@ export function AppSidebar() {
                         )}
                       </Link>
                     </SidebarMenuButton>
+
                   </SidebarMenuItem>
                 );
               })}
@@ -238,12 +239,13 @@ export function AppSidebar() {
                   isActive={currentPath === "/scout-team"}
                   className={
                     currentPath === "/scout-team"
-                      ? "relative bg-gradient-to-r from-blue-500/25 via-cyan-500/10 to-transparent text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:from-blue-500/25 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                      ? "relative bg-cyan-400 text-slate-950 font-semibold data-[active=true]:bg-cyan-400 data-[active=true]:text-slate-950 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-slate-950"
                       : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                   }
                 >
                   <Link to="/scout-team" className="flex items-center gap-2.5">
-                    <Radar className="h-4 w-4 text-cyan-300" />
+                    <Radar className={`h-4 w-4 ${currentPath === "/scout-team" ? "text-slate-950" : "text-cyan-300"}`} />
+
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-[13px]">Command Floor</span>
@@ -316,12 +318,13 @@ export function AppSidebar() {
                   isActive={currentPath === "/seo-suite"}
                   className={
                     currentPath === "/seo-suite"
-                      ? "relative bg-gradient-to-r from-cyan-500/25 via-cyan-500/10 to-transparent text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:from-cyan-500/25 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                      ? "relative bg-cyan-400 text-slate-950 font-semibold data-[active=true]:bg-cyan-400 data-[active=true]:text-slate-950 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-slate-950"
                       : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                   }
                 >
                   <Link to="/seo-suite" className="flex items-center gap-2.5">
-                    <Rocket className="h-4 w-4 text-cyan-300" />
+                    <Rocket className={`h-4 w-4 ${currentPath === "/seo-suite" ? "text-slate-950" : "text-cyan-300"}`} />
+
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-[13px]">Optimisation Hub</span>
