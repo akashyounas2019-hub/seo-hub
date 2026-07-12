@@ -34,6 +34,7 @@ import {
   Braces,
   Route as RouteIcon,
   PenSquare,
+  ListOrdered,
 } from "lucide-react";
 
 export type ScoutTab = {
