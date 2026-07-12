@@ -447,12 +447,163 @@ function Index() {
         <div aria-hidden className="h-16" />
       </div>
 
+      {showAdd && (
+        <AddAgentModal
+          onClose={() => setShowAdd(false)}
+          onCreate={(agent) => {
+            setCustomAgents((prev) => [...prev, agent]);
+            setShowAdd(false);
+          }}
+        />
+      )}
+
       <style>{`
         @keyframes subIn {
           from { opacity: 0; transform: translateY(8px) scale(0.98); filter: blur(2px); }
           to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
       `}</style>
+    </div>
+  );
+}
+
+function AddAgentModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (a: CustomAgent) => void;
+}) {
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("Specialist");
+  const [iconId, setIconId] = useState(ICON_CHOICES[0].id);
+  const [accent, setAccent] = useState(ACCENT_CHOICES[0]);
+  const SelectedIcon = ICON_CHOICES.find((c) => c.id === iconId)?.icon ?? Bot;
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onCreate({
+      id: `custom-${Date.now()}`,
+      name: name.trim(),
+      role: role.trim() || "Specialist",
+      iconId,
+      accent,
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <form
+        onSubmit={submit}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-cyan-500/25 bg-slate-950 shadow-2xl"
+      >
+        <div className={`h-1 w-full bg-gradient-to-r ${accent}`} />
+        <div className="flex items-start justify-between border-b border-slate-800 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className={`relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-slate-900 ring-1 ring-cyan-400/30`}>
+              <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-25`} />
+              <SelectedIcon className="relative h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                Fleet · New Agent
+              </div>
+              <h2 className="text-base font-semibold text-white">Add Agent</h2>
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 px-5 py-4">
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-slate-500">Agent name</label>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. International SEO Scout"
+              className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-slate-500">Role / tag</label>
+            <input
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="e.g. Specialist"
+              className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-slate-500">Logo icon</label>
+            <div className="mt-2 grid grid-cols-6 gap-2">
+              {ICON_CHOICES.map((c) => {
+                const I = c.icon;
+                const active = iconId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setIconId(c.id)}
+                    title={c.label}
+                    className={`relative grid aspect-square place-items-center rounded-lg border transition ${
+                      active
+                        ? "border-cyan-400/60 bg-cyan-400/10 text-white shadow-[0_0_14px_rgba(34,211,238,0.35)]"
+                        : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-cyan-400/40 hover:text-white"
+                    }`}
+                  >
+                    <I className="h-4 w-4" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-slate-500">Accent</label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ACCENT_CHOICES.map((a) => {
+                const active = a === accent;
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setAccent(a)}
+                    className={`h-7 w-10 rounded-md bg-gradient-to-br ${a} transition ${
+                      active ? "ring-2 ring-white/70 ring-offset-2 ring-offset-slate-950" : "opacity-70 hover:opacity-100"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-slate-800 bg-slate-950/60 px-5 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!name.trim()}
+            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <UserPlus className="h-3.5 w-3.5" /> Create Agent
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
