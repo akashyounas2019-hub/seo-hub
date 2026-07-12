@@ -113,11 +113,28 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   notes: "",
 };
 
+export type LogEntry = {
+  id: string;
+  ts: string; // ISO
+  kind: "task" | "system" | "memory" | "assignment";
+  message: string;
+};
+
+export type MemoryNote = {
+  id: string;
+  ts: string;
+  text: string;
+  pinned?: boolean;
+};
+
 export type AgentProfile = {
   skills: string;
   tasks: Task[];
   settings: AgentSettings;
   extraSubs?: Sub[];
+  memory: string;
+  notes: MemoryNote[];
+  logs: LogEntry[];
 };
 
 export function slugify(s: string) {
@@ -173,10 +190,25 @@ export function saveProfiles(profiles: ProfileState) {
   } catch {}
 }
 
+const SEED_MEMORY: Record<string, string> = {
+  onpage: "Prefer entity-first briefs. Client tone: pragmatic, Dubai-market. Cluster around service + area.",
+  offpage: "Only pursue UAE-relevant DR40+ referrers. Never buy links. Ramadan blackout: Mar 1–10.",
+  technical: "LCP budget = 2.0s. Origin behind Cloudflare. Log parsing runs nightly at 02:00 GST.",
+  research: "Track Arabic + English variants. Persona focus: property managers, HR admins.",
+  auditor: "E-E-A-T = author bios + sameAs + real-world case studies. Zero tolerance for AI-only pages.",
+};
+
 export function getDefaultProfile(id: string): AgentProfile {
+  const { parentId } = parseAgentId(id);
+  const nowIso = new Date().toISOString();
   return {
     skills: DEFAULT_SKILLS[id] ?? "",
     tasks: [],
     settings: { ...DEFAULT_SETTINGS },
+    memory: SEED_MEMORY[parentId] ?? "",
+    notes: [],
+    logs: [
+      { id: "seed-1", ts: nowIso, kind: "system", message: "Agent initialized · memory seeded from playbook." },
+    ],
   };
 }
