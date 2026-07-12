@@ -339,15 +339,19 @@ function ConnectedSitesMenu() {
 
           <div className="flex items-center justify-between gap-2 border-t border-slate-800/80 bg-slate-950/80 px-4 py-3">
             <Link
-              to="/"
+              to="/connected-sites"
               onClick={() => setOpen(false)}
               className="text-[11px] font-medium text-slate-300 hover:text-cyan-200"
             >
-              View all sites
+              View all sites →
             </Link>
-            <button className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-3 py-1 text-[11px] font-semibold text-slate-950 shadow-[0_0_16px_rgba(34,211,238,0.35)] hover:brightness-110">
-              <Link2 className="h-3 w-3" /> Connect new site
-            </button>
+            <Link
+              to="/connected-sites"
+              onClick={() => setOpen(false)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-3 py-1 text-[11px] font-semibold text-slate-950 shadow-[0_0_16px_rgba(34,211,238,0.35)] hover:brightness-110"
+            >
+              <Link2 className="h-3 w-3" /> Manage sites
+            </Link>
           </div>
         </div>
       )}
