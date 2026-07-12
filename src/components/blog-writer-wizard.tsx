@@ -17,6 +17,15 @@ import {
   Globe,
   Clock,
   Type,
+  Database,
+  Download,
+  Network,
+  BookOpen,
+  Languages,
+  ShieldCheck,
+  AlertTriangle,
+  FileSearch,
+  ExternalLink,
   type LucideIcon,
 } from "lucide-react";
 
