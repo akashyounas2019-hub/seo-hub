@@ -175,25 +175,25 @@ export function AppSidebar() {
                       isActive={active}
                       className={
                         active
-                          ? "relative bg-gradient-to-r from-cyan-500/15 via-cyan-500/5 to-transparent text-cyan-100 hover:from-cyan-500/20 hover:text-white data-[active=true]:from-cyan-500/15 data-[active=true]:text-cyan-100 before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_10px_rgba(34,211,238,0.7)]"
-                          : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                          ? "relative bg-gradient-to-r from-cyan-500/25 via-cyan-500/10 to-transparent text-white font-semibold ring-1 ring-inset ring-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:from-cyan-500/30 hover:text-white data-[active=true]:from-cyan-500/25 data-[active=true]:text-white data-[active=true]:font-semibold before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                          : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                       }
                     >
                       <Link to={item.url} className="flex items-center gap-2.5">
                         <item.icon
                           className={`h-4 w-4 shrink-0 transition ${
-                            active ? "text-cyan-300" : "text-slate-500 group-hover/menu-item:text-cyan-300"
+                            active ? "text-cyan-200" : "text-slate-400 group-hover/menu-item:text-cyan-300"
                           }`}
                         />
                         {!collapsed && (
                           <>
-                            <span className="flex-1 truncate text-[13px]">{item.title}</span>
+                            <span className={`flex-1 truncate text-[13px] ${active ? "text-white" : ""}`}>{item.title}</span>
                             {item.badge && (
                               <span
                                 className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${
                                   active
-                                    ? "bg-cyan-400/20 text-cyan-100 ring-1 ring-cyan-300/40"
-                                    : "bg-slate-800 text-slate-300 ring-1 ring-slate-700"
+                                    ? "bg-cyan-400/30 text-white ring-1 ring-cyan-300/60"
+                                    : "bg-slate-800 text-slate-200 ring-1 ring-slate-700"
                                 }`}
                               >
                                 {item.badge}
@@ -237,8 +237,8 @@ export function AppSidebar() {
                   isActive={currentPath === "/scout-team"}
                   className={
                     currentPath === "/scout-team"
-                      ? "bg-gradient-to-r from-blue-500/15 to-transparent text-blue-100 data-[active=true]:from-blue-500/15 data-[active=true]:text-blue-100"
-                      : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                      ? "relative bg-gradient-to-r from-blue-500/25 via-cyan-500/10 to-transparent text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:from-blue-500/25 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                      : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                   }
                 >
                   <Link to="/scout-team" className="flex items-center gap-2.5">
@@ -266,12 +266,12 @@ export function AppSidebar() {
                             isActive={active}
                             className={
                               active
-                                ? "bg-cyan-500/10 text-cyan-100 data-[active=true]:bg-cyan-500/10 data-[active=true]:text-cyan-100"
-                                : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                                ? "bg-cyan-500/20 text-white font-medium ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white"
+                                : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                             }
                           >
                             <Link to="/scout-team/$scoutId" params={{ scoutId: s.id }} className="flex items-center gap-2">
-                              <s.icon className={`h-3.5 w-3.5 ${active ? "text-cyan-300" : "text-slate-500"}`} />
+                              <s.icon className={`h-3.5 w-3.5 ${active ? "text-cyan-200" : "text-slate-400"}`} />
                               <span className="truncate text-[12px]">{s.title}</span>
                             </Link>
                           </SidebarMenuSubButton>
@@ -315,8 +315,8 @@ export function AppSidebar() {
                   isActive={currentPath === "/seo-suite"}
                   className={
                     currentPath === "/seo-suite"
-                      ? "bg-gradient-to-r from-cyan-500/15 to-transparent text-cyan-100 data-[active=true]:from-cyan-500/15 data-[active=true]:text-cyan-100"
-                      : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                      ? "relative bg-gradient-to-r from-cyan-500/25 via-cyan-500/10 to-transparent text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:from-cyan-500/25 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                      : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                   }
                 >
                   <Link to="/seo-suite" className="flex items-center gap-2.5">
@@ -345,8 +345,8 @@ export function AppSidebar() {
                             isActive={active}
                             className={
                               active
-                                ? "bg-cyan-500/10 text-cyan-100 data-[active=true]:bg-cyan-500/10 data-[active=true]:text-cyan-100"
-                                : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                                ? "bg-cyan-500/20 text-white font-medium ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white"
+                                : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                             }
                           >
                             <Link
@@ -355,7 +355,7 @@ export function AppSidebar() {
                               className="flex items-center gap-2"
                             >
                               <Icon
-                                className={`h-3.5 w-3.5 ${active ? "text-cyan-300" : "text-slate-500"}`}
+                                className={`h-3.5 w-3.5 ${active ? "text-cyan-200" : "text-slate-400"}`}
                               />
                               <span className="truncate text-[12px]">{t.title}</span>
                             </Link>
@@ -458,12 +458,12 @@ export function AppSidebar() {
                         isActive={active}
                         className={
                           active
-                            ? "bg-cyan-500/10 text-cyan-100 data-[active=true]:bg-cyan-500/10"
-                            : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                            ? "relative bg-cyan-500/20 text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:bg-cyan-500/20 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500"
+                            : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                         }
                       >
                         <Link to={item.url} className="flex items-center gap-2.5">
-                          <item.icon className={`h-4 w-4 ${active ? "text-cyan-300" : "text-slate-500"}`} />
+                          <item.icon className={`h-4 w-4 ${active ? "text-cyan-200" : "text-slate-400"}`} />
                           {!collapsed && <span className="truncate text-[13px]">{item.title}</span>}
                         </Link>
                       </SidebarMenuButton>
