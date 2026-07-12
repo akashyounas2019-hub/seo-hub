@@ -614,3 +614,246 @@ function AddAgentModal({
     </div>
   );
 }
+
+function ModalShell({
+  title,
+  kicker,
+  accent = "from-cyan-400 to-blue-500",
+  icon: Icon,
+  onClose,
+  children,
+  footer,
+}: {
+  title: string;
+  kicker: string;
+  accent?: string;
+  icon: LucideIcon;
+  onClose: () => void;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-cyan-500/25 bg-slate-950 shadow-2xl"
+      >
+        <div className={`h-1 w-full bg-gradient-to-r ${accent}`} />
+        <div className="flex items-start justify-between border-b border-slate-800 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-slate-900 ring-1 ring-cyan-400/30">
+              <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-25`} />
+              <Icon className="relative h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                {kicker}
+              </div>
+              <h2 className="text-base font-semibold text-white">{title}</h2>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>
+        <div className="flex items-center justify-end gap-2 border-t border-slate-800 bg-slate-950/60 px-5 py-3">
+          {footer}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AssignJobModal({
+  onClose,
+  customAgents,
+}: {
+  onClose: () => void;
+  customAgents: CustomAgent[];
+}) {
+  const allAgents = [
+    { id: "leader", name: "AKS SEO Team Leader" },
+    ...EXPERTS.map((e) => ({ id: e.id, name: e.title })),
+    ...customAgents.map((a) => ({ id: a.id, name: a.name })),
+  ];
+  const [selected, setSelected] = useState<string[]>([]);
+  const [job, setJob] = useState("");
+  const [priority, setPriority] = useState<"low" | "normal" | "high">("normal");
+
+  const toggle = (id: string) =>
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  return (
+    <ModalShell
+      onClose={onClose}
+      title="Assign Job"
+      kicker="Fleet · Task Allocation"
+      icon={ClipboardList}
+      accent="from-cyan-400 to-sky-500"
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!job.trim() || selected.length === 0}
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ClipboardList className="h-3.5 w-3.5" /> Assign
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Task title</label>
+          <input
+            autoFocus
+            value={job}
+            onChange={(e) => setJob(e.target.value)}
+            placeholder="e.g. Audit homepage meta tags"
+            className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Priority</label>
+          <div className="mt-2 flex gap-2">
+            {(["low", "normal", "high"] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPriority(p)}
+                className={`rounded-md border px-3 py-1.5 text-[12px] font-medium capitalize transition ${
+                  priority === p
+                    ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-100"
+                    : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-white"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">
+            Assign to agent(s) · {selected.length} selected
+          </label>
+          <div className="mt-2 max-h-52 space-y-1 overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/40 p-2">
+            {allAgents.map((a) => {
+              const on = selected.includes(a.id);
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => toggle(a.id)}
+                  className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-[12px] transition ${
+                    on
+                      ? "bg-cyan-400/15 text-cyan-100 ring-1 ring-inset ring-cyan-400/30"
+                      : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Bot className="h-3.5 w-3.5 text-cyan-300" />
+                    {a.name}
+                  </span>
+                  {on && <CheckCircle2 className="h-3.5 w-3.5 text-cyan-300" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
+function NewJobModal({ onClose }: { onClose: () => void }) {
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [when, setWhen] = useState("now");
+
+  return (
+    <ModalShell
+      onClose={onClose}
+      title="New Job"
+      kicker="Fleet · Create"
+      icon={Sparkles}
+      accent="from-violet-400 to-fuchsia-500"
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!title.trim()}
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(217,70,239,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Create Job
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Job title</label>
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Q4 backlink outreach sprint"
+            className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Description</label>
+          <textarea
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            placeholder="Scope, goals, target URLs…"
+            rows={4}
+            className="mt-1 w-full resize-none rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-slate-500">Schedule</label>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {[
+              { id: "now", label: "Start now" },
+              { id: "queue", label: "Queue" },
+              { id: "schedule", label: "Schedule" },
+            ].map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => setWhen(o.id)}
+                className={`rounded-md border px-3 py-2 text-[12px] font-medium transition ${
+                  when === o.id
+                    ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-100"
+                    : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-white"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
