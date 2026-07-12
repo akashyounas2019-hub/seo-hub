@@ -188,9 +188,20 @@ function ScoutProfilePage() {
 
             {/* Actions */}
             <div className="flex flex-wrap items-center gap-2 md:justify-end">
-              <button className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${scout.accent} px-3 py-2 text-xs font-semibold text-slate-950 shadow hover:brightness-110`}>
+              <button
+                onClick={() => setRunning(true)}
+                className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${scout.accent} px-3 py-2 text-xs font-semibold text-slate-950 shadow hover:brightness-110`}
+              >
                 <PlayCircle className="h-4 w-4" /> Run new task
               </button>
+              {scout.id === "design" && running && (
+                <button
+                  onClick={() => setRunning(false)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-500/20"
+                >
+                  <span className="h-3 w-3 rounded-sm bg-rose-400" /> Stop
+                </button>
+              )}
               <button className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
                 <Download className="h-4 w-4" /> Export
               </button>
