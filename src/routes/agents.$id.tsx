@@ -14,6 +14,11 @@ import {
   Gauge,
   Power,
   UserPlus,
+  Brain,
+  ScrollText,
+  Pin,
+  PinOff,
+  Eraser,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import {
@@ -29,6 +34,8 @@ import {
   type AgentSettings,
   type Task,
   type Sub,
+  type LogEntry,
+  type MemoryNote,
 } from "@/lib/agents";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
