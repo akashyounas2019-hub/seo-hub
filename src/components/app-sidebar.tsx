@@ -58,7 +58,7 @@ const workspaceItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: Activity },
   { title: "Agency Health", url: "/agency-health", icon: ShieldCheck, badge: "8" },
   { title: "Agents", url: "/", icon: Zap, badge: "12" },
-  { title: "Assign Tasks", url: "/automation", icon: ClipboardList },
+  { title: "Assign Tasks", url: "/assign-tasks", icon: ClipboardList },
   { title: "Automation", url: "/automation", icon: Workflow },
   { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
