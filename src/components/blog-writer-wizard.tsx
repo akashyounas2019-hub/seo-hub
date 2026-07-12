@@ -81,6 +81,14 @@ const STEPS: WizardStep[] = [
       "Choose tone, length, and reading level, then let the scout draft the full article.",
   },
   {
+    id: "audit",
+    label: "Content Audit",
+    short: "Audit",
+    icon: FileSearch,
+    description:
+      "Review the draft against SEO, brand, readability, and originality checks before publish.",
+  },
+  {
     id: "review",
     label: "Review & Publish",
     short: "Publish",
@@ -285,6 +293,9 @@ export function BlogWriterWizard({ accent }: { accent: Accent }) {
         )}
         {step.id === "generate" && (
           <GenerateStep state={state} patch={patch} accent={accent} />
+        )}
+        {step.id === "audit" && (
+          <AuditStep state={state} patch={patch} accent={accent} />
         )}
         {step.id === "review" && (
           <ReviewStep
@@ -507,45 +518,177 @@ function TopicStep({ state, patch }: StepProps) {
 }
 
 function KeywordsStep({ state, patch, accent }: StepProps) {
+  const [listOpen, setListOpen] = useState(false);
+  const KEYWORD_LISTS = [
+    { name: "EN · Movers & Storage", kws: ["office movers dubai", "villa relocation UAE", "packing services marina"] },
+    { name: "Local · Marina + JLT", kws: ["marina movers", "jlt storage", "cluster q movers"] },
+    { name: "Competitor Gaps", kws: ["cheap movers dubai", "same day storage", "office packing service"] },
+    { name: "AR · نقل الاثاث دبي", kws: ["نقل اثاث دبي", "شركة نقل عفش دبي", "نقل مكاتب دبي"] },
+  ];
+  const SUGGESTED_ENTITIES = ["JAFZA", "DMCC", "Ejari", "DEWA", "Etisalat", "Business Bay", "Dubai Marina", "Downtown Dubai"];
+  const RELEVANT = ["moving company dubai", "packing tips uae", "storage solutions dubai", "commercial relocation", "office fit-out"];
+  const SEMANTIC = ["relocation", "logistics", "packing crate", "inventory", "insurance", "warehouse", "load-out", "furniture assembly"];
+
+  const importFromList = (list: (typeof KEYWORD_LISTS)[number]) => {
+    const [primary, ...rest] = list.kws;
+    patch({
+      primaryKeyword: primary,
+      secondaryKeywords: Array.from(new Set([...state.secondaryKeywords, ...rest])),
+    });
+    setListOpen(false);
+  };
+  const addChip = (field: "secondaryKeywords" | "entities", v: string) => {
+    const cur = state[field];
+    if (cur.includes(v)) return;
+    patch({ [field]: [...cur, v] } as Partial<WizardState>);
+  };
+
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <div className="space-y-4">
-        <Field label="Primary keyword">
-          <input
-            className={inputCls}
-            value={state.primaryKeyword}
-            onChange={(e) => patch({ primaryKeyword: e.target.value })}
-            placeholder="One clear head term"
-          />
-        </Field>
-        <Field label="Secondary keywords" hint="Enter to add">
-          <ChipInput
-            values={state.secondaryKeywords}
-            onChange={(v) => patch({ secondaryKeywords: v })}
-            placeholder="Add a supporting keyword"
-            accent={accent}
-          />
-        </Field>
-      </div>
-      <div className="space-y-4">
-        <Field label="Entities to cover" hint="People, places, brands">
-          <ChipInput
-            values={state.entities}
-            onChange={(v) => patch({ entities: v })}
-            placeholder="Add an entity"
-            accent={accent}
-          />
-        </Field>
-        <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-          <div className="text-[10px] uppercase tracking-wider text-cyan-300/70">
-            Coverage
+    <div className="space-y-4">
+      {/* Fetch bar */}
+      <div className={`relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60 p-4`}>
+        <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">Sources</div>
+            <div className="text-sm font-semibold text-white">Pull keywords into this brief</div>
           </div>
-          <div className="mt-2 grid grid-cols-3 gap-3 text-center">
-            <StatMini label="Primary" value="1" />
-            <StatMini label="Secondary" value={String(state.secondaryKeywords.length)} />
-            <StatMini label="Entities" value={String(state.entities.length)} />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setListOpen((v) => !v)}
+                className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${accent} px-3 py-1.5 text-xs font-semibold text-slate-950 shadow hover:brightness-110`}
+              >
+                <Database className="h-3.5 w-3.5" /> Fetch from Keyword List
+              </button>
+              {listOpen && (
+                <div className="absolute right-0 z-20 mt-2 w-72 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/95 shadow-xl backdrop-blur">
+                  <div className="border-b border-slate-800 px-3 py-2 text-[10px] uppercase tracking-wider text-cyan-300/70">
+                    Choose a list
+                  </div>
+                  <ul className="max-h-72 overflow-auto py-1">
+                    {KEYWORD_LISTS.map((l) => (
+                      <li key={l.name}>
+                        <button
+                          onClick={() => importFromList(l)}
+                          className="block w-full px-3 py-2 text-left text-xs text-slate-200 hover:bg-slate-900"
+                        >
+                          <div className="font-semibold text-white">{l.name}</div>
+                          <div className="text-[10px] text-slate-500">{l.kws.length} keywords</div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <button className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20">
+              <ExternalLink className="h-3.5 w-3.5" /> Semrush lookup
+            </button>
+            <button className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
+              <Download className="h-3.5 w-3.5" /> Import CSV
+            </button>
           </div>
         </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-4">
+          <Field label="Primary keyword">
+            <input
+              className={inputCls}
+              value={state.primaryKeyword}
+              onChange={(e) => patch({ primaryKeyword: e.target.value })}
+              placeholder="One clear head term"
+            />
+          </Field>
+          <Field label="Secondary keywords" hint="Enter to add">
+            <ChipInput
+              values={state.secondaryKeywords}
+              onChange={(v) => patch({ secondaryKeywords: v })}
+              placeholder="Add a supporting keyword"
+              accent={accent}
+            />
+          </Field>
+          <Field label="Entities to cover" hint="People, places, brands">
+            <ChipInput
+              values={state.entities}
+              onChange={(v) => patch({ entities: v })}
+              placeholder="Add an entity"
+              accent={accent}
+            />
+          </Field>
+          <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+            <div className="text-[10px] uppercase tracking-wider text-cyan-300/70">
+              Coverage
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-3 text-center">
+              <StatMini label="Primary" value="1" />
+              <StatMini label="Secondary" value={String(state.secondaryKeywords.length)} />
+              <StatMini label="Entities" value={String(state.entities.length)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <SuggestBox
+            title="Suggested Entities"
+            icon={BookOpen}
+            accent={accent}
+            items={SUGGESTED_ENTITIES}
+            onAdd={(v) => addChip("entities", v)}
+          />
+          <SuggestBox
+            title="Suggested Relevant Keywords"
+            icon={Network}
+            accent={accent}
+            items={RELEVANT}
+            onAdd={(v) => addChip("secondaryKeywords", v)}
+          />
+          <SuggestBox
+            title="Semantic Keywords"
+            icon={Languages}
+            accent={accent}
+            items={SEMANTIC}
+            onAdd={(v) => addChip("secondaryKeywords", v)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SuggestBox({
+  title,
+  icon: Icon,
+  items,
+  onAdd,
+  accent,
+}: {
+  title: string;
+  icon: LucideIcon;
+  items: string[];
+  onAdd: (v: string) => void;
+  accent: string;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+      <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-cyan-300/70">
+        <Icon className="h-3.5 w-3.5" /> {title}
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {items.map((v) => (
+          <button
+            key={v}
+            onClick={() => onAdd(v)}
+            className="group inline-flex items-center gap-1 rounded-full border border-slate-800 bg-slate-900/50 px-2 py-0.5 text-[11px] text-slate-200 hover:border-cyan-400/40 hover:text-cyan-100"
+          >
+            <Plus className="h-3 w-3 text-slate-500 group-hover:text-cyan-300" />
+            {v}
+          </button>
+        ))}
       </div>
     </div>
   );
