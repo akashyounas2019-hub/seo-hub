@@ -22,7 +22,6 @@ import {
   BarChart3,
   Rocket,
   Bot,
-  Bell,
   ShieldCheck,
   Globe,
   type LucideIcon,
