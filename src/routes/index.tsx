@@ -201,45 +201,46 @@ function Index() {
           ))}
         </section>
 
-        {/* Leader — clean, centered, no inline buttons */}
-        <section className="mt-8 flex flex-col items-center">
-          <div className="relative w-full max-w-2xl">
-            <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
-            <div className="relative flex items-center gap-4 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 backdrop-blur">
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
-                <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
-                  Main Agent
+        {/* Unified Command Container — Leader merged with Fleet */}
+        <section className="mt-8 rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950/80 to-slate-900/30 p-5 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+          {/* Leader row */}
+          <div className="flex flex-col items-center">
+            <div className="relative w-full max-w-2xl">
+              <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
+              <div className="relative flex items-center gap-4 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 backdrop-blur">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
+                  <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
                 </div>
-                <div className="truncate text-lg font-semibold text-white">AKS SEO Team Leader</div>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                    Main Agent
+                  </div>
+                  <div className="truncate text-lg font-semibold text-white">AKS SEO Team Leader</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      </span>
+                      All agents online
                     </span>
-                    All agents online
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                    <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Healthy
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                    <Network className="h-3 w-3 text-cyan-300" /> {EXPERTS.length} experts · {totalSubs} sub-agents
-                  </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Healthy
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                      <Network className="h-3 w-3 text-cyan-300" /> {EXPERTS.length} experts · {totalSubs} sub-agents
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Continuous trunk from leader down into the fleet bus */}
+            <div className="mx-auto h-10 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
           </div>
 
-          {/* leader trunk drops into connector bus */}
-          <div className="mx-auto mt-4 h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
-        </section>
-
-        {/* Fleet container — clearly separates the rest of the hierarchy from the leader */}
-        <section className="mt-4 rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950/80 to-slate-900/30 p-5 sm:p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          {/* Fleet header */}
+          <div className="mb-2 mt-2 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Network className="h-4 w-4 text-cyan-300" />
               <div>
@@ -253,6 +254,7 @@ function Index() {
               {EXPERTS.length} experts · {totalSubs} sub-agents
             </span>
           </div>
+
 
           {/* Experts grid */}
           <section className="grid grid-cols-1 gap-x-5 gap-y-0 sm:grid-cols-2 lg:grid-cols-5">
