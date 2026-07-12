@@ -36,10 +36,10 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 const kpis = [
-  { k: "Organic Sessions", v: "48.2k", d: 12.4, icon: Users, accent: "from-cyan-400 to-sky-500", src: "Google Analytics" },
-  { k: "Search Impressions", v: "312k", d: 18.2, icon: Eye, accent: "from-violet-400 to-fuchsia-500", src: "Search Console" },
-  { k: "GMB Actions", v: "1,686", d: 22.1, icon: MapPin, accent: "from-amber-400 to-orange-500", src: "Business Profile" },
-  { k: "Avg Position", v: "11.4", d: -1.6, icon: Target, accent: "from-emerald-400 to-teal-500", src: "Search Console", invertColors: true },
+  { k: "Organic Sessions", v: "48.2k", d: 12.4, icon: Users, accent: "from-cyan-400 to-sky-500", src: "Google Analytics", href: "/analytics/google-analytics" },
+  { k: "Search Impressions", v: "312k", d: 18.2, icon: Eye, accent: "from-violet-400 to-fuchsia-500", src: "Search Console", href: "/analytics/search-console" },
+  { k: "GMB Actions", v: "1,686", d: 22.1, icon: MapPin, accent: "from-amber-400 to-orange-500", src: "Business Profile", href: "/analytics/business-profile" },
+  { k: "Avg Position", v: "11.4", d: -1.6, icon: Target, accent: "from-emerald-400 to-teal-500", src: "Search Console", href: "/analytics/search-console", invertColors: true },
 ];
 
 const trafficTrend = [22, 28, 26, 34, 31, 40, 38, 46, 44, 52, 49, 58, 55, 62];
