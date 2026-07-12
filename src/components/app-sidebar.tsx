@@ -86,9 +86,11 @@ const githubItems: NavItem[] = [
 ];
 
 const systemItems: NavItem[] = [
-  { title: "Settings", url: "/settings", icon: Settings },
-  { title: "Security", url: "/settings/security", icon: ShieldCheck },
-  { title: "API Keys", url: "/settings/keys", icon: KeyRound },
+  { title: "Assistant", url: "/assistant", icon: Bot },
+  { title: "Build Agent", url: "/build-agent", icon: Hammer },
+  { title: "QA Suite", url: "/qa-suite", icon: TestTube2 },
+  { title: "Logs", url: "/logs", icon: ScrollText },
+  { title: "Settings", url: "/settings", icon: SlidersHorizontal },
 ];
 
 export function AppSidebar() {
