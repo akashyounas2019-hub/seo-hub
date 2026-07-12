@@ -237,8 +237,8 @@ export function AppSidebar() {
                   isActive={currentPath === "/scout-team"}
                   className={
                     currentPath === "/scout-team"
-                      ? "bg-gradient-to-r from-blue-500/15 to-transparent text-blue-100 data-[active=true]:from-blue-500/15 data-[active=true]:text-blue-100"
-                      : "text-slate-400 hover:bg-slate-800/40 hover:text-cyan-100"
+                      ? "relative bg-gradient-to-r from-blue-500/25 via-cyan-500/10 to-transparent text-white font-semibold ring-1 ring-inset ring-cyan-400/30 data-[active=true]:from-blue-500/25 data-[active=true]:text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-gradient-to-b before:from-cyan-300 before:to-blue-500 before:shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                      : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                   }
                 >
                   <Link to="/scout-team" className="flex items-center gap-2.5">
