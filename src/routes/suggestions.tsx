@@ -196,6 +196,8 @@ function SuggestionsPage() {
   const [generating, setGenerating] = useState(false);
   const [genCursor, setGenCursor] = useState(0);
   const [flashId, setFlashId] = useState<string | null>(null);
+  const [impactFilter, setImpactFilter] = useState<Impact | "all">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const total = sections.reduce((n, s) => n + s.items.length, 0);
   const assigned = sections.reduce((n, s) => n + s.items.filter((i) => i.assigned).length, 0);
