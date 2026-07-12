@@ -188,7 +188,7 @@ export function AppSidebar() {
         <SidebarGroup>
           {!collapsed && (
             <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.2em] text-cyan-200">
-              Workspace
+              Command
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
