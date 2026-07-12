@@ -357,6 +357,17 @@ function AlertsPage() {
   function updateStatus(id: string, next: Status) {
     setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, status: next } : a)));
     setSelected((cur) => (cur && cur.id === id ? { ...cur, status: next } : cur));
+    toast.success(next === "acknowledged" ? "Alert acknowledged" : next === "resolved" ? "Alert resolved" : "Alert reopened");
+  }
+
+  function acknowledgeAll() {
+    const n = alerts.filter((a) => a.status === "active").length;
+    if (n === 0) {
+      toast.info("No active alerts to acknowledge");
+      return;
+    }
+    setAlerts((prev) => prev.map((a) => (a.status === "active" ? { ...a, status: "acknowledged" } : a)));
+    toast.success(`Acknowledged ${n} alert${n === 1 ? "" : "s"}`);
   }
 
   return (
