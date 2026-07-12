@@ -137,8 +137,62 @@
     border-color: var(--color-border);
   }
 
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  img, svg, video, canvas { max-width: 100%; }
 }
+
+/*
+ * Global responsive fallbacks.
+ * Many route files declare fixed multi-column grids without `sm:`/`md:` prefixes.
+ * These media queries collapse those grids on smaller viewports so the whole
+ * app is usable on mobile/tablet without touching every route.
+ */
+@media (max-width: 640px) {
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4,
+  .grid-cols-5,
+  .grid-cols-6,
+  .grid-cols-7,
+  .grid-cols-8 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  /* Common shadcn/tanstack sidebar-content padding tweaks */
+  .p-6 { padding: 1rem !important; }
+  .p-8 { padding: 1.25rem !important; }
+  .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .px-8 { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+  .gap-6 { gap: 1rem !important; }
+  .gap-8 { gap: 1.25rem !important; }
+  .text-4xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+  .text-5xl { font-size: 2.25rem !important; line-height: 2.5rem !important; }
+  .text-6xl { font-size: 2.75rem !important; line-height: 1.1 !important; }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-cols-4,
+  .grid-cols-5,
+  .grid-cols-6,
+  .grid-cols-7,
+  .grid-cols-8 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Prevent tables and wide content from breaking layout */
+@media (max-width: 768px) {
+  table { display: block; overflow-x: auto; white-space: nowrap; }
+}
+
