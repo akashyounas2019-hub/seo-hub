@@ -1,6 +1,31 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Minus, Activity, ArrowUpRight } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Activity,
+  ArrowUpRight,
+  UserPlus,
+  ClipboardList,
+  Sparkles,
+  Users,
+  Zap,
+  PowerOff,
+  X,
+  Search,
+  FileText,
+  Palette,
+  MapPin,
+  Target,
+  ClipboardCheck,
+  Wrench,
+  BarChart3,
+  Rocket,
+  Bot,
+  ShieldCheck,
+  Globe,
+  type LucideIcon,
+} from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
 import { EXPERTS, buildSubAgentId } from "@/lib/agents";
@@ -8,22 +33,48 @@ import { EXPERTS, buildSubAgentId } from "@/lib/agents";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AKS SEO Team — Agent Hierarchy" },
+      { title: "Agents — AKS SEO Console" },
       {
         name: "description",
         content:
-          "Hierarchical dashboard of the AKS SEO Team Leader and its specialist sub-agents across On-Page, Off-Page, Technical, Research, and Audit.",
+          "Manage the AKS agent fleet: total, working, and offline agents at a glance, with the leader and specialist sub-agent hierarchy.",
       },
-      { property: "og:title", content: "AKS SEO Team — Agent Hierarchy" },
+      { property: "og:title", content: "Agents — AKS SEO Console" },
       {
         property: "og:description",
         content:
-          "Explore the AKS SEO Team Leader agent and its sub-agent fleet.",
+          "Add, assign, and orchestrate specialist SEO agents from a single control surface.",
       },
     ],
   }),
   component: Index,
 });
+
+const ICON_CHOICES: { id: string; icon: LucideIcon; label: string }[] = [
+  { id: "search", icon: Search, label: "Keyword" },
+  { id: "content", icon: FileText, label: "Content" },
+  { id: "design", icon: Palette, label: "Design" },
+  { id: "local", icon: MapPin, label: "Local" },
+  { id: "target", icon: Target, label: "Competitor" },
+  { id: "audit", icon: ClipboardCheck, label: "Audit" },
+  { id: "tech", icon: Wrench, label: "Technical" },
+  { id: "analytics", icon: BarChart3, label: "Analytics" },
+  { id: "growth", icon: Rocket, label: "Growth" },
+  { id: "bot", icon: Bot, label: "Assistant" },
+  { id: "shield", icon: ShieldCheck, label: "Security" },
+  { id: "globe", icon: Globe, label: "International" },
+];
+
+const ACCENT_CHOICES = [
+  "from-cyan-400 to-sky-500",
+  "from-violet-400 to-fuchsia-500",
+  "from-amber-400 to-orange-500",
+  "from-emerald-400 to-teal-500",
+  "from-rose-400 to-pink-500",
+  "from-indigo-400 to-blue-500",
+];
+
+type CustomAgent = { id: string; name: string; iconId: string; accent: string; role: string };
 
 // Per-index bus-half visibility for 5 experts at breakpoints:
 // base = 1 col (both halves hidden), sm = 2 cols, lg = 5 cols (single row).
@@ -39,6 +90,8 @@ const CONNECTOR_CLASSES: { left: string; right: string }[] = [
 function Index() {
   const [open, setOpen] = useState<string | null>("onpage");
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [showAdd, setShowAdd] = useState(false);
+  const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -49,6 +102,11 @@ function Index() {
     }, 200);
     return () => clearTimeout(t);
   }, [open]);
+
+  const totalSubs = EXPERTS.reduce((a, e) => a + e.subs.length, 0);
+  const totalAgents = 1 /* leader */ + EXPERTS.length + totalSubs + customAgents.length;
+  const working = Math.round(totalAgents * 0.72);
+  const offline = totalAgents - working;
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200 relative overflow-hidden">
@@ -68,54 +126,103 @@ function Index() {
 
       <div className="relative mx-auto max-w-7xl px-6 py-10">
         {/* Header */}
-        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
+        <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-slate-900/60 ring-1 ring-cyan-400/30 shadow-[0_0_30px_rgba(34,211,238,0.35)]">
               <img src={agentBot} alt="" className="h-full w-full object-contain" loading="lazy" width={512} height={512} />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-semibold tracking-tight text-white">
-                AKS Agent Console
-              </h1>
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                Fleet Control
+              </div>
+              <h1 className="truncate text-xl font-semibold tracking-tight text-white">Agents</h1>
               <p className="truncate text-xs text-slate-400">
-                Hierarchical SEO Agent Orchestration
+                Orchestrate the AKS SEO agent hierarchy
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
-            </span>
-            <span className="text-cyan-200">All agents online</span>
-          </div>
         </header>
 
-        {/* Leader */}
-        <section className="mt-12 flex flex-col items-center">
-          <div className="relative">
-            <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
-            <div className="relative flex items-center gap-4 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-6 py-5 backdrop-blur">
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
-                <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
+        {/* Summary cards */}
+        <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {[
+            { k: "Total Agents", v: totalAgents, sub: "in fleet", a: "from-cyan-400 to-blue-500", i: Users },
+            { k: "Working", v: working, sub: "active jobs", a: "from-emerald-400 to-teal-500", i: Zap, pulse: true },
+            { k: "Offline", v: offline, sub: "idle / paused", a: "from-rose-400 to-orange-500", i: PowerOff },
+          ].map((s) => (
+            <div key={s.k} className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+              <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${s.a}`} />
+              <div className="flex items-start justify-between">
+                <div className={`inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${s.a} text-slate-950 shadow`}>
+                  <s.i className="h-4 w-4" />
+                </div>
+                {s.pulse && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                  </span>
+                )}
               </div>
-              <div>
-                <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
-                  Main Agent
+              <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-500">{s.k}</div>
+              <div className="mt-0.5 flex items-baseline gap-1.5">
+                <span className="text-2xl font-semibold tabular-nums text-white">{s.v}</span>
+                <span className="text-[11px] text-slate-500">{s.sub}</span>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* Leader + horizontal actions */}
+        <section className="mt-8 flex flex-col items-center">
+          <div className="relative w-full">
+            <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
+            <div className="relative flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-4 backdrop-blur">
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
+                  <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
                 </div>
-                <div className="text-xl font-semibold text-white">
-                  AKS SEO Team Leader
+                <div className="min-w-0">
+                  <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                    Main Agent
+                  </div>
+                  <div className="truncate text-lg font-semibold text-white">AKS SEO Team Leader</div>
+                  <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    </span>
+                    All agents online
+                  </div>
                 </div>
-                <div className="text-xs text-slate-400">
-                  Orchestrates 5 experts · 20 sub-agents
-                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setShowAdd(true)}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-2 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:brightness-110"
+                >
+                  <UserPlus className="h-3.5 w-3.5" /> Add Agent
+                </button>
+                <Link
+                  to="/automation"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-400/20"
+                >
+                  <ClipboardList className="h-3.5 w-3.5" /> Assign Job
+                </Link>
+                <Link
+                  to="/automation"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-[12px] font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-white"
+                >
+                  <Sparkles className="h-3.5 w-3.5" /> New Job
+                </Link>
               </div>
             </div>
           </div>
 
           {/* leader trunk drops down into the connector row of the grid */}
-          <div className="mx-auto mt-2 h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+          <div className="mx-auto mt-4 h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
         </section>
+
 
         {/* Experts grid */}
         <section className="grid grid-cols-1 gap-x-5 gap-y-0 sm:grid-cols-2 lg:grid-cols-5">
@@ -275,8 +382,44 @@ function Index() {
           );
         })()}
 
+        {/* Custom agents added via Add Agent modal */}
+        {customAgents.length > 0 && (
+          <section className="mt-8">
+            <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
+              <span className="h-px flex-1 bg-slate-800" />
+              <span>Custom Agents</span>
+              <span className="h-px flex-1 bg-slate-800" />
+            </div>
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {customAgents.map((a) => {
+                const Icon = ICON_CHOICES.find((c) => c.id === a.iconId)?.icon ?? Bot;
+                return (
+                  <li key={a.id} className="group/sub relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-4 transition hover:-translate-y-0.5 hover:border-cyan-500/40 hover:bg-slate-900/70">
+                    <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${a.accent}`} />
+                    <div className="flex items-start justify-between">
+                      <div className={`relative grid h-14 w-14 place-items-center overflow-hidden rounded-xl bg-slate-950/60 ring-1 ring-slate-700/60`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${a.accent} opacity-25`} />
+                        <Icon className="relative h-6 w-6 text-white" />
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-medium text-emerald-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> New
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full bg-gradient-to-r ${a.accent}`} />
+                      <div className="text-sm font-semibold text-white leading-tight">{a.name}</div>
+                    </div>
+                    <div className="mt-1 text-[11px] uppercase tracking-wider text-slate-500">{a.role}</div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
         {/* generous breathing room below the agent graph */}
         <div aria-hidden className="h-24 sm:h-32" />
+
 
         {/* footer stats */}
         <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -303,12 +446,163 @@ function Index() {
         <div aria-hidden className="h-16" />
       </div>
 
+      {showAdd && (
+        <AddAgentModal
+          onClose={() => setShowAdd(false)}
+          onCreate={(agent) => {
+            setCustomAgents((prev) => [...prev, agent]);
+            setShowAdd(false);
+          }}
+        />
+      )}
+
       <style>{`
         @keyframes subIn {
           from { opacity: 0; transform: translateY(8px) scale(0.98); filter: blur(2px); }
           to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
       `}</style>
+    </div>
+  );
+}
+
+function AddAgentModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (a: CustomAgent) => void;
+}) {
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("Specialist");
+  const [iconId, setIconId] = useState(ICON_CHOICES[0].id);
+  const [accent, setAccent] = useState(ACCENT_CHOICES[0]);
+  const SelectedIcon = ICON_CHOICES.find((c) => c.id === iconId)?.icon ?? Bot;
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onCreate({
+      id: `custom-${Date.now()}`,
+      name: name.trim(),
+      role: role.trim() || "Specialist",
+      iconId,
+      accent,
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <form
+        onSubmit={submit}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-cyan-500/25 bg-slate-950 shadow-2xl"
+      >
+        <div className={`h-1 w-full bg-gradient-to-r ${accent}`} />
+        <div className="flex items-start justify-between border-b border-slate-800 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className={`relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-slate-900 ring-1 ring-cyan-400/30`}>
+              <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-25`} />
+              <SelectedIcon className="relative h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                Fleet · New Agent
+              </div>
+              <h2 className="text-base font-semibold text-white">Add Agent</h2>
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 px-5 py-4">
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-slate-500">Agent name</label>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. International SEO Scout"
+              className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-slate-500">Role / tag</label>
+            <input
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="e.g. Specialist"
+              className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-slate-500">Logo icon</label>
+            <div className="mt-2 grid grid-cols-6 gap-2">
+              {ICON_CHOICES.map((c) => {
+                const I = c.icon;
+                const active = iconId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setIconId(c.id)}
+                    title={c.label}
+                    className={`relative grid aspect-square place-items-center rounded-lg border transition ${
+                      active
+                        ? "border-cyan-400/60 bg-cyan-400/10 text-white shadow-[0_0_14px_rgba(34,211,238,0.35)]"
+                        : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-cyan-400/40 hover:text-white"
+                    }`}
+                  >
+                    <I className="h-4 w-4" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-slate-500">Accent</label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ACCENT_CHOICES.map((a) => {
+                const active = a === accent;
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setAccent(a)}
+                    className={`h-7 w-10 rounded-md bg-gradient-to-br ${a} transition ${
+                      active ? "ring-2 ring-white/70 ring-offset-2 ring-offset-slate-950" : "opacity-70 hover:opacity-100"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-slate-800 bg-slate-950/60 px-5 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!name.trim()}
+            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <UserPlus className="h-3.5 w-3.5" /> Create Agent
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

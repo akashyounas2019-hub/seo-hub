@@ -56,7 +56,7 @@ type NavItem = {
 const workspaceItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: Activity },
   { title: "Agency Health", url: "/agency-health", icon: ShieldCheck, badge: "8" },
-  { title: "Agent Jobs", url: "/", icon: Zap, badge: "12" },
+  { title: "Agents", url: "/", icon: Zap, badge: "12" },
   { title: "Assign Tasks", url: "/automation", icon: ClipboardList },
   { title: "Automation", url: "/automation", icon: Workflow },
   { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
