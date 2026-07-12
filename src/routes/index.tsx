@@ -1,6 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Minus, Activity, ArrowUpRight } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Activity,
+  ArrowUpRight,
+  UserPlus,
+  ClipboardList,
+  Sparkles,
+  Users,
+  Zap,
+  PowerOff,
+  X,
+  Search,
+  FileText,
+  Palette,
+  MapPin,
+  Target,
+  ClipboardCheck,
+  Wrench,
+  BarChart3,
+  Rocket,
+  Bot,
+  Bell,
+  ShieldCheck,
+  Globe,
+  type LucideIcon,
+} from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
 import { EXPERTS, buildSubAgentId } from "@/lib/agents";
@@ -8,22 +34,48 @@ import { EXPERTS, buildSubAgentId } from "@/lib/agents";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AKS SEO Team — Agent Hierarchy" },
+      { title: "Agents — AKS SEO Console" },
       {
         name: "description",
         content:
-          "Hierarchical dashboard of the AKS SEO Team Leader and its specialist sub-agents across On-Page, Off-Page, Technical, Research, and Audit.",
+          "Manage the AKS agent fleet: total, working, and offline agents at a glance, with the leader and specialist sub-agent hierarchy.",
       },
-      { property: "og:title", content: "AKS SEO Team — Agent Hierarchy" },
+      { property: "og:title", content: "Agents — AKS SEO Console" },
       {
         property: "og:description",
         content:
-          "Explore the AKS SEO Team Leader agent and its sub-agent fleet.",
+          "Add, assign, and orchestrate specialist SEO agents from a single control surface.",
       },
     ],
   }),
   component: Index,
 });
+
+const ICON_CHOICES: { id: string; icon: LucideIcon; label: string }[] = [
+  { id: "search", icon: Search, label: "Keyword" },
+  { id: "content", icon: FileText, label: "Content" },
+  { id: "design", icon: Palette, label: "Design" },
+  { id: "local", icon: MapPin, label: "Local" },
+  { id: "target", icon: Target, label: "Competitor" },
+  { id: "audit", icon: ClipboardCheck, label: "Audit" },
+  { id: "tech", icon: Wrench, label: "Technical" },
+  { id: "analytics", icon: BarChart3, label: "Analytics" },
+  { id: "growth", icon: Rocket, label: "Growth" },
+  { id: "bot", icon: Bot, label: "Assistant" },
+  { id: "shield", icon: ShieldCheck, label: "Security" },
+  { id: "globe", icon: Globe, label: "International" },
+];
+
+const ACCENT_CHOICES = [
+  "from-cyan-400 to-sky-500",
+  "from-violet-400 to-fuchsia-500",
+  "from-amber-400 to-orange-500",
+  "from-emerald-400 to-teal-500",
+  "from-rose-400 to-pink-500",
+  "from-indigo-400 to-blue-500",
+];
+
+type CustomAgent = { id: string; name: string; iconId: string; accent: string; role: string };
 
 // Per-index bus-half visibility for 5 experts at breakpoints:
 // base = 1 col (both halves hidden), sm = 2 cols, lg = 5 cols (single row).
