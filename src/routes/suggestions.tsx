@@ -297,8 +297,9 @@ function SuggestionsPage() {
 
         {/* Sections */}
         <div className="mt-8 space-y-6">
-          {SECTIONS.map((s) => (
-            <SectionBlock key={s.id} section={s} />
+          {sections.map((s) => (
+            <SectionBlock key={s.id} section={s} flashId={flashId} />
+          ))}
           ))}
           <AutomationSuggestions />
         </div>
@@ -438,7 +439,7 @@ function AutomationSuggestions() {
   );
 }
 
-function SectionBlock({ section }: { section: Section }) {
+function SectionBlock({ section, flashId }: { section: Section; flashId?: string | null }) {
   const [expanded, setExpanded] = useState(false);
   const Icon = section.icon;
   const previewCount = 3;
@@ -492,7 +493,7 @@ function SectionBlock({ section }: { section: Section }) {
       {/* Items */}
       <ul className="divide-y divide-slate-800/70">
         {items.map((item) => (
-          <SuggestionRow key={item.id} item={item} accent={section.accent} tint={section.from} />
+          <SuggestionRow key={item.id} item={item} accent={section.accent} tint={section.from} isNew={flashId === item.id} />
         ))}
       </ul>
 
@@ -519,10 +520,12 @@ function SuggestionRow({
   item,
   accent,
   tint,
+  isNew,
 }: {
   item: Suggestion;
   accent: string;
   tint: string;
+  isNew?: boolean;
 }) {
   const impactStyle: Record<Impact, string> = {
     High: "bg-amber-400/10 text-amber-200 border-amber-400/25",
@@ -532,7 +535,7 @@ function SuggestionRow({
   const effortLabel: Record<Effort, string> = { S: "S · Quick", M: "M · Focused", L: "L · Project" };
 
   return (
-    <li className="group relative flex items-start justify-between gap-4 px-5 py-4 transition hover:bg-slate-900/60">
+    <li className={`group relative flex items-start justify-between gap-4 px-5 py-4 transition hover:bg-slate-900/60 ${isNew ? "bg-cyan-400/5 ring-1 ring-inset ring-cyan-400/30" : ""}`}>
       <div className="flex min-w-0 items-start gap-3">
         <div
           className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${accent} text-slate-950`}
@@ -540,7 +543,14 @@ function SuggestionRow({
           <Lightbulb className="h-3.5 w-3.5" />
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-medium text-white leading-snug">{item.title}</div>
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-medium text-white leading-snug">{item.title}</div>
+            {isNew && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/40 bg-cyan-400/15 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-100">
+                <Sparkles className="h-2.5 w-2.5" /> New
+              </span>
+            )}
+          </div>
           <div className="mt-0.5 text-xs text-slate-400">{item.desc}</div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <span
