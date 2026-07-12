@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TeamRouteImport } from './routes/team'
 import { Route as SuggestionsRouteImport } from './routes/suggestions'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as QaSuiteRouteImport } from './routes/qa-suite'
@@ -33,11 +32,6 @@ import { Route as AnalyticsGoogleAnalyticsRouteImport } from './routes/analytics
 import { Route as AnalyticsBusinessProfileRouteImport } from './routes/analytics.business-profile'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 
-const TeamRoute = TeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SuggestionsRoute = SuggestionsRouteImport.update({
   id: '/suggestions',
   path: '/suggestions',
@@ -165,7 +159,6 @@ export interface FileRoutesByFullPath {
   '/qa-suite': typeof QaSuiteRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
-  '/team': typeof TeamRoute
   '/agents/$id': typeof AgentsIdRoute
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
@@ -190,7 +183,6 @@ export interface FileRoutesByTo {
   '/qa-suite': typeof QaSuiteRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
-  '/team': typeof TeamRoute
   '/agents/$id': typeof AgentsIdRoute
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
@@ -216,7 +208,6 @@ export interface FileRoutesById {
   '/qa-suite': typeof QaSuiteRoute
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
-  '/team': typeof TeamRoute
   '/agents/$id': typeof AgentsIdRoute
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
@@ -243,7 +234,6 @@ export interface FileRouteTypes {
     | '/qa-suite'
     | '/settings'
     | '/suggestions'
-    | '/team'
     | '/agents/$id'
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
@@ -268,7 +258,6 @@ export interface FileRouteTypes {
     | '/qa-suite'
     | '/settings'
     | '/suggestions'
-    | '/team'
     | '/agents/$id'
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
@@ -293,7 +282,6 @@ export interface FileRouteTypes {
     | '/qa-suite'
     | '/settings'
     | '/suggestions'
-    | '/team'
     | '/agents/$id'
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
@@ -319,7 +307,6 @@ export interface RootRouteChildren {
   QaSuiteRoute: typeof QaSuiteRoute
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
-  TeamRoute: typeof TeamRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AnalyticsBusinessProfileRoute: typeof AnalyticsBusinessProfileRoute
   AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
@@ -333,13 +320,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/team': {
-      id: '/team'
-      path: '/team'
-      fullPath: '/team'
-      preLoaderRoute: typeof TeamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/suggestions': {
       id: '/suggestions'
       path: '/suggestions'
@@ -511,7 +491,6 @@ const rootRouteChildren: RootRouteChildren = {
   QaSuiteRoute: QaSuiteRoute,
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
-  TeamRoute: TeamRoute,
   AgentsIdRoute: AgentsIdRoute,
   AnalyticsBusinessProfileRoute: AnalyticsBusinessProfileRoute,
   AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
