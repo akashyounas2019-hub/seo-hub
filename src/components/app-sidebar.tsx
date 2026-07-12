@@ -531,35 +531,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="relative border-t border-cyan-500/10 bg-transparent">
         {!collapsed ? (
-          <div className="m-1.5 overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-br from-slate-950 via-slate-950 to-blue-950/40 p-3">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 p-px">
-                  <div className="grid h-full w-full place-items-center rounded-full bg-slate-950 text-[10px] font-bold text-cyan-200">
-                    AK
-                  </div>
-                </div>
-                <span
-                  className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-slate-950 bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.9)]"
-                  style={{ animation: "ledPulse 1.6s ease-in-out infinite" }}
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[12px] font-semibold text-white">Ahmed K.</div>
-                <div className="truncate text-[10px] text-cyan-300/70">Operator · Dubai</div>
-              </div>
-            </div>
-            <div className="mt-2.5 flex items-center justify-between text-[10px]">
-              <span className="text-slate-500">Usage</span>
-              <span className="font-mono text-cyan-200">62%</span>
-            </div>
-            <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-800">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_8px_rgba(34,211,238,0.7)]"
-                style={{ width: "62%" }}
-              />
-            </div>
-          </div>
+          <UsagePanel />
         ) : (
           <div className="grid place-items-center py-2">
             <div className="h-7 w-7 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 p-px">
