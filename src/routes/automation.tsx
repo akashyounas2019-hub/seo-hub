@@ -185,13 +185,14 @@ function AutomationPage() {
     category: string;
     cadence: Cadence;
     status: Status;
+    assignedAgents: string[];
   }) {
     const cat = CATEGORIES.find((c) => c.id === data.category) ?? CATEGORIES[0];
     if (data.id) {
       setFlows((prev) =>
         prev.map((f) =>
           f.id === data.id
-            ? { ...f, name: data.name, desc: data.desc, category: data.category, cadence: data.cadence, status: data.status, accent: cat.accent }
+            ? { ...f, name: data.name, desc: data.desc, category: data.category, cadence: data.cadence, status: data.status, accent: cat.accent, assignedAgents: data.assignedAgents }
             : f,
         ),
       );
@@ -207,6 +208,7 @@ function AutomationPage() {
         accent: cat.accent,
         lastRun: "—",
         successRate: 0,
+        assignedAgents: data.assignedAgents,
       };
       setFlows((prev) => [newFlow, ...prev]);
     }
