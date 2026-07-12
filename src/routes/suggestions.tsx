@@ -618,12 +618,13 @@ function SuggestionRow({
           </div>
         </div>
       </div>
-      <Link
-        to="/suggestions"
+      <button
+        type="button"
+        onClick={() => toast.success(`Reviewing: ${item.title}`, { description: item.assigned ? `Assigned to ${item.assigned}` : "Unassigned — pick an agent from Assign Tasks." })}
         className="mt-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] font-medium text-slate-300 transition group-hover:border-cyan-400/40 group-hover:text-cyan-200"
       >
         Review <ArrowUpRight className="h-3 w-3" />
-      </Link>
+      </button>
     </li>
   );
 }
