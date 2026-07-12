@@ -83,6 +83,7 @@ function ScoutProfilePage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(scout.tabs[0].id);
   const [clock, setClock] = useState("");
+  const [running, setRunning] = useState(false);
 
   useEffect(() => {
     setActiveTab(scout.tabs[0].id);
