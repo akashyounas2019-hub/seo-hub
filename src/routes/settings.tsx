@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 import {
   SlidersHorizontal,
   KeyRound,
@@ -15,7 +16,22 @@ import {
   Copy,
 } from "lucide-react";
 
+const settingsTabIds = [
+  "general",
+  "apis",
+  "integrations",
+  "roles",
+  "automation",
+  "webhooks",
+  "audit",
+  "logs",
+  "notifications",
+] as const;
+
 export const Route = createFileRoute("/settings")({
+  validateSearch: z.object({
+    tab: z.enum(settingsTabIds).optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Settings — AKS SEO Console" },
@@ -40,7 +56,11 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 function SettingsPage() {
-  const [tab, setTab] = useState<TabId>("general");
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const tab: TabId = (search.tab as TabId | undefined) ?? "general";
+  const setTab = (id: TabId) =>
+    navigate({ search: { tab: id === "general" ? undefined : id }, replace: true });
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
