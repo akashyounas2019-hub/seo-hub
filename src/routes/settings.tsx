@@ -80,6 +80,7 @@ function SettingsPage() {
         {tab === "automation" && <AutomationPanel />}
         {tab === "webhooks" && <WebhooksPanel />}
         {tab === "audit" && <AuditPanel />}
+        {tab === "logs" && <LogsPanel />}
         {tab === "notifications" && <NotificationsPanel />}
       </div>
     </div>
