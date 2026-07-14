@@ -42,6 +42,25 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
+type WorkspaceRole = "Owner" | "Admin" | "Editor" | "Viewer";
+
+// Prototype role source. In production this comes from the auth context /
+// server session (see `tanstack-auth-guards`), never from client storage.
+function useCurrentRole(): WorkspaceRole {
+  const [role, setRole] = useState<WorkspaceRole>("Owner");
+  // read once on mount to keep SSR happy
+  if (typeof window !== "undefined") {
+    const stored = window.localStorage.getItem("aks:role") as WorkspaceRole | null;
+    if (stored && stored !== role) setRole(stored);
+  }
+  return role;
+}
+
+// Same allowlist the old /logs Intelligence entry used: system logs are
+// programmer/owner surface only.
+const LOGS_ALLOWED: ReadonlySet<WorkspaceRole> = new Set(["Owner", "Admin"]);
+const canViewLogs = (role: WorkspaceRole) => LOGS_ALLOWED.has(role);
+
 const tabs = [
   { id: "general", label: "General", icon: SlidersHorizontal },
   { id: "apis", label: "APIs", icon: KeyRound },
@@ -50,7 +69,7 @@ const tabs = [
   { id: "automation", label: "Automation", icon: Workflow },
   { id: "webhooks", label: "Webhooks", icon: Webhook },
   { id: "audit", label: "Audit Log", icon: ScrollText },
-  { id: "logs", label: "Logs", icon: ScrollText },
+  { id: "logs", label: "Logs", icon: ScrollText, restricted: true as const },
   { id: "notifications", label: "Notifications", icon: Bell },
 ] as const;
 
@@ -59,7 +78,11 @@ type TabId = (typeof tabs)[number]["id"];
 function SettingsPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const tab: TabId = (search.tab as TabId | undefined) ?? "general";
+  const role = useCurrentRole();
+  const requested = (search.tab as TabId | undefined) ?? "general";
+  // Server-mirroring guard: if the URL points at a restricted tab and the
+  // caller lacks the role, drop back to General instead of rendering it.
+  const tab: TabId = requested === "logs" && !canViewLogs(role) ? "general" : requested;
   const setTab = (id: TabId) =>
     navigate({ search: { tab: id === "general" ? undefined : id }, replace: true });
 
@@ -74,21 +97,32 @@ function SettingsPage() {
             <h1 className="text-2xl font-semibold text-white">Settings</h1>
             <p className="text-sm text-slate-400">Programmer + agency-owner controls · encrypted at rest (AES-256-GCM).</p>
           </div>
+          <span className="ml-auto rounded-full border border-slate-800 bg-slate-950/60 px-2.5 py-1 text-[10px] uppercase tracking-wider text-slate-400">
+            Role · <span className="text-cyan-300">{role}</span>
+          </span>
         </header>
 
         <div className="mb-6 flex flex-wrap gap-1 rounded-xl border border-slate-800 bg-slate-950/40 p-1">
           {tabs.map((t) => {
             const active = tab === t.id;
+            const locked = "restricted" in t && t.restricted && !canViewLogs(role);
             return (
               <button
                 key={t.id}
-                onClick={() => setTab(t.id)}
+                onClick={() => !locked && setTab(t.id)}
+                disabled={locked}
+                title={locked ? "Requires Owner or Admin role" : undefined}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                  active ? "bg-cyan-400 text-slate-950" : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                  active
+                    ? "bg-cyan-400 text-slate-950"
+                    : locked
+                      ? "cursor-not-allowed text-slate-600"
+                      : "text-slate-300 hover:bg-slate-900 hover:text-white"
                 }`}
               >
                 <t.icon className="h-3.5 w-3.5" />
                 {t.label}
+                {locked && <Lock className="h-3 w-3" />}
               </button>
             );
           })}
@@ -101,7 +135,7 @@ function SettingsPage() {
         {tab === "automation" && <AutomationPanel />}
         {tab === "webhooks" && <WebhooksPanel />}
         {tab === "audit" && <AuditPanel />}
-        {tab === "logs" && <LogsPanel />}
+        {tab === "logs" && (canViewLogs(role) ? <LogsPanel /> : <RestrictedPanel />)}
         {tab === "notifications" && <NotificationsPanel />}
       </div>
     </div>
