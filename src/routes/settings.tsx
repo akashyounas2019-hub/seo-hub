@@ -16,7 +16,22 @@ import {
   Copy,
 } from "lucide-react";
 
+const settingsTabIds = [
+  "general",
+  "apis",
+  "integrations",
+  "roles",
+  "automation",
+  "webhooks",
+  "audit",
+  "logs",
+  "notifications",
+] as const;
+
 export const Route = createFileRoute("/settings")({
+  validateSearch: z.object({
+    tab: z.enum(settingsTabIds).optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Settings — AKS SEO Console" },
