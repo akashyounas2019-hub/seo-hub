@@ -142,6 +142,23 @@ function SettingsPage() {
   );
 }
 
+function RestrictedPanel() {
+  return (
+    <Card title="Restricted" desc="System Logs require Owner or Admin role.">
+      <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+        <Lock className="mt-0.5 h-4 w-4 text-amber-300" />
+        <div className="text-xs text-slate-300">
+          <p className="font-medium text-amber-200">Access denied</p>
+          <p className="mt-1 text-slate-400">
+            Your current role can&apos;t view raw system logs. Ask an Owner to grant the <span className="text-cyan-300">Admin</span> role, or open the
+            <span className="text-cyan-300"> Audit Log</span> tab for user-facing activity.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function Card({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
