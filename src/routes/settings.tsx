@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Check,
   Copy,
+  Lock,
 } from "lucide-react";
 
 const settingsTabIds = [
