@@ -89,11 +89,10 @@ const scouts: { id: string; title: string; icon: LucideIcon }[] = [
   { id: "design", title: "Designing Scout", icon: Palette },
 ];
 
-// Intelligence — analysis, QA, logs
+// Intelligence — analysis, QA
 const intelligenceItems: NavItem[] = [
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "QA Suite", url: "/qa-suite", icon: TestTube2 },
-  { title: "Logs", url: "/logs", icon: ScrollText },
 ];
 
 // Integrations — external systems this console plugs into

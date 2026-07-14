@@ -33,6 +33,7 @@ const tabs = [
   { id: "automation", label: "Automation", icon: Workflow },
   { id: "webhooks", label: "Webhooks", icon: Webhook },
   { id: "audit", label: "Audit Log", icon: ScrollText },
+  { id: "logs", label: "Logs", icon: ScrollText },
   { id: "notifications", label: "Notifications", icon: Bell },
 ] as const;
 
@@ -79,6 +80,7 @@ function SettingsPage() {
         {tab === "automation" && <AutomationPanel />}
         {tab === "webhooks" && <WebhooksPanel />}
         {tab === "audit" && <AuditPanel />}
+        {tab === "logs" && <LogsPanel />}
         {tab === "notifications" && <NotificationsPanel />}
       </div>
     </div>
@@ -354,6 +356,73 @@ function NotificationsPanel() {
             ))}
           </div>
         ))}
+      </div>
+    </Card>
+  );
+}
+
+type LogLevel = "info" | "warn" | "error" | "debug";
+type LogRow = { ts: string; level: LogLevel; source: string; msg: string };
+
+const logSeed: LogRow[] = [
+  { ts: "07:12:44", level: "info", source: "build-agent", msg: "Job spotlesscleaningservices → phase=global_research queued" },
+  { ts: "07:12:38", level: "info", source: "keyword-scout", msg: "Fetched 214 keywords from Semrush (dubai-cleaning)" },
+  { ts: "07:11:20", level: "warn", source: "cwv", msg: "LCP 2.8s > 2.0s budget on /services/deep-clean" },
+  { ts: "07:10:02", level: "error", source: "outreach", msg: "SMTP 550: recipient rejected (batch #42)" },
+  { ts: "07:08:55", level: "info", source: "auditor", msg: "Rubric audit passed for 4 pages" },
+  { ts: "07:07:12", level: "debug", source: "router", msg: "Prefetch /agents/onpage" },
+  { ts: "07:06:44", level: "info", source: "gateway", msg: "Anthropic call · 1.2s · $0.014" },
+];
+
+const logTone: Record<LogLevel, string> = {
+  info: "text-cyan-300 bg-cyan-400/10 border-cyan-400/20",
+  warn: "text-amber-300 bg-amber-400/10 border-amber-400/20",
+  error: "text-rose-300 bg-rose-400/10 border-rose-400/20",
+  debug: "text-slate-400 bg-slate-500/10 border-slate-500/20",
+};
+
+function LogsPanel() {
+  const [level, setLevel] = useState<LogLevel | "all">("all");
+  const rows = logSeed.filter((r) => level === "all" || r.level === level);
+
+  return (
+    <Card title="System Logs" desc="Live tail across every agent, gateway, and job runner.">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="inline-flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 px-2 py-1.5 text-xs">
+          <span className="pr-1 text-[10px] uppercase tracking-wider text-slate-500">Level</span>
+          {(["all", "info", "warn", "error", "debug"] as const).map((l) => (
+            <button
+              key={l}
+              onClick={() => setLevel(l)}
+              className={`rounded px-2 py-0.5 text-[11px] uppercase tracking-wider ${level === l ? "bg-cyan-400 text-slate-950 font-semibold" : "text-slate-400 hover:text-white"}`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+        <button className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-1.5 text-xs text-slate-300 hover:border-cyan-400/40">
+          Export
+        </button>
+      </div>
+      <div className="rounded-xl border border-slate-800 overflow-hidden">
+        <div className="grid grid-cols-12 gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2 text-[10px] uppercase tracking-wider text-slate-500">
+          <div className="col-span-2">Timestamp</div>
+          <div className="col-span-1">Level</div>
+          <div className="col-span-2">Source</div>
+          <div className="col-span-7">Message</div>
+        </div>
+        <div className="max-h-[60vh] overflow-y-auto font-mono text-[12px]">
+          {rows.map((r, i) => (
+            <div key={i} className="grid grid-cols-12 gap-3 border-b border-slate-900 px-4 py-2 hover:bg-slate-900/40">
+              <div className="col-span-2 text-slate-500">{r.ts}</div>
+              <div className="col-span-1">
+                <span className={`inline-flex rounded border px-1.5 py-px text-[9px] uppercase tracking-wider ${logTone[r.level]}`}>{r.level}</span>
+              </div>
+              <div className="col-span-2 text-cyan-300">{r.source}</div>
+              <div className="col-span-7 text-slate-200">{r.msg}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </Card>
   );
