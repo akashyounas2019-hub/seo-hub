@@ -33,6 +33,7 @@ const tabs = [
   { id: "automation", label: "Automation", icon: Workflow },
   { id: "webhooks", label: "Webhooks", icon: Webhook },
   { id: "audit", label: "Audit Log", icon: ScrollText },
+  { id: "logs", label: "Logs", icon: ScrollText },
   { id: "notifications", label: "Notifications", icon: Bell },
 ] as const;
 
