@@ -1,0 +1,472 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  ────────────────────────────────────────────────────────────────────
+  GYL Platform · "Dark Onyx" premium dark design system
+  ────────────────────────────────────────────────────────────────────
+
+  Deep charcoal-black theme matched from the AturnDeck reference.
+  Near-black backgrounds with a subtle warm-violet undertone, darker
+  sidebar pane, cards that lift just enough to read, and a teal-green
+  accent for active states and primary CTAs.
+
+  Both "light" and "dark" data-theme attributes resolve to this
+  single dark palette (solo-operator setup).
+
+  Customer-facing surfaces (booking widgets, brand-match previews) get
+  `data-theme="brand-limo"` (LEGACY name — kept for CSS selector contract with
+  the widget preview code) which restores navy/champagne. Untouched.
+*/
+
+/* ════════════════════════ DARK ONYX (default + light + dark) ═══════ */
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Surfaces — the reference uses a near-black canvas (#181820),
+     an even darker sidebar (#111118), and slightly lifted cards
+     (#1e1e2d). Subtle violet-purple undertone throughout. */
+  --bg:            oklch(15% 0.012 285);
+  --sidebar:       oklch(11.5% 0.014 285);
+  --surface:       oklch(18.5% 0.010 280);
+  --surface-2:     oklch(22% 0.010 280);
+  --surface-3:     oklch(26% 0.008 280);
+  --surface-soft:  oklch(18.5% 0.010 280);
+
+  /* Text — the reference has crisp white headings, medium-gray body,
+     and dimmer faint text. */
+  --text:          oklch(95% 0.003 280);
+  --text-muted:    oklch(65% 0.008 280);
+  --text-faint:    oklch(48% 0.008 280);
+
+  /* Borders — very subtle, warm-tinted white alpha. The reference
+     cards have barely-visible edges. */
+  --border:        oklch(95% 0.005 280 / 0.07);
+  --border-strong: oklch(95% 0.005 280 / 0.14);
+
+  /* Accent — teal-green, matching the reference toggle switch and
+     active sidebar highlight. Slightly cyan-shifted emerald. */
+  --accent:        oklch(72% 0.17 170);
+  --accent-hover:  oklch(78% 0.15 170);
+  --accent-fg:     oklch(12% 0.02 170);
+  --accent-tint:   oklch(72% 0.17 170 / 0.14);
+  --accent-ring:   oklch(72% 0.17 170 / 0.35);
+  --accent-dark:   oklch(55% 0.16 170);
+
+  /* Secondary accent (legacy --gold aliases) */
+  --gold:          oklch(72% 0.17 170);
+  --gold-tint:     oklch(72% 0.17 170 / 0.14);
+  --gold-2:        oklch(78% 0.15 170);
+
+  /* Semantic — tuned for contrast on the dark card surfaces */
+  --success:       oklch(74% 0.17 155);
+  --success-tint:  oklch(74% 0.17 155 / 0.14);
+  --warning:       oklch(76% 0.14 75);
+  --warning-tint:  oklch(76% 0.14 75 / 0.14);
+  --danger:        oklch(66% 0.19 25);
+  --danger-tint:   oklch(66% 0.19 25 / 0.14);
+  --info:          oklch(70% 0.13 235);
+  --info-tint:     oklch(70% 0.13 235 / 0.14);
+
+  /* Customer brand (for /p/* and widget preview surfaces only) */
+  --brand-navy:        #0B1E3F;
+  --brand-navy-2:      #0F2A55;
+  --brand-navy-deep:   #06132A;
+  --brand-champagne:   #C9A961;
+  --brand-champagne-2: #E9CF94;
+  --brand-ivory:       #F7F2E7;
+  --brand-cream:       #FAF7EE;
+
+  /* Shadows — deep, diffuse on the near-black canvas */
+  --shadow-xs: 0 1px 0 0 oklch(0% 0 0 / 0.35);
+  --shadow-sm: 0 1px 3px 0 oklch(0% 0 0 / 0.30), 0 1px 2px 0 oklch(0% 0 0 / 0.20);
+  --shadow-md: 0 4px 16px -4px oklch(0% 0 0 / 0.45), 0 2px 6px -2px oklch(0% 0 0 / 0.30);
+  --shadow-lg: 0 16px 40px -12px oklch(0% 0 0 / 0.55), 0 4px 12px -4px oklch(0% 0 0 / 0.35);
+}
+
+/* ═══════════════════ CUSTOMER-BRAND PREVIEW THEME ══════════════════════ */
+/* Applied to surfaces showing booking widgets / customer-facing previews. */
+[data-theme="brand-limo"] {
+  color-scheme: light;
+  --bg:        var(--brand-cream);
+  --surface:   var(--brand-ivory);
+  --surface-2: oklch(94% 0.018 80);
+  --surface-3: oklch(90% 0.022 80);
+  --text:      var(--brand-navy);
+  --text-muted: oklch(40% 0.04 250);
+  --text-faint: oklch(60% 0.03 250);
+  --border:    oklch(from oklch(20% 0.08 250) l c h / 0.10);
+  --border-strong: oklch(from oklch(20% 0.08 250) l c h / 0.20);
+  --accent:    var(--brand-champagne);
+  --accent-hover: oklch(56% 0.10 80);
+  --accent-fg: var(--brand-navy-deep);
+  --accent-tint: oklch(56% 0.10 80 / 0.16);
+  --accent-ring: oklch(56% 0.10 80 / 0.40);
+}
+
+/* ═══════════════════════════ BASE TYPOGRAPHY ═══════════════════════════ */
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), ui-sans-serif, -apple-system, "Segoe UI", "Roboto", sans-serif;
+  /* Geist stylistic alternates — flat 1, single-storey g, ss01 = grotesk feel.
+     cv11 = alternate gradient digits (premium UI tools use this). */
+  font-feature-settings: "ss01" 1, "cv11" 1, "cv01" 1, "cv09" 1, "calt" 1;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* Geist alts for ALL text (Linear/Vercel do this — sharper rendering) */
+* {
+  font-feature-settings: inherit;
+}
+
+/* `font-serif` is referenced on most page H1s. We retire serif from chrome
+   but keep the class as a soft alias so existing pages don't break. They
+   land on the sans stack with a tighter tracking + heavier weight. */
+.font-serif {
+  font-family: var(--font-sans), ui-sans-serif, sans-serif;
+  letter-spacing: -0.011em;
+  font-feature-settings: "ss01" 1, "cv11" 1;
+}
+
+.tnum,
+td.num,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "cv11" 1;
+}
+
+/* ═══════════════════════════════ FOCUS ═════════════════════════════════ */
+@layer base {
+  :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 1px;
+    border-radius: 4px;
+  }
+}
+
+/* ═══════════════════════ SMOOTH INTERACTIONS ═══════════════════════════
+   Premium tactile feel across every clickable surface: eased colour/shadow
+   transitions on hover, and a subtle press (scale + sink) on click so taps
+   feel physical. Scoped to interactive elements only; honours
+   prefers-reduced-motion via the global reset below. */
+@layer base {
+  :where(button, a, [role="button"], summary, label[for], .gyl-nav-item, [cmdk-item]) {
+    transition:
+      background-color 160ms cubic-bezier(0.2, 0, 0, 1),
+      border-color     160ms cubic-bezier(0.2, 0, 0, 1),
+      color            160ms cubic-bezier(0.2, 0, 0, 1),
+      box-shadow       160ms cubic-bezier(0.2, 0, 0, 1),
+      opacity          160ms cubic-bezier(0.2, 0, 0, 1),
+      transform        120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  /* Press feedback — gentle sink + shrink, springs back on release. */
+  :where(button, a[href], [role="button"]):not(:disabled):active {
+    transform: translateY(0.5px) scale(0.985);
+  }
+  :where(button):disabled,
+  :where([aria-disabled="true"]) {
+    cursor: not-allowed;
+  }
+}
+
+/* Primary CTAs get a soft teal glow on dark surfaces. */
+.bg-accent,
+[data-primary-cta] {
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+              0 4px 16px -8px var(--accent-ring);
+}
+.bg-accent:hover,
+[data-primary-cta]:hover {
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.10) inset,
+              0 6px 22px -6px var(--accent-ring);
+}
+
+/* ═══════════════════════ PAGE & CARD MOTION ════════════════════════════
+   The "wow" layer. Page sections settle in with a staggered fade-up on every
+   route change (wrapper is keyed by pathname). Cards opt into a hover lift.
+   All of this is silenced by the prefers-reduced-motion reset above. */
+@keyframes gyl-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.gyl-page-enter > * {
+  animation: gyl-fade-up 0.5s cubic-bezier(0.2, 0, 0, 1) both;
+}
+.gyl-page-enter > *:nth-child(1) { animation-delay: 0.00s; }
+.gyl-page-enter > *:nth-child(2) { animation-delay: 0.05s; }
+.gyl-page-enter > *:nth-child(3) { animation-delay: 0.10s; }
+.gyl-page-enter > *:nth-child(4) { animation-delay: 0.15s; }
+.gyl-page-enter > *:nth-child(5) { animation-delay: 0.20s; }
+.gyl-page-enter > *:nth-child(n+6) { animation-delay: 0.24s; }
+
+/* Reusable hover lift for card-like surfaces that opt in via class. */
+.gyl-lift {
+  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
+              border-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.gyl-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px -16px oklch(0% 0 0 / 0.50),
+              0 0 0 1px var(--border-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@supports (scrollbar-color: auto) {
+  * { scrollbar-color: var(--border-strong) transparent; scrollbar-width: thin; }
+}
+
+::selection {
+  background: var(--accent-tint);
+  color: var(--text);
+}
+
+/* ═══════════════════════════════ KBD ═══════════════════════════════════ */
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: 4px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 0 0 oklch(from var(--text) l c h / 0.04);
+}
+
+/* ════════════════════════════ COMMAND BAR ══════════════════════════════ */
+[cmdk-input] { background: transparent; outline: none; width: 100%; }
+[cmdk-item][data-selected="true"] {
+  background: var(--surface-2);
+  transition: background 100ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ══════════════════════════ APP-SHELL CHROME ═══════════════════════════ */
+.gyl-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.gyl-shell-row {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.gyl-sidebar {
+  width: 296px;
+  flex-shrink: 0;
+  transition: width 180ms cubic-bezier(0.2, 0, 0, 1);
+  background: linear-gradient(180deg, var(--sidebar), oklch(9% 0.010 285));
+  border-right: 1px solid var(--border);
+}
+.gyl-sidebar-collapsed { width: 64px; }
+@media (max-width: 767px) {
+  .gyl-sidebar { width: 64px; }
+}
+.gyl-sidebar-label {
+  transition: opacity 140ms ease 40ms;
+}
+/* When the rail is collapsed (or on phones) hide the text labels entirely so
+   the icons center in the 56px rail. Previously this rule merged a selector
+   and an @media into one invalid selector list, so the browser dropped it and
+   the labels stayed visible — clipped mid-word ("Mission Con…"). */
+.gyl-sidebar-collapsed .gyl-sidebar-label {
+  display: none;
+}
+@media (max-width: 767px) {
+  .gyl-sidebar-label {
+    display: none;
+  }
+}
+
+/* Canonical page-header rule. Every admin page using `<header class="brand-rule">`
+   gets the same chrome: clean bottom hairline, 16px breathing room below. */
+.brand-rule {
+  position: relative;
+  padding-bottom: 16px;
+  margin-bottom: 4px;
+}
+.brand-rule::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--border);
+  pointer-events: none;
+}
+
+/* H1s inside .brand-rule — auto-style. Replaces the random
+   font-serif text-[28px] mishmash with a single canonical heading shape
+   across every page that uses the brand-rule wrapper.
+
+   Uses !important to win against the legacy inline `text-[26px]
+   font-serif font-semibold` classes still on many pages. When those
+   classes are eventually removed via sweep, these rules still apply
+   transparently. */
+.brand-rule > h1,
+.brand-rule h1.font-serif {
+  font-family: var(--font-sans), ui-sans-serif, sans-serif !important;
+  font-size: 28px !important;
+  line-height: 32px !important;
+  letter-spacing: -0.014em !important;
+  font-weight: 500 !important;
+  color: var(--text) !important;
+  margin: 0 !important;
+}
+.brand-rule h1 + p,
+.brand-rule > p {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+  max-width: 68ch;
+}
+/* Eyebrow above the H1 inside a brand-rule — back-links + section labels */
+.brand-rule a[href^="/admin"] {
+  font-size: 12px;
+  color: var(--text-faint);
+  display: inline-block;
+  margin-bottom: 6px;
+}
+.brand-rule a[href^="/admin"]:hover {
+  color: var(--text);
+}
+
+/* ══════════════════════════ LIVE-STATUS DOT ════════════════════════════ */
+@keyframes gyl-pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.live-dot {
+  position: relative;
+  display: inline-flex;
+  height: 8px;
+  width: 8px;
+}
+.live-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--accent);
+  animation: gyl-pulse 1.8s cubic-bezier(0.2, 0, 0.6, 1) infinite;
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--accent);
+}
+
+/* ═══════════════════ AGENT-WORKING ANIMATION (live task states) ════════════
+   Used by <AgentWorking>. Every running task surface across the dashboard
+   shows this so the agent visibly *feels* alive. prefers-reduced-motion is
+   already neutralised globally above. */
+
+/* Radar — concentric gold rings expanding out of the core emblem. */
+@keyframes gyl-radar {
+  0%   { transform: scale(0.42); opacity: 0.55; }
+  100% { transform: scale(2.4);  opacity: 0; }
+}
+.gyl-radar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid var(--accent);
+  animation: gyl-radar 2.4s cubic-bezier(0.2, 0, 0.5, 1) infinite;
+}
+
+/* Orbit — a satellite dot circling the core. */
+@keyframes gyl-orbit { to { transform: rotate(360deg); } }
+.gyl-orbit { animation: gyl-orbit 3.2s linear infinite; }
+
+/* Core breathe — the central spark gently pulses. */
+@keyframes gyl-breathe {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.16); opacity: 0.82; }
+}
+.gyl-breathe { animation: gyl-breathe 2.4s ease-in-out infinite; }
+
+/* Indeterminate progress sweep — a gold comet crossing the track. */
+@keyframes gyl-sweep {
+  0%   { transform: translateX(-60%); }
+  100% { transform: translateX(360%); }
+}
+.gyl-sweep { animation: gyl-sweep 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+
+/* Active-step glow on the pipeline stepper. */
+@keyframes gyl-step-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-ring); }
+  50%      { box-shadow: 0 0 0 5px transparent; }
+}
+.gyl-step-active { animation: gyl-step-glow 1.8s ease-out infinite; }
+
+/* Shimmer skeleton — light sweep across placeholder blocks. */
+@keyframes gyl-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.gyl-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    var(--surface) 28%,
+    var(--surface-2) 48%,
+    var(--surface) 68%
+  );
+  background-size: 200% 100%;
+  animation: gyl-shimmer 1.7s ease-in-out infinite;
+}
+
+/* ═══════════════════ NOTIFICATION / DIGEST MARKDOWN ════════════════════ */
+/* Digests are stored as Markdown; rendered via markdownToHtml. Scope the
+   element styles so headings/lists read tightly inside the dim card body. */
+.notif-md > :first-child { margin-top: 0; }
+.notif-md h1, .notif-md h2, .notif-md h3, .notif-md h4 {
+  margin: 10px 0 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.notif-md p { margin: 4px 0; }
+.notif-md ul, .notif-md ol { margin: 4px 0; padding-left: 18px; }
+.notif-md ul { list-style: disc; }
+.notif-md ol { list-style: decimal; }
+.notif-md li { margin: 1px 0; }
+.notif-md strong { color: var(--text); font-weight: 600; }
+.notif-md a { color: var(--accent); }
+.notif-md a:hover { text-decoration: underline; }
+.notif-md code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+}

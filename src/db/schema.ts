@@ -1,0 +1,417 @@
+import { sql } from "drizzle-orm";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  jsonb,
+  integer,
+  primaryKey,
+  uniqueIndex,
+  index,
+  pgEnum,
+  numeric,
+  date,
+  doublePrecision,
+} from "drizzle-orm/pg-core";
+
+export const userRoleEnum = pgEnum("user_role", ["admin", "manager", "student"]);
+export const siteUserRoleEnum = pgEnum("site_user_role", ["manager", "worker"]);
+export const leadStatusEnum = pgEnum("lead_status", [
+  "new",
+  "contacted",
+  "qualified",
+  "won",
+  "lost",
+]);
+export const taskStatusEnum = pgEnum("task_status", [
+  "todo",
+  "in_progress",
+  "blocked",
+  "in_review",
+  "done",
+  "cancelled",
+]);
+export const taskPriorityEnum = pgEnum("task_priority", ["low", "normal", "high", "urgent"]);
+
+export const sites = pgTable(
+  "sites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    domain: text("domain").notNull(),
+    city: text("city"),
+    region: text("region"),
+    knowledgeBase: text("knowledge_base"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    slugIdx: uniqueIndex("sites_slug_uq").on(t.slug),
+    domainIdx: uniqueIndex("sites_domain_uq").on(t.domain),
+  }),
+);
+
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    keyId: text("key_id").notNull(),
+    secret: text("secret").notNull(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  },
+  (t) => ({
+    keyIdIdx: uniqueIndex("api_keys_key_id_uq").on(t.keyId),
+    siteIdx: index("api_keys_site_idx").on(t.siteId),
+  }),
+);
+
+export const leads = pgTable(
+  "leads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    form: text("form").notNull(),
+    name: text("name"),
+    email: text("email"),
+    phone: text("phone"),
+    service: text("service"),
+    message: text("message"),
+    pageUrl: text("page_url"),
+    meta: jsonb("meta").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    sourceIp: text("source_ip"),
+    userAgent: text("user_agent"),
+    status: leadStatusEnum("status").notNull().default("new"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    siteCreatedIdx: index("leads_site_created_idx").on(t.siteId, t.createdAt),
+    emailIdx: index("leads_email_idx").on(t.email),
+  }),
+);
+
+export const events = pgTable(
+  "events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    signatureValid: boolean("signature_valid").notNull(),
+    idempotencyKey: text("idempotency_key").notNull(),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    idemUq: uniqueIndex("events_site_idem_uq").on(t.siteId, t.idempotencyKey),
+    siteReceivedIdx: index("events_site_received_idx").on(t.siteId, t.receivedAt),
+  }),
+);
+
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    name: text("name"),
+    role: userRoleEnum("role").notNull().default("student"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  },
+  (t) => ({
+    emailUq: uniqueIndex("users_email_uq").on(t.email),
+  }),
+);
+
+export const siteUsers = pgTable(
+  "site_users",
+  {
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: siteUserRoleEnum("role").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.siteId, t.userId] }),
+  }),
+);
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    userAgent: text("user_agent"),
+    ip: text("ip"),
+  },
+  (t) => ({
+    userIdx: index("sessions_user_idx").on(t.userId),
+    expiresIdx: index("sessions_expires_idx").on(t.expiresAt),
+  }),
+);
+
+export const taskTemplates = pgTable(
+  "task_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id").references(() => sites.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description"),
+    cadence: text("cadence").notNull(),
+    defaultAssigneeId: uuid("default_assignee_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    defaultPriority: taskPriorityEnum("default_priority").notNull().default("normal"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastRunAt: timestamp("last_run_at", { withTimezone: true }),
+  },
+  (t) => ({
+    siteIdx: index("task_templates_site_idx").on(t.siteId),
+  }),
+);
+
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description"),
+    status: taskStatusEnum("status").notNull().default("todo"),
+    priority: taskPriorityEnum("priority").notNull().default("normal"),
+    assigneeId: uuid("assignee_id").references(() => users.id, { onDelete: "set null" }),
+    creatorId: uuid("creator_id").references(() => users.id, { onDelete: "set null" }),
+    templateId: uuid("template_id").references(() => taskTemplates.id, { onDelete: "set null" }),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    siteIdx: index("tasks_site_idx").on(t.siteId),
+    assigneeIdx: index("tasks_assignee_idx").on(t.assigneeId),
+    statusDueIdx: index("tasks_status_due_idx").on(t.status, t.dueAt),
+  }),
+);
+
+export const taskComments = pgTable(
+  "task_comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    taskIdx: index("task_comments_task_idx").on(t.taskId, t.createdAt),
+  }),
+);
+
+export const orgSettings = pgTable("org_settings", {
+  id: text("id").primaryKey().default("singleton"),
+  anthropicKeyCiphertext: text("anthropic_key_ciphertext"),
+  geminiKeyCiphertext: text("gemini_key_ciphertext"),
+  groqKeyCiphertext: text("groq_key_ciphertext"),
+  llmProviderPreference: text("llm_provider_preference").notNull().default("gemini"),
+  llmModel: text("llm_model").notNull().default("claude-opus-4-7"),
+  auditEnabled: boolean("audit_enabled").notNull().default(true),
+  digestEnabled: boolean("digest_enabled").notNull().default(true),
+  twilioAccountSid: text("twilio_account_sid"),
+  twilioAuthTokenCiphertext: text("twilio_auth_token_ciphertext"),
+  twilioWebhookBaseUrl: text("twilio_webhook_base_url"),
+  stripeOauthClientId: text("stripe_oauth_client_id"),
+  stripeOauthSecretCiphertext: text("stripe_oauth_secret_ciphertext"),
+  squareOauthClientId: text("square_oauth_client_id"),
+  squareOauthSecretCiphertext: text("square_oauth_secret_ciphertext"),
+  googleOauthClientId: text("google_oauth_client_id"),
+  googleOauthSecretCiphertext: text("google_oauth_secret_ciphertext"),
+  smtpHost: text("smtp_host"),
+  smtpPort: integer("smtp_port"),
+  smtpUser: text("smtp_user"),
+  smtpPasswordCiphertext: text("smtp_password_ciphertext"),
+  smtpFrom: text("smtp_from"),
+  smtpEnabled: boolean("smtp_enabled").notNull().default(false),
+  publicBaseUrl: text("public_base_url"),
+  networkKnowledgeBase: text("network_knowledge_base"),
+  telegramBotTokenCiphertext: text("telegram_bot_token_ciphertext"),
+  telegramWebhookSecret: text("telegram_webhook_secret"),
+  telegramBotUsername: text("telegram_bot_username"),
+  claudeWorkerSecret: text("claude_worker_secret"),
+  industry: text("industry").notNull().default("cleaning_services"),
+  pagespeedApiKeyCiphertext: text("pagespeed_api_key_ciphertext"),
+  googleCruxApiKeyCiphertext: text("google_crux_api_key_ciphertext"),
+  indexnowDailyQuota: integer("indexnow_daily_quota").notNull().default(200),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+});
+
+export const claudeJobs = pgTable(
+  "claude_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").notNull(),
+    title: text("title").notNull(),
+    siteId: uuid("site_id").references(() => sites.id, { onDelete: "set null" }),
+    input: jsonb("input").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    status: text("status").notNull().default("pending"),
+    priority: text("priority").notNull().default("normal"),
+    output: jsonb("output").$type<Record<string, unknown>>(),
+    outputMarkdown: text("output_markdown"),
+    artifacts: jsonb("artifacts").$type<Array<{ name: string; url?: string; bytes?: number }>>().notNull().default(sql`'[]'::jsonb`),
+    workerId: text("worker_id"),
+    workerInfo: jsonb("worker_info").$type<Record<string, unknown>>(),
+    preferWorker: text("prefer_worker").notNull().default("any"),
+    triggerSource: text("trigger_source").notNull().default("system"),
+    tokensInput: integer("tokens_input"),
+    tokensOutput: integer("tokens_output"),
+    durationMs: integer("duration_ms"),
+    error: text("error"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    statusIdx: index("claude_jobs_status_idx").on(t.status, t.priority, t.createdAt),
+    siteIdx: index("claude_jobs_site_idx").on(t.siteId, t.createdAt),
+    kindIdx: index("claude_jobs_kind_idx").on(t.kind, t.status),
+  }),
+);
+
+export const agentProfiles = pgTable(
+  "agent_profiles",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    title: text("title").notNull(),
+    focus: text("focus"),
+    skillInstructions: text("skill_instructions"),
+    isCustom: boolean("is_custom").notNull().default(false),
+    isActive: boolean("is_active").notNull().default(true),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    customIdx: index("agent_profiles_custom_idx").on(t.isCustom, t.createdAt),
+  }),
+);
+
+export const trafficSnapshots = pgTable(
+  "traffic_snapshots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),
+    source: text("source").notNull(),
+    snapshotDate: text("snapshot_date").notNull(),
+    metrics: jsonb("metrics").$type<Record<string, number>>().notNull(),
+    detail: jsonb("detail").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    siteSourceDateUq: uniqueIndex("traffic_snapshots_uq").on(t.siteId, t.source, t.snapshotDate),
+    dateIdx: index("traffic_snapshots_date_idx").on(t.snapshotDate),
+  }),
+);
+
+export const kanbanTasks = pgTable(
+  "kanban_tasks",
+  {
+    id: text("id").primaryKey(),
+    siteId: text("site_id").default("safaeewala"),
+    title: text("title").notNull(),
+    desc: text("desc"),
+    assignee: text("assignee").notNull(),
+    priority: text("priority").notNull().default("medium"),
+    status: text("status").notNull().default("todo"),
+    due: text("due"),
+    templateId: text("template_id"),
+    jobId: text("job_id"),
+    outputMarkdown: text("output_markdown"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    statusIdx: index("kanban_tasks_status_idx").on(t.status),
+    assigneeIdx: index("kanban_tasks_assignee_idx").on(t.assignee),
+  }),
+);
+
+export const kanbanTaskTemplates = pgTable(
+  "kanban_task_templates",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    title: text("title").notNull(),
+    desc: text("desc"),
+    defaultAssignee: text("default_assignee"),
+    priority: text("priority").notNull().default("medium"),
+    builtIn: boolean("built_in").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  }
+);
+
+export const automationFlows = pgTable(
+  "automation_flows",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    desc: text("desc"),
+    category: text("category").notNull(),
+    cadence: text("cadence").notNull().default("weekly"),
+    status: text("status").notNull().default("running"),
+    icon: text("icon"),
+    accent: text("accent"),
+    lastRun: text("last_run").default("—"),
+    successRate: integer("success_rate").notNull().default(100),
+    assignedAgents: jsonb("assigned_agents").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    statusIdx: index("automation_flows_status_idx").on(t.status),
+    categoryIdx: index("automation_flows_category_idx").on(t.category),
+  }),
+);
+
+export type Site = typeof sites.$inferSelect;
+export type NewSite = typeof sites.$inferInsert;
+export type Lead = typeof leads.$inferSelect;
+export type Task = typeof tasks.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type ClaudeJob = typeof claudeJobs.$inferSelect;
+export type AgentProfile = typeof agentProfiles.$inferSelect;
+export type KanbanTask = typeof kanbanTasks.$inferSelect;
+export type KanbanTaskTemplate = typeof kanbanTaskTemplates.$inferSelect;
+export type AutomationFlow = typeof automationFlows.$inferSelect;
+
+

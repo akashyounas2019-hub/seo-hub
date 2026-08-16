@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="GYL Platform">
+  <!-- Brand navy square with rounded corners — matches the limo brand. -->
+  <rect width="512" height="512" rx="96" fill="#0B1E3F"/>
+  <!-- Subtle champagne hairline frame, hints at "premium" without screaming. -->
+  <rect x="40" y="40" width="432" height="432" rx="64" fill="none" stroke="#C9A961" stroke-width="2" stroke-opacity="0.45"/>
+  <!-- GYL wordmark in Playfair-flavoured serif. We embed the path of the
+       letters rather than depending on a font because the icon is rendered
+       at install time and the OS won't have Playfair loaded. -->
+  <g fill="#E9CF94" font-family="Georgia, 'Times New Roman', serif" font-weight="600" letter-spacing="-2">
+    <text x="256" y="320" font-size="220" text-anchor="middle">GYL</text>
+  </g>
+  <!-- Tiny gold dot under the wordmark — same accent that appears on the
+       customer-site CTA. -->
+  <circle cx="256" cy="380" r="6" fill="#C9A961"/>
+</svg>

@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --env-file=.env --import tsx src/db/cli.ts user:list)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3001/admin/dashboard-overview)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3001/admin/agent/jobs)",
+      "Bash(npm run *)",
+      "Bash(find \"/c/Users/11 TRDs/Downloads\" \"/c/Users/11 TRDs/Desktop\" \"/c/Users/11 TRDs/Documents\" -maxdepth 3 -iname \"*loveable*\" -o -iname \"*DFC*14A00*\" 2>/dev/null | head -20)",
+      "Read(//c/Users/11 TRDs/Downloads/**)",
+      "Bash(mkdir -p \"C:/Users/11TRDS~1/AppData/Local/Temp/claude/c--Users-11-TRDs-Downloads-ai-website-factory-student-student-copy-ai-website-factory-starter/0a15c8b5-7c10-45da-af66-ed2aa3089ac6/scratchpad/lovable\")",
+      "Bash(unzip -o \"/c/Users/11 TRDs/Downloads/lovable-project-dfc14a00.zip\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} in %{time_total}s\\\\n\" http://localhost:3001/admin/agent -L --cookie-jar /tmp/gyl_cookies.txt --cookie /tmp/gyl_cookies.txt)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} in %{time_total}s\\\\n\" http://localhost:3001/admin/agent/roster/onpage)",
+      "PowerShell(& \"c:\\\\Users\\\\11 TRDs\\\\Downloads\\\\ai-website-factory-student\\\\student-copy\\\\ai-website-factory-starter\\\\worker\\\\install-scheduled-task.ps1\")",
+      "Bash(curl -s -o /dev/null -w 'scout=%{http_code} agent/jobs=%{http_code} tasks=%{http_code} roster/research=%{http_code}\\\\n' http://localhost:3001/admin/scout http://localhost:3001/admin/agent/jobs http://localhost:3001/admin/tasks http://localhost:3001/admin/agent/roster/research)",
+      "Bash(grep -nA 10 \"^export const seoProposals\" \"c:/Users/11 TRDs/Downloads/ai-website-factory-student/student-copy/ai-website-factory-starter/src/db/schema.ts\")",
+      "Bash(ls \"c:/Users/11 TRDs/Downloads/ai-website-factory-student/student-copy/ai-website-factory-starter/\" | grep -iE \"levable|lovable|zip\" 2>/dev/null ; echo \"---\" ; find \"c:/Users/11 TRDs/Downloads/\" -maxdepth 2 -iname \"*levable*\" -o -iname \"*lovable*\" 2>/dev/null | head)",
+      "Bash(npx tsx *)",
+      "Bash(rm -rf \"c:/Users/11 TRDs/Downloads/ai-website-factory-student/student-copy/ai-website-factory-starter/.next/types/app/api/sites/[id]/connection-status\" && echo \"CLEARED\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\11 TRDs\\Downloads\\ai-website-factory-student\\student-copy\\ai-website-factory-starter\\.next\\types\\app\\api\\sites\\[id]\\connection-status"
+    ]
+  }
+}

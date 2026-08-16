@@ -1,0 +1,286 @@
+/* gyl-bookings: smart-quote (v2 single-screen) — additive over gyl-bookings.css */
+
+/* The form should be visually quiet at rest — the smart bar is the hero. */
+.gyl-smart-quote { background: transparent; border: none; padding: 0; }
+
+/* ===== 1. Natural-language bar ===== */
+.gyl-smart-quote .gyl-smart-bar { margin: 0 0 18px; }
+.gyl-smart-bar-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gyl-text, #555);
+  opacity: 0.65;
+  margin-bottom: 8px;
+}
+.gyl-smart-bar-row { display: flex; gap: 8px; align-items: stretch; }
+.gyl-smart-input {
+  flex: 1; min-width: 0;
+  padding: 14px 16px; font-size: 15px;
+  border: 1.5px solid #d1d5db; border-radius: 10px;
+  background: #fff; color: #111;
+  outline: none; transition: border-color 120ms, box-shadow 120ms;
+}
+.gyl-smart-input:focus {
+  border-color: var(--gyl-accent, #1f6feb);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gyl-accent, #1f6feb) 18%, transparent);
+}
+.gyl-smart-mic, .gyl-smart-parse {
+  border: 1.5px solid #d1d5db; background: #fff;
+  border-radius: 10px; cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.gyl-smart-mic { width: 46px; color: #555; }
+.gyl-smart-mic:hover { background: #f5f5f7; }
+.gyl-smart-mic.is-listening {
+  color: #fff; background: #e11d48; border-color: #e11d48;
+  animation: gyl-mic-pulse 1.2s ease-in-out infinite;
+}
+.gyl-smart-parse { padding: 0 18px; font-weight: 600; font-size: 14px; min-width: 110px; }
+.gyl-smart-hint { font-size: 12px; color: #6b7280; margin-top: 6px; }
+
+/* ===== Status pill ===== */
+.gyl-smart-status {
+  margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+  font-size: 13px;
+  background: #f0f9ff; color: #075985; border: 1px solid #bae6fd;
+}
+.gyl-smart-status.is-error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.gyl-smart-status.is-loading { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+
+/* ===== 2. Summary card (what AI got — chip row) ===== */
+.gyl-summary-card {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  animation: gyl-fade-in 240ms ease-out;
+}
+.gyl-summary-card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: #14532d;
+  margin-bottom: 10px;
+}
+.gyl-summary-check {
+  display: inline-grid; place-items: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #16a34a; color: #fff;
+  font-size: 12px; font-weight: 700;
+}
+.gyl-summary-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.gyl-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fff; border: 1px solid #d1d5db; border-radius: 999px;
+  padding: 6px 10px 6px 12px;
+  font-size: 12.5px; color: #111;
+  cursor: pointer; font: inherit;
+  transition: background 120ms, border-color 120ms, box-shadow 120ms;
+  max-width: 100%; min-height: 32px;
+}
+.gyl-chip:hover {
+  background: #fafafa;
+  border-color: var(--gyl-accent, #1f6feb);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gyl-accent, #1f6feb) 12%, transparent);
+}
+.gyl-chip-label { color: #6b7280; font-weight: 500; font-size: 11.5px; }
+.gyl-chip-value { color: #111; font-weight: 500; }
+.gyl-chip-edit { color: #6b7280; font-size: 11px; opacity: 0.6; }
+.gyl-chip:hover .gyl-chip-edit { opacity: 1; color: var(--gyl-accent, #1f6feb); }
+
+.gyl-chip.is-editing {
+  background: #fff;
+  padding: 4px 8px;
+  border-color: var(--gyl-accent, #1f6feb);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gyl-accent, #1f6feb) 16%, transparent);
+}
+.gyl-chip-input {
+  border: none; outline: none; background: transparent;
+  font: inherit; font-size: 13px; min-width: 140px; padding: 2px 4px;
+  color: #111;
+}
+
+/* ===== 3. Missing-fields card ===== */
+.gyl-missing-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: gyl-fade-in 240ms ease-out;
+}
+.gyl-missing-title {
+  font-size: 14px; font-weight: 600; color: #111;
+  margin: 0 0 12px;
+}
+.gyl-missing-grid {
+  display: grid; gap: 12px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 520px) {
+  .gyl-missing-grid { grid-template-columns: 1fr 1fr; }
+}
+.gyl-missing-field { display: block; }
+.gyl-missing-field-label {
+  display: block; font-size: 12px; font-weight: 500; color: #374151;
+  margin-bottom: 5px;
+}
+.gyl-missing-input {
+  width: 100%; box-sizing: border-box;
+  padding: 11px 12px; font-size: 14px;
+  border: 1.5px solid #d1d5db; border-radius: 8px;
+  background: #fff; color: #111;
+  outline: none; transition: border-color 120ms, box-shadow 120ms;
+  font-family: inherit;
+}
+.gyl-missing-input:focus {
+  border-color: var(--gyl-accent, #1f6feb);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gyl-accent, #1f6feb) 18%, transparent);
+}
+
+/* ===== 4. Final CTA ===== */
+.gyl-final-row {
+  display: flex; align-items: center; gap: 16px;
+  margin-top: 8px;
+  animation: gyl-fade-in 240ms ease-out;
+}
+.gyl-final-cta {
+  flex: 1;
+  padding: 14px 18px;
+  font-size: 15px; font-weight: 600;
+  border-radius: 10px;
+}
+.gyl-edit-all {
+  background: none; border: none; cursor: pointer;
+  color: #6b7280; font-size: 12.5px; padding: 8px 4px;
+  text-decoration: underline; text-underline-offset: 3px;
+  font-family: inherit;
+}
+.gyl-edit-all:hover { color: var(--gyl-accent, #1f6feb); }
+
+/* ===== 5. Full form expander ===== */
+.gyl-full-form {
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  animation: gyl-fade-in 240ms ease-out;
+}
+.gyl-edit-all-collapse { display: block; margin: 16px auto 0; }
+
+/* ===== 3b. Live vehicle price tiles ===== */
+.gyl-tiles {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  animation: gyl-fade-in 240ms ease-out;
+}
+@media (min-width: 640px) {
+  .gyl-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+.gyl-tile {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 4px;
+  padding: 12px 12px;
+  background: #fff; border: 1.5px solid #e5e7eb; border-radius: 10px;
+  cursor: pointer; font: inherit; text-align: left;
+  transition: border-color 120ms, background 120ms, box-shadow 120ms, transform 80ms;
+  min-height: 88px;
+}
+.gyl-tile:hover {
+  border-color: var(--gyl-accent, #1f6feb);
+  background: #fafbff;
+}
+.gyl-tile.is-selected {
+  border-color: var(--gyl-accent, #1f6feb);
+  background: color-mix(in srgb, var(--gyl-accent, #1f6feb) 6%, #fff);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gyl-accent, #1f6feb) 22%, transparent);
+}
+.gyl-tile-name {
+  font-size: 11.5px; font-weight: 600; color: #6b7280;
+  letter-spacing: 0.02em; text-transform: uppercase;
+}
+.gyl-tile-price {
+  font-size: 20px; font-weight: 700; color: #111;
+  line-height: 1.1;
+}
+.gyl-tile-sub {
+  font-size: 11.5px; color: #6b7280;
+}
+.gyl-tile-loading {
+  cursor: default;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+  background-size: 200% 100%;
+  animation: gyl-tile-shimmer 1.4s ease-in-out infinite;
+  border-color: transparent;
+}
+.gyl-tile-loading * { visibility: hidden; }
+.gyl-tile-fallback {
+  grid-column: 1 / -1;
+  flex-direction: column; align-items: flex-start;
+  background: #f9fafb; border-style: dashed; cursor: default;
+}
+.gyl-tile-fallback:hover { background: #f9fafb; border-color: #e5e7eb; }
+
+@keyframes gyl-tile-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== Animations ===== */
+@keyframes gyl-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes gyl-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(225, 29, 72, 0); }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 520px) {
+  .gyl-smart-bar-row { flex-wrap: wrap; }
+  .gyl-smart-input { flex: 1 1 100%; }
+  .gyl-smart-mic { flex: 0 0 auto; }
+  .gyl-smart-parse { flex: 1 1 auto; min-width: 0; }
+  .gyl-final-row { flex-wrap: wrap; }
+  .gyl-final-cta { flex: 1 1 100%; }
+  .gyl-edit-all { flex: 1 1 100%; text-align: center; }
+}
+
+/* ===== Dark theme ===== */
+.gyl-bookings-theme-dark .gyl-smart-input,
+.gyl-bookings-theme-dark .gyl-missing-input {
+  background: #0f1115; color: #e5e7eb; border-color: #2d3138;
+}
+.gyl-bookings-theme-dark .gyl-smart-mic,
+.gyl-bookings-theme-dark .gyl-smart-parse {
+  background: #14181d; border-color: #2d3138; color: #d1d5db;
+}
+.gyl-bookings-theme-dark .gyl-summary-card { background: #0c1a14; border-color: #1d4d3a; color: #bbf7d0; }
+.gyl-bookings-theme-dark .gyl-summary-card-title { color: #86efac; }
+.gyl-bookings-theme-dark .gyl-missing-card { background: #0e1116; border-color: #2d3138; }
+.gyl-bookings-theme-dark .gyl-missing-title { color: #f3f4f6; }
+.gyl-bookings-theme-dark .gyl-missing-field-label { color: #cbd5e1; }
+.gyl-bookings-theme-dark .gyl-full-form { border-top-color: #2d3138; }
+.gyl-bookings-theme-dark .gyl-chip { background: #14181d; border-color: #2d3138; color: #e5e7eb; }
+.gyl-bookings-theme-dark .gyl-chip-label { color: #9ca3af; }
+.gyl-bookings-theme-dark .gyl-chip-value { color: #f3f4f6; }
+.gyl-bookings-theme-dark .gyl-smart-hint { color: #9ca3af; }
+.gyl-bookings-theme-dark .gyl-smart-status { background: #0c2030; color: #93c5fd; border-color: #1e3a52; }
+.gyl-bookings-theme-dark .gyl-smart-status.is-error { background: #2a0d12; color: #fda4af; border-color: #5a1d24; }
+.gyl-bookings-theme-dark .gyl-smart-status.is-loading { background: #2a2410; color: #fde68a; border-color: #5a4a1d; }
+.gyl-bookings-theme-dark .gyl-tile { background: #14181d; border-color: #2d3138; }
+.gyl-bookings-theme-dark .gyl-tile:hover { background: #181d24; }
+.gyl-bookings-theme-dark .gyl-tile.is-selected { background: #131a26; }
+.gyl-bookings-theme-dark .gyl-tile-name { color: #9ca3af; }
+.gyl-bookings-theme-dark .gyl-tile-price { color: #f3f4f6; }
+.gyl-bookings-theme-dark .gyl-tile-sub { color: #9ca3af; }
+.gyl-bookings-theme-dark .gyl-tile-fallback { background: #0e1116; }
+.gyl-bookings-theme-dark .gyl-tile-loading {
+  background: linear-gradient(90deg, #14181d 0%, #1e242c 50%, #14181d 100%);
+  background-size: 200% 100%;
+}

@@ -1,0 +1,278 @@
+/* GYL Bookings — minimal, brandable widget styles. All selectors are namespaced
+   under .gyl-bookings-* so we won't collide with theme CSS. */
+
+:root {
+	--gyl-accent: #1f6feb;
+	--gyl-accent-contrast: #ffffff;
+	--gyl-bg: #ffffff;
+	--gyl-bg-soft: #f6f8fa;
+	--gyl-text: #1f2328;
+	--gyl-muted: #6e7781;
+	--gyl-border: #d0d7de;
+	--gyl-border-strong: #1f2328;
+	--gyl-radius: 8px;
+	--gyl-success-bg: #ddf4e4;
+	--gyl-success-text: #14532d;
+	--gyl-error-bg: #fde7e9;
+	--gyl-error-text: #82071e;
+}
+
+.gyl-bookings-theme-dark {
+	--gyl-bg: #0d1117;
+	--gyl-bg-soft: #161b22;
+	--gyl-text: #e6edf3;
+	--gyl-muted: #8b949e;
+	--gyl-border: #30363d;
+	--gyl-border-strong: #e6edf3;
+}
+
+.gyl-bookings-form,
+.gyl-bookings-quick {
+	background: var(--gyl-bg);
+	color: var(--gyl-text);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-size: 15px;
+	line-height: 1.4;
+	box-sizing: border-box;
+	max-width: 100%;
+}
+
+.gyl-bookings-form *,
+.gyl-bookings-quick * {
+	box-sizing: border-box;
+}
+
+/* Trip type pill group */
+.gyl-bookings-fieldset {
+	border: none;
+	padding: 0;
+	margin: 0 0 1.25em 0;
+}
+.gyl-bookings-legend {
+	font-weight: 600;
+	margin-bottom: 0.5em;
+	display: block;
+	font-size: 14px;
+	color: var(--gyl-muted);
+}
+.gyl-bookings-trip-type {
+	display: flex;
+	gap: 0.5em;
+	flex-wrap: wrap;
+}
+.gyl-bookings-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.5em 1em;
+	border: 1px solid var(--gyl-border);
+	border-radius: 999px;
+	cursor: pointer;
+	background: var(--gyl-bg);
+	transition: background 120ms, border-color 120ms;
+	font-size: 14px;
+}
+.gyl-bookings-pill input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.gyl-bookings-pill:hover {
+	border-color: var(--gyl-accent);
+}
+.gyl-bookings-pill input:checked + span {
+	color: var(--gyl-accent-contrast);
+}
+.gyl-bookings-pill:has(input:checked) {
+	background: var(--gyl-accent);
+	border-color: var(--gyl-accent);
+	color: var(--gyl-accent-contrast);
+}
+
+/* Form grid */
+.gyl-bookings-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1em;
+}
+@media (min-width: 640px) {
+	.gyl-bookings-form:not(.gyl-bookings-compact) .gyl-bookings-grid {
+		grid-template-columns: 1fr 1fr;
+	}
+	.gyl-bookings-form .gyl-bookings-field-full {
+		grid-column: 1 / -1;
+	}
+}
+
+.gyl-bookings-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35em;
+}
+.gyl-bookings-field label {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--gyl-muted);
+}
+.gyl-bookings-req {
+	color: #c00;
+	margin-left: 2px;
+}
+.gyl-bookings-input {
+	width: 100%;
+	padding: 0.55em 0.75em;
+	border: 1px solid var(--gyl-border);
+	border-radius: var(--gyl-radius);
+	background: var(--gyl-bg);
+	color: var(--gyl-text);
+	font: inherit;
+	transition: border-color 120ms, box-shadow 120ms;
+}
+.gyl-bookings-input:focus {
+	border-color: var(--gyl-accent);
+	outline: none;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--gyl-accent) 25%, transparent);
+}
+textarea.gyl-bookings-input {
+	resize: vertical;
+	min-height: 80px;
+}
+
+/* Submit row */
+.gyl-bookings-submit-row {
+	margin-top: 1.5em;
+	display: flex;
+	align-items: center;
+	gap: 0.75em;
+}
+.gyl-bookings-btn {
+	border: 1px solid var(--gyl-border);
+	background: var(--gyl-bg);
+	color: var(--gyl-text);
+	padding: 0.7em 1.3em;
+	border-radius: var(--gyl-radius);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 120ms, transform 120ms;
+}
+.gyl-bookings-btn-primary {
+	background: var(--gyl-accent);
+	color: var(--gyl-accent-contrast);
+	border-color: var(--gyl-accent);
+	font-size: 16px;
+	padding: 0.8em 1.6em;
+}
+.gyl-bookings-btn-primary:hover {
+	filter: brightness(0.95);
+}
+.gyl-bookings-btn-primary:active {
+	transform: translateY(1px);
+}
+.gyl-bookings-btn[disabled] {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+/* Spinner */
+.gyl-bookings-spinner {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	border: 2px solid var(--gyl-border);
+	border-top-color: var(--gyl-accent);
+	display: inline-block;
+	animation: gyl-bookings-spin 700ms linear infinite;
+}
+@keyframes gyl-bookings-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* Status banner */
+.gyl-bookings-status {
+	margin-top: 1em;
+	padding: 0.75em 1em;
+	border-radius: var(--gyl-radius);
+	font-size: 14px;
+}
+.gyl-bookings-status[data-gyl-status-kind="success"] {
+	background: var(--gyl-success-bg);
+	color: var(--gyl-success-text);
+}
+.gyl-bookings-status[data-gyl-status-kind="error"] {
+	background: var(--gyl-error-bg);
+	color: var(--gyl-error-text);
+}
+
+/* Confirmation panel */
+.gyl-bookings-summary {
+	margin-top: 1.25em;
+	padding: 1em 1.25em;
+	background: var(--gyl-bg-soft);
+	border: 1px solid var(--gyl-border);
+	border-left: 4px solid var(--gyl-accent);
+	border-radius: var(--gyl-radius);
+}
+.gyl-bookings-summary-title {
+	margin: 0 0 0.4em 0;
+	font-size: 16px;
+}
+.gyl-bookings-summary-text {
+	margin: 0;
+	color: var(--gyl-text);
+}
+
+/* Quick-quote inline bar */
+.gyl-bookings-quick-form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	align-items: stretch;
+}
+.gyl-bookings-quick-form .gyl-bookings-input {
+	flex: 1 1 180px;
+	min-width: 0;
+}
+.gyl-bookings-quick-form .gyl-bookings-btn-primary {
+	flex: 0 0 auto;
+}
+
+/* Modal */
+.gyl-bookings-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 99999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.gyl-bookings-modal[hidden] {
+	display: none !important;
+}
+.gyl-bookings-modal-backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0,0,0,0.55);
+}
+.gyl-bookings-modal-panel {
+	position: relative;
+	background: var(--gyl-bg);
+	color: var(--gyl-text);
+	max-width: 640px;
+	width: calc(100% - 2em);
+	max-height: calc(100vh - 2em);
+	overflow: auto;
+	padding: 1.5em;
+	border-radius: var(--gyl-radius);
+	box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+}
+.gyl-bookings-modal-close {
+	position: absolute;
+	top: 0.5em;
+	right: 0.5em;
+	border: none;
+	background: transparent;
+	font-size: 1.6em;
+	line-height: 1;
+	cursor: pointer;
+	color: var(--gyl-muted);
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="GYL Platform">
+  <!-- Maskable variant — the brand fills the full safe-area circle so OS
+       launchers that crop into circles or squircles don't eat the wordmark.
+       Inner content sits inside the 80% safe zone. -->
+  <rect width="512" height="512" fill="#0B1E3F"/>
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#C9A961" stroke-width="2" stroke-opacity="0.4"/>
+  <g fill="#E9CF94" font-family="Georgia, 'Times New Roman', serif" font-weight="600" letter-spacing="-2">
+    <text x="256" y="300" font-size="180" text-anchor="middle">GYL</text>
+  </g>
+  <circle cx="256" cy="350" r="5" fill="#C9A961"/>
+</svg>

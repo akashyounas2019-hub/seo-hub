@@ -1,0 +1,773 @@
+================================================================================
+AKS WORKER — CLOUD SUBSCRIPTION AI WORKER ARCHITECTURE
+Complete Implementation Guide for Replicating in New Projects
+================================================================================
+
+OVERVIEW
+--------
+The AKS Worker is an architecture pattern that routes heavy AI workloads
+through the Claude Code CLI on a local machine (Mac, Windows, or Linux),
+using a flat-rate Claude Pro/Max subscription instead of per-token API calls.
+The result: unlimited AI processing at zero marginal cost.
+
+The web application never calls the AI API directly for heavy tasks.
+Instead, it inserts a "job" row into a database queue. A worker process
+running on the operator's computer polls that queue, claims pending jobs,
+runs them through the Claude CLI, and posts the results back.
+
+
+================================================================================
+PART 1: THE STRATEGY
+================================================================================
+
+WHY THIS WORKS
+--------------
+- Claude Pro ($20/mo) and Claude Max ($100-200/mo) subscriptions include
+  access to the Claude Code CLI, which can be invoked programmatically.
+- The CLI runs on any machine where the user is logged in.
+- A worker script polls a job queue, feeds prompts to the CLI, captures
+  output, and posts results back to the web app.
+- The web app only stores/serves jobs — it never touches the AI directly
+  for queued work.
+
+COST COMPARISON
+---------------
+- API approach:  ~$15-75 per Claude Opus call (long research/audit prompts)
+                  Running 50 jobs/month = $750-3,750/month in API costs
+- Worker approach: $20-200/month flat (subscription), unlimited jobs
+                   Same 50 jobs/month = $20-200/month total
+
+WHAT ROUTES THROUGH THE WORKER (preferWorker: "mac")
+-----------------------------------------------------
+- SEO audits, content generation, research tasks
+- Site builds, design DNA synthesis, quality reviews
+- Blog post drafting, competitor research
+- Any task that takes >30 seconds or requires deep reasoning
+- Basically: anything expensive if done via API
+
+WHAT STILL USES THE API DIRECTLY (not queued)
+---------------------------------------------
+- Live chat (needs sub-second latency, can't wait for polling)
+- Sub-second Haiku validation probes (too small to queue)
+- Vision/image inputs (CLI doesn't support image input)
+- Anthropic web_search server tool (API-native feature)
+
+
+================================================================================
+PART 2: ARCHITECTURE COMPONENTS
+================================================================================
+
+The system has 4 parts:
+
+  [Browser UI] → [Web Server + DB Queue] ← [Worker on Local Machine]
+       ↑                    |                         |
+       |                    |                         |
+       └── polls status ────┘                         |
+                                                      ↓
+                                              [Claude Code CLI]
+                                            (subscription, $0/call)
+
+COMPONENT 1: Job Queue Table (Database)
+---------------------------------------
+A single table tracks all AI jobs:
+
+  CREATE TABLE claude_jobs (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    kind            text NOT NULL,                -- job type, e.g. "cloud-seo:technical"
+    title           text NOT NULL,                -- human label for the UI
+    status          text NOT NULL DEFAULT 'pending',
+                    -- Values: pending → claimed → running → done | failed | cancelled
+    input           jsonb NOT NULL DEFAULT '{}',  -- structured input data + prompt
+    output_markdown text,                         -- Claude's response (markdown)
+    error           text,                         -- error message if failed
+    prefer_worker   text DEFAULT 'mac',           -- 'mac' | 'server' | 'any'
+    priority        text DEFAULT 'normal',        -- 'low' | 'normal' | 'high'
+    site_id         uuid,                         -- optional: which site this relates to
+    created_by      uuid,                         -- who triggered the job
+    created_at      timestamptz DEFAULT now(),
+    claimed_at      timestamptz,
+    completed_at    timestamptz,
+    duration_ms     integer                       -- how long Claude took
+  );
+
+COMPONENT 2: Server API Endpoints
+----------------------------------
+Four endpoints manage the job lifecycle:
+
+  POST /api/claude-jobs/claim
+    - Worker calls this every 30 seconds
+    - Atomically claims the oldest pending job (UPDATE WHERE status='pending')
+    - Builds the prompt from a template system or input.prompt
+    - Returns: { job: { id, kind, title, prompt, input, site } }
+    - If no jobs available, returns: { job: null }
+
+  POST /api/claude-jobs/:id/complete
+    - Worker posts results after Claude finishes
+    - Body: { outputMarkdown: "...", durationMs: 42000 }
+    - Updates row: status='done', output_markdown, duration_ms, completed_at
+
+  POST /api/claude-jobs/:id/fail
+    - Worker reports failure
+    - Body: { error: "error message" }
+    - Updates row: status='failed', error
+
+  POST /api/claude-jobs/:id/heartbeat
+    - Worker sends every 60 seconds while a job is running
+    - Proves the worker is alive; server can detect stale jobs if heartbeats stop
+
+COMPONENT 3: Template System
+-----------------------------
+Templates define how to build prompts for each job kind.
+
+  interface JobTemplate {
+    kind: string;                    // e.g. "cloud-seo:technical"
+    label: string;                   // human-readable name
+    description: string;
+    fields: FieldDefinition[];       // what the form collects
+    buildPrompt(input, siteCtx): string;  // constructs the full prompt
+  }
+
+Two patterns:
+
+  a) STRUCTURED templates — buildPrompt() weaves input fields into a
+     detailed prompt with specific instructions, sections, output format.
+     Example: build:design_dna, site_audit, build:page_generate
+
+  b) PASSTHROUGH templates — the prompt is pre-built by the server action
+     and stored in input.prompt. buildPrompt() just returns input.prompt.
+     Example: cloud-seo:*, build:keyword_research
+
+The claim endpoint resolves the template:
+
+  const template = templateByKind(job.kind);
+  const prompt = template
+    ? template.buildPrompt(job.input, siteContext)
+    : "(no template found)";
+
+COMPONENT 4: The Worker Script
+-------------------------------
+A Node.js script that runs on the operator's machine.
+
+Core loop:
+  1. Poll /api/claude-jobs/claim every 30 seconds
+  2. If a job is claimed:
+     a. Start heartbeat interval (every 60s)
+     b. Check if job.kind has a DIRECT_HANDLER (non-LLM task)
+        - Yes → run the handler directly (Playwright, curl, etc.)
+        - No  → feed job.prompt to the Claude Code CLI
+     c. Capture stdout (markdown output)
+     d. POST results to /api/claude-jobs/:id/complete
+     e. On error, POST to /api/claude-jobs/:id/fail
+     f. Clear heartbeat interval
+  3. If no job, sleep 30 seconds, repeat
+
+
+================================================================================
+PART 3: STEP-BY-STEP IMPLEMENTATION GUIDE
+================================================================================
+
+Follow these steps to implement this pattern in a new project.
+
+STEP 1: PREREQUISITES
+---------------------
+  - Claude Pro or Claude Max subscription
+  - Claude Code CLI installed:
+      npm install -g @anthropic-ai/claude-code
+    Then log in:
+      claude login
+  - A web application with a database (Postgres, PGlite, SQLite, etc.)
+  - Node.js 18+ on the worker machine
+
+STEP 2: CREATE THE JOB QUEUE TABLE
+-----------------------------------
+Add to your database schema:
+
+  CREATE TABLE IF NOT EXISTS ai_jobs (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    kind            text NOT NULL,
+    title           text NOT NULL,
+    status          text NOT NULL DEFAULT 'pending',
+    input           jsonb NOT NULL DEFAULT '{}',
+    output_markdown text,
+    error           text,
+    prefer_worker   text DEFAULT 'mac',
+    priority        text DEFAULT 'normal',
+    created_by      text,
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    claimed_at      timestamptz,
+    completed_at    timestamptz,
+    duration_ms     integer
+  );
+
+  CREATE INDEX idx_ai_jobs_status ON ai_jobs(status, priority, created_at);
+
+STEP 3: CREATE THE SERVER API ENDPOINTS
+----------------------------------------
+
+--- Claim endpoint (POST /api/jobs/claim) ---
+
+  import { NextResponse } from "next/server";
+
+  export async function POST(request) {
+    // Verify worker auth
+    const auth = request.headers.get("authorization");
+    if (auth !== `Bearer ${process.env.WORKER_SECRET}`) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    // Atomic claim: grab the oldest pending job
+    const [claimed] = await db
+      .update(aiJobs)
+      .set({ status: "claimed", claimedAt: new Date() })
+      .where(eq(aiJobs.status, "pending"))
+      .orderBy(asc(aiJobs.createdAt))
+      .limit(1)
+      .returning();
+
+    if (!claimed) {
+      return NextResponse.json({ ok: true, job: null });
+    }
+
+    // Build prompt from template or use input.prompt directly
+    const prompt = buildPromptForKind(claimed.kind, claimed.input);
+
+    return NextResponse.json({
+      ok: true,
+      job: {
+        id: claimed.id,
+        kind: claimed.kind,
+        title: claimed.title,
+        prompt,
+        input: claimed.input,
+      },
+    });
+  }
+
+--- Complete endpoint (POST /api/jobs/:id/complete) ---
+
+  export async function POST(request, { params }) {
+    // Verify auth...
+    const body = await request.json();
+    await db
+      .update(aiJobs)
+      .set({
+        status: "done",
+        outputMarkdown: body.outputMarkdown,
+        durationMs: body.durationMs,
+        completedAt: new Date(),
+      })
+      .where(eq(aiJobs.id, params.id));
+
+    return NextResponse.json({ ok: true });
+  }
+
+--- Fail endpoint (POST /api/jobs/:id/fail) ---
+
+  export async function POST(request, { params }) {
+    // Verify auth...
+    const body = await request.json();
+    await db
+      .update(aiJobs)
+      .set({
+        status: "failed",
+        error: body.error,
+        completedAt: new Date(),
+      })
+      .where(eq(aiJobs.id, params.id));
+
+    return NextResponse.json({ ok: true });
+  }
+
+--- Heartbeat endpoint (POST /api/jobs/:id/heartbeat) ---
+
+  export async function POST(request, { params }) {
+    // Verify auth...
+    await db
+      .update(aiJobs)
+      .set({ status: "running" })
+      .where(eq(aiJobs.id, params.id));
+
+    return NextResponse.json({ ok: true });
+  }
+
+STEP 4: CREATE THE PROMPT BUILDER / TEMPLATE SYSTEM
+----------------------------------------------------
+Define templates for each job kind:
+
+  // lib/job-templates.js
+
+  const TEMPLATES = {
+    "seo:audit": {
+      buildPrompt(input) {
+        return `You are an SEO expert. Audit this URL: ${input.url}
+                Focus on: technical SEO, content quality, schema markup.
+                Return structured markdown with scores and recommendations.`;
+      },
+    },
+    "content:blog-post": {
+      buildPrompt(input) {
+        return `Write a ${input.wordCount}-word blog post about "${input.topic}"
+                for a ${input.niche} business in ${input.city}.
+                Target keyword: ${input.keyword}
+                Tone: ${input.tone}`;
+      },
+    },
+  };
+
+  // For passthrough jobs (prompt pre-built by the server action):
+  function buildPromptForKind(kind, input) {
+    const template = TEMPLATES[kind];
+    if (template) return template.buildPrompt(input);
+    // Passthrough: prompt was pre-built and stored in input.prompt
+    if (input.prompt) return input.prompt;
+    return "(no template or prompt found for this job kind)";
+  }
+
+STEP 5: CREATE THE WORKER SCRIPT
+---------------------------------
+Save as worker/worker.mjs:
+
+  #!/usr/bin/env node
+  import { spawn } from "node:child_process";
+  import { writeFile, mkdtemp, rm } from "node:fs/promises";
+  import { tmpdir, hostname, userInfo } from "node:os";
+  import { join } from "node:path";
+
+  // ─── Configuration ───
+  const PORTAL_URL    = process.env.PORTAL_URL;           // Your web app URL
+  const WORKER_SECRET = process.env.WORKER_SECRET;        // Shared secret
+  const POLL_MS       = Number(process.env.POLL_MS ?? 30000);
+  const CLAUDE_BIN    = process.env.CLAUDE_BIN ?? "claude";
+  const MAX_TURNS     = Number(process.env.MAX_TURNS ?? 25);
+  const TIMEOUT_MS    = Number(process.env.TIMEOUT_MS ?? 20 * 60000); // 20 min
+  const MODEL         = process.env.CLAUDE_MODEL ?? "claude-sonnet-4-6";
+  const WORKER_ID     = `${userInfo().username}@${hostname()}`;
+
+  if (!PORTAL_URL || !WORKER_SECRET) {
+    console.error("Missing PORTAL_URL or WORKER_SECRET");
+    process.exit(1);
+  }
+
+  const HEADERS = {
+    "content-type": "application/json",
+    authorization: `Bearer ${WORKER_SECRET}`,
+  };
+
+  // ─── API helper ───
+  async function api(path, init = {}) {
+    const res = await fetch(`${PORTAL_URL}${path}`, {
+      ...init,
+      headers: { ...HEADERS, ...(init.headers ?? {}) },
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`${path} → ${res.status} ${text.slice(0, 200)}`);
+    }
+    return res.json();
+  }
+
+  // ─── Run Claude Code CLI ───
+  async function runClaude(promptText) {
+    const dir = await mkdtemp(join(tmpdir(), "worker-claude-"));
+    const promptFile = join(dir, "prompt.txt");
+    await writeFile(promptFile, promptText, "utf8");
+
+    return new Promise((resolve, reject) => {
+      const started = Date.now();
+      const args = [
+        "--print",                          // non-interactive, print output
+        "--max-turns", String(MAX_TURNS),    // limit tool-use loops
+        "--output-format", "text",           // plain text/markdown output
+        "--model", MODEL,                    // use the best model available
+        "--permission-mode", "bypassPermissions", // headless, no human to approve
+      ];
+
+      const child = spawn(CLAUDE_BIN, args, {
+        stdio: ["pipe", "pipe", "pipe"],
+        env: { ...process.env },
+      });
+
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (chunk) => (stdout += chunk.toString()));
+      child.stderr.on("data", (chunk) => (stderr += chunk.toString()));
+
+      // Kill if it exceeds timeout
+      const killer = setTimeout(() => {
+        child.kill("SIGKILL");
+        reject(new Error(`claude timed out after ${TIMEOUT_MS}ms`));
+      }, TIMEOUT_MS);
+
+      child.on("error", (err) => {
+        clearTimeout(killer);
+        rm(dir, { recursive: true, force: true }).catch(() => {});
+        reject(err);
+      });
+
+      child.on("close", async (code) => {
+        clearTimeout(killer);
+        const ms = Date.now() - started;
+        await rm(dir, { recursive: true, force: true }).catch(() => {});
+        if (code !== 0) {
+          reject(new Error(`claude exited ${code}: ${stderr.slice(0, 500)}`));
+          return;
+        }
+        resolve({ output: stdout.trim(), durationMs: ms });
+      });
+
+      // Feed prompt via stdin
+      child.stdin.write(promptText);
+      child.stdin.end();
+    });
+  }
+
+  // ─── Claim a job ───
+  async function claimOnce() {
+    try {
+      const res = await api("/api/jobs/claim", {
+        method: "POST",
+        body: JSON.stringify({
+          workerId: WORKER_ID,
+          workerKind: "mac",
+        }),
+      });
+      return res.job ?? null;
+    } catch (err) {
+      console.warn("[worker] claim error:", err.message);
+      return null;
+    }
+  }
+
+  // ─── Heartbeat ───
+  async function heartbeat(jobId) {
+    try {
+      await api(`/api/jobs/${jobId}/heartbeat`, { method: "POST", body: "{}" });
+    } catch (err) {
+      console.warn(`[worker] heartbeat failed:`, err.message);
+    }
+  }
+
+  // ─── Complete ───
+  async function complete(jobId, output, durationMs) {
+    await api(`/api/jobs/${jobId}/complete`, {
+      method: "POST",
+      body: JSON.stringify({ outputMarkdown: output, durationMs }),
+    });
+  }
+
+  // ─── Fail ───
+  async function fail(jobId, error) {
+    try {
+      await api(`/api/jobs/${jobId}/fail`, {
+        method: "POST",
+        body: JSON.stringify({ error: String(error).slice(0, 1000) }),
+      });
+    } catch (err) {
+      console.warn(`[worker] fail report failed:`, err.message);
+    }
+  }
+
+  // ─── Process one job ───
+  async function workOne(job) {
+    console.log(`[worker] claimed ${job.id} — ${job.title} (${job.kind})`);
+    const hb = setInterval(() => heartbeat(job.id), 60000);
+    await heartbeat(job.id); // initial heartbeat marks "running"
+
+    try {
+      const { output, durationMs } = await runClaude(job.prompt);
+      await complete(job.id, output, durationMs);
+      console.log(`[worker] done ${job.id} in ${Math.round(durationMs / 1000)}s`);
+    } catch (err) {
+      console.error(`[worker] ${job.id} failed:`, err.message);
+      await fail(job.id, err.message);
+    } finally {
+      clearInterval(hb);
+    }
+  }
+
+  // ─── Main loop ───
+  async function main() {
+    console.log(`[worker] starting · id=${WORKER_ID} · portal=${PORTAL_URL}`);
+    console.log(`[worker] polling every ${POLL_MS / 1000}s · model=${MODEL}`);
+
+    while (true) {
+      try {
+        const job = await claimOnce();
+        if (job) {
+          await workOne(job);
+          continue; // poll again immediately after finishing
+        }
+      } catch (err) {
+        console.warn("[worker] loop error:", err.message);
+      }
+      await new Promise((r) => setTimeout(r, POLL_MS));
+    }
+  }
+
+  main().catch((err) => {
+    console.error("[worker] fatal:", err);
+    process.exit(1);
+  });
+
+STEP 6: CREATE THE FRONTEND QUEUE + POLL PATTERN
+-------------------------------------------------
+Server action to queue a job:
+
+  // app/actions/my-feature.ts
+  "use server";
+
+  export async function queueMyJob(formData) {
+    const prompt = `You are an expert at X. Analyze: ${formData.get("url")}...`;
+
+    const [job] = await db.insert(aiJobs).values({
+      kind: "my-feature:analysis",
+      title: `Analysis · ${formData.get("url")}`,
+      input: { url: formData.get("url"), prompt },
+      status: "pending",
+      preferWorker: "mac",
+      priority: "high",
+      createdBy: currentUser.id,
+    }).returning({ id: aiJobs.id });
+
+    return { ok: true, jobId: job.id };
+  }
+
+  export async function getJobStatus(jobId) {
+    const [row] = await db.select().from(aiJobs).where(eq(aiJobs.id, jobId));
+    if (!row) return { ok: false, error: "Not found" };
+    return {
+      ok: true,
+      status: row.status,
+      markdown: row.outputMarkdown,
+      error: row.error,
+      durationMs: row.durationMs,
+    };
+  }
+
+Frontend component that queues and polls:
+
+  // components/MyFeatureForm.tsx
+  "use client";
+
+  function MyFeatureForm() {
+    const [phase, setPhase] = useState("idle");  // idle | queuing | polling | done | error
+    const [jobId, setJobId] = useState(null);
+    const [result, setResult] = useState(null);
+    const pollRef = useRef(null);
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      setPhase("queuing");
+
+      const res = await queueMyJob(new FormData(e.currentTarget));
+      if (!res.ok) { setPhase("error"); return; }
+
+      setJobId(res.jobId);
+      setPhase("polling");
+
+      // Poll every 5 seconds
+      pollRef.current = setInterval(async () => {
+        const status = await getJobStatus(res.jobId);
+        setResult(status);
+        if (status.status === "done" || status.status === "failed") {
+          clearInterval(pollRef.current);
+          setPhase(status.status === "done" ? "done" : "error");
+        }
+      }, 5000);
+    }
+
+    return (
+      <form onSubmit={handleSubmit}>
+        <input name="url" type="url" required />
+        <button type="submit" disabled={phase === "polling"}>
+          {phase === "polling" ? "Processing..." : "Run Analysis"}
+        </button>
+
+        {phase === "polling" && (
+          <div>Running on cloud subscription — no API cost...</div>
+        )}
+
+        {phase === "done" && result?.markdown && (
+          <article>{result.markdown}</article>
+        )}
+      </form>
+    );
+  }
+
+STEP 7: CONFIGURE AND RUN THE WORKER
+--------------------------------------
+
+Create a .env.worker file in the project root:
+
+  PORTAL_URL=http://localhost:3000
+  WORKER_SECRET=your-secret-here
+  CLAUDE_BIN=claude
+  MAX_TURNS=25
+  CLAUDE_MODEL=claude-sonnet-4-6
+  POLL_MS=30000
+
+Add to package.json scripts:
+
+  "scripts": {
+    "worker": "node --env-file=.env.worker worker/worker.mjs"
+  }
+
+Generate a shared secret (the web app and worker both know it):
+
+  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+Set this secret in:
+  - .env.worker as WORKER_SECRET
+  - Your web app's .env as WORKER_SECRET (for the claim endpoint to verify)
+
+Start the worker:
+
+  npm run worker
+
+You should see:
+
+  [worker] starting · id=yourname@yourmachine · portal=http://localhost:3000
+  [worker] polling every 30s · model=claude-sonnet-4-6
+
+
+================================================================================
+PART 4: SECURITY & RELIABILITY
+================================================================================
+
+AUTHENTICATION
+--------------
+- Worker authenticates via a shared Bearer token on every request.
+- The web app verifies this token before allowing claims or completions.
+- The worker NEVER sees the Anthropic API key. It uses its own CLI login.
+
+ATOMIC CLAIMS (No Double-Processing)
+-------------------------------------
+- The claim endpoint uses UPDATE ... WHERE status='pending' with LIMIT 1.
+- If two workers poll simultaneously, only one gets the row (database
+  guarantees atomicity). The other gets { job: null }.
+
+HEARTBEAT & STALE JOB DETECTION
+---------------------------------
+- Worker sends heartbeat every 60 seconds while processing.
+- Server can detect stale jobs: if status='claimed' but no heartbeat
+  in 5+ minutes, the job can be released back to 'pending' for retry.
+
+TIMEOUT PROTECTION
+------------------
+- Worker kills the Claude CLI process after 20 minutes (configurable).
+- Reports failure to the server so the job doesn't hang forever.
+
+FALLBACK STRATEGY
+-----------------
+- If the worker machine is offline, an optional server-side executor
+  (using the API) can pick up jobs after they've been pending for N minutes.
+- Set prefer_worker='any' for jobs that either engine can handle.
+
+
+================================================================================
+PART 5: ADVANCED PATTERNS
+================================================================================
+
+DIRECT HANDLERS (Non-LLM Jobs)
+-------------------------------
+Some jobs don't need Claude at all. The worker can run shell commands,
+Playwright scripts, or API calls directly:
+
+  const DIRECT_HANDLERS = {
+    "audit:lighthouse": runLighthouse,
+    "capture:screenshot": runPlaywrightScreenshot,
+    "deploy:static": runStaticDeploy,
+  };
+
+  async function workOne(job) {
+    const handler = DIRECT_HANDLERS[job.kind];
+    if (handler) {
+      const { output, durationMs } = await handler(job);
+      await complete(job.id, output, durationMs);
+    } else {
+      const { output, durationMs } = await runClaude(job.prompt);
+      await complete(job.id, output, durationMs);
+    }
+  }
+
+This lets you use the same job queue for ALL background work — AI and non-AI.
+
+PRIORITY QUEUE
+--------------
+Order claims by priority + creation time:
+
+  .orderBy(
+    sql`CASE priority WHEN 'critical' THEN 0 WHEN 'high' THEN 1
+        WHEN 'normal' THEN 2 WHEN 'low' THEN 3 END`,
+    asc(aiJobs.createdAt)
+  )
+
+JOB CHAINING
+-------------
+One job can queue the next:
+
+  // In the complete endpoint, after marking done:
+  if (job.kind === "research:global" && job.status === "done") {
+    await db.insert(aiJobs).values({
+      kind: "research:synthesize",
+      title: "Synthesize research",
+      input: { researchOutput: job.outputMarkdown, prompt: "..." },
+      status: "pending",
+      preferWorker: "mac",
+    });
+  }
+
+MULTI-WORKER SETUP
+------------------
+You can run workers on multiple machines. Each calls the same claim
+endpoint. Atomic claims prevent double-processing. Use different
+WORKER_ID values to identify which machine processed each job.
+
+
+================================================================================
+PART 6: QUICK-START CHECKLIST
+================================================================================
+
+  [ ] 1. Claude Pro/Max subscription active
+  [ ] 2. Claude Code CLI installed and logged in (claude login)
+  [ ] 3. Database table created (ai_jobs)
+  [ ] 4. Four API endpoints created (claim, complete, fail, heartbeat)
+  [ ] 5. Template/prompt builder for your job kinds
+  [ ] 6. Server action to queue jobs from the UI
+  [ ] 7. Frontend form with 5-second polling
+  [ ] 8. Worker script created (worker/worker.mjs)
+  [ ] 9. Shared secret generated and configured
+  [ ] 10. npm run worker — verify it connects and polls
+  [ ] 11. Queue a test job from the UI — verify it completes
+
+Once working, every new AI feature is just:
+  1. Define a job kind + prompt template
+  2. Add a UI form that queues the job
+  3. The worker picks it up automatically — zero additional setup
+
+
+================================================================================
+PART 7: CLAUDE CLI FLAGS REFERENCE
+================================================================================
+
+Key flags used by the worker when spawning the Claude CLI:
+
+  --print                   Non-interactive mode, prints output to stdout
+  --max-turns N             Limits tool-use iterations (default 25)
+  --output-format text      Returns plain text/markdown (not JSON)
+  --model MODEL_ID          Which model to use (e.g. claude-sonnet-4-6)
+  --permission-mode bypassPermissions
+                            Headless mode — auto-approves all tool use
+                            (WebSearch, WebFetch, Bash, file read/write)
+                            Required because there's no human to click "Allow"
+
+The prompt is fed via stdin. Output is captured from stdout.
+Stderr contains progress/debug info (logged but not sent to the server).
+
+
+================================================================================
+END OF GUIDE
+================================================================================
+This architecture turns any Claude subscription into a zero-cost AI backend.
+The web app queues work, the worker executes it, results flow back automatically.
+No API keys, no per-token billing, no vendor lock-in on the execution layer.

@@ -1,0 +1,25 @@
+{
+  "name": "GYL Platform",
+  "short_name": "GYL",
+  "description": "Multi-site control plane for the AI Website Factory network.",
+  "start_url": "/admin",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0B1E3F",
+  "theme_color": "#0B1E3F",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

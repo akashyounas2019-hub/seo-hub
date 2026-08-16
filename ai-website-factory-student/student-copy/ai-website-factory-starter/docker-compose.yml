@@ -1,0 +1,183 @@
+# Production deploy file. Lives at /opt/gyl-platform/docker-compose.yml on the
+# SkillsHeaven VPS (2.24.80.141), reverse-proxied by the existing coolify-proxy
+# (Traefik) at localhost:3001.
+#
+# Run from /opt/gyl-platform:
+#   docker compose --env-file .env.production up -d --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gyl-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # 127.0.0.1 only — no external exposure. App reaches it via the internal
+    # docker network as hostname `postgres`. The port 5434 binding is just a
+    # convenience for SSH-tunnel'd psql sessions during ops.
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - gyl_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      gyl_internal:
+        # Pin to a static IPv4. The platform container sits on both
+        # `gyl_internal` and `coolify`; without this, hostname `postgres`
+        # resolves to a Docker-assigned IPv6 (the coolify network is dual-stack)
+        # and pg-pool's SCRAM round-trip never completes — confirmed by
+        # 28P01 errors when using hostname vs success when using IP literal.
+        ipv4_address: 172.30.0.10
+
+  platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gyl-platform
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: ${DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SEED_SITES: ${SEED_SITES}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      # Fallback source for the LLM key. The UI-stored key in
+      # org_settings still takes precedence if set.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+      # Photo studio (Phase 1-5). Must match the same env on claude-executor —
+      # both containers read/write the SAME volume, the executor writes bytes
+      # and the platform serves them via /api/photos/file/<id>.
+      PHOTO_STORAGE_PATH: /app/.data/photos
+    volumes:
+      - gyl_photos:/app/.data/photos
+    networks:
+      # Internal: to reach Postgres
+      - gyl_internal
+      # Coolify: so the existing Traefik (coolify-proxy) can route to us
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+
+      # HTTP → 301 → HTTPS
+      - "traefik.http.routers.gyl-platform-http.rule=Host(`localhost:3001`)"
+      - "traefik.http.routers.gyl-platform-http.entrypoints=http"
+      - "traefik.http.routers.gyl-platform-http.middlewares=gyl-platform-redirect"
+      - "traefik.http.middlewares.gyl-platform-redirect.redirectscheme.scheme=https"
+
+      # HTTPS → port 3000 inside container, Let's Encrypt cert
+      - "traefik.http.routers.gyl-platform-https.rule=Host(`localhost:3001`)"
+      - "traefik.http.routers.gyl-platform-https.entrypoints=https"
+      - "traefik.http.routers.gyl-platform-https.tls=true"
+      - "traefik.http.routers.gyl-platform-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.gyl-platform-https.service=gyl-platform"
+      - "traefik.http.services.gyl-platform.loadbalancer.server.port=3000"
+
+  # ─── Claude Code server executor ──────────────────────────────────
+  # Long-running daemon that polls claude_jobs every 30s and runs them
+  # using the platform's Anthropic API key. Without this service, jobs
+  # only execute when a Mac worker is running (worker/claude-worker.mjs).
+  #
+  # Same image as `platform` so all source + node_modules are available.
+  claude-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gyl-claude-executor
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["node", "--import", "tsx", "src/scripts/claude-executor-daemon.ts"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      # The Anthropic key. UI-stored value (org_settings) takes precedence;
+      # this env value is the fallback so the daemon works on a fresh deploy
+      # before any admin has visited /admin/settings.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+      # Optional tuning. Defaults: 30000ms poll, executor enabled.
+      # CLAUDE_EXECUTOR_POLL_MS: "30000"
+      # CLAUDE_EXECUTOR_DISABLED: "0"
+      # Photo studio (Phase 1-5). The photo-executor (started inside this same
+      # daemon process) writes generated bytes here; the platform container
+      # serves them via the shared gyl_photos volume.
+      PHOTO_STORAGE_PATH: /app/.data/photos
+      # Default daily cap = Gemini free tier limit. Raise per quota.
+      PHOTO_DAILY_CAP: ${PHOTO_DAILY_CAP:-500}
+      # PHOTO_EXECUTOR_POLL_MS: "5000"
+      # PHOTO_EXECUTOR_DISABLED: "0"
+    volumes:
+      - gyl_photos:/app/.data/photos
+    networks:
+      - gyl_internal
+
+  # ─── Scheduled jobs ────────────────────────────────────────────────
+  # Same image as `platform` so node_modules + source are present, but
+  # runs busybox crond instead of next start. Schedule lives in
+  # deploy/crontab; see deploy/run-cron.sh for boot logic.
+  #
+  # The cron container is the answer to "the agent must work without
+  # my laptop" — it runs continuously on the VPS, independent of any
+  # user session.
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gyl-cron
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    user: root  # crond needs root to read /etc/crontabs and exec as nextjs
+    entrypoint: ["/bin/sh", "/app/deploy/run-cron.sh"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+    volumes:
+      # Mount the deploy/ directory so crontab + run-cron.sh are visible
+      # without rebuilding the image when we change the schedule.
+      - ./deploy:/app/deploy:ro
+      # Persist logs to the host for easy `tail -F /opt/gyl-platform/logs/*.log`.
+      - ./logs:/var/log/gyl
+    networks:
+      - gyl_internal
+
+volumes:
+  gyl_pg_data:
+  # Shared between `platform` and `claude-executor` so the executor can write
+  # generated images and the platform can serve them via /api/photos/file/<id>.
+  gyl_photos:
+
+networks:
+  gyl_internal:
+    driver: bridge
+    enable_ipv6: false
+    # Without this, Docker may auto-assign IPv6 ULAs to containers on this
+    # network. The platform container resolves `postgres` to its IPv6 address
+    # (Node prefers AAAA) and the SCRAM auth round-trip fails over that route.
+    # Forcing v4-only DNS resolution is the simplest fix.
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/24
+  coolify:
+    external: true

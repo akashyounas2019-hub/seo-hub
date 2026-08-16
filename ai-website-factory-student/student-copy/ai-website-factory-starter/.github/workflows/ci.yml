@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SESSION_SECRET: test-session-secret-must-be-at-least-32-chars-long-for-aes-256
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint --if-present
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Test
+        run: npm test

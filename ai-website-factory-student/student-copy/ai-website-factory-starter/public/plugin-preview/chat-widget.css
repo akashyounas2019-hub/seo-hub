@@ -1,0 +1,277 @@
+/*
+ * GYL Bookings — public chat widget styles.
+ *
+ * All selectors prefixed `.gyl-chat-*` so they can't clash with theme CSS.
+ * Brandable via the CSS custom property `--gyl-accent` (set inline by JS
+ * from window.GYL_CHAT_CONFIG.accent).
+ */
+
+.gyl-chat-launcher,
+.gyl-chat-panel {
+  --gyl-accent: #0b5fff;
+  --gyl-accent-text: #ffffff;
+  --gyl-bg: #ffffff;
+  --gyl-text: #1a1a1a;
+  --gyl-muted: #6b7280;
+  --gyl-border: #e5e7eb;
+  --gyl-user-bubble: #0b5fff;
+  --gyl-assistant-bubble: #f3f4f6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.gyl-chat-launcher *,
+.gyl-chat-panel *,
+.gyl-chat-launcher *::before,
+.gyl-chat-panel *::before,
+.gyl-chat-launcher *::after,
+.gyl-chat-panel *::after {
+  box-sizing: border-box;
+}
+
+/* ---- launcher ---- */
+.gyl-chat-launcher {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gyl-accent);
+  color: var(--gyl-accent-text);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.gyl-chat-launcher:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+}
+.gyl-chat-launcher-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.gyl-chat-launcher-active {
+  transform: scale(0.9);
+}
+
+/* ---- panel ---- */
+.gyl-chat-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 88px;
+  width: 380px;
+  height: 560px;
+  max-height: calc(100vh - 120px);
+  background: var(--gyl-bg);
+  color: var(--gyl-text);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  z-index: 99999;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--gyl-border);
+}
+.gyl-chat-panel.gyl-chat-open {
+  display: flex;
+}
+
+/* ---- header ---- */
+.gyl-chat-header {
+  padding: 12px 14px;
+  background: var(--gyl-accent);
+  color: var(--gyl-accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.gyl-chat-title {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.2;
+}
+.gyl-chat-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.gyl-chat-close,
+.gyl-chat-mute {
+  background: transparent;
+  color: var(--gyl-accent-text);
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  opacity: 0.85;
+}
+.gyl-chat-close:hover,
+.gyl-chat-mute:hover {
+  background: rgba(255, 255, 255, 0.15);
+  opacity: 1;
+}
+.gyl-chat-close {
+  font-size: 24px;
+  font-weight: 300;
+}
+
+/* ---- transcript ---- */
+.gyl-chat-transcript {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fafafa;
+}
+.gyl-chat-msg {
+  display: flex;
+  width: 100%;
+}
+.gyl-chat-msg-user {
+  justify-content: flex-end;
+}
+.gyl-chat-msg-assistant {
+  justify-content: flex-start;
+}
+.gyl-chat-bubble {
+  max-width: 80%;
+  padding: 9px 13px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.gyl-chat-msg-user .gyl-chat-bubble {
+  background: var(--gyl-accent);
+  color: var(--gyl-accent-text);
+  border-bottom-right-radius: 4px;
+}
+.gyl-chat-msg-assistant .gyl-chat-bubble {
+  background: var(--gyl-assistant-bubble);
+  color: var(--gyl-text);
+  border-bottom-left-radius: 4px;
+}
+.gyl-chat-typing .gyl-chat-bubble {
+  font-style: italic;
+  color: var(--gyl-muted);
+}
+
+/* ---- status row (listening indicator) ---- */
+.gyl-chat-status-row {
+  padding: 4px 14px 0;
+  min-height: 20px;
+  font-size: 12px;
+}
+.gyl-chat-listening {
+  color: #dc2626;
+  font-weight: 500;
+  animation: gyl-chat-pulse 1.4s ease-in-out infinite;
+}
+@keyframes gyl-chat-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ---- input row ---- */
+.gyl-chat-input-row {
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+  gap: 6px;
+  border-top: 1px solid var(--gyl-border);
+  background: var(--gyl-bg);
+  flex-shrink: 0;
+}
+.gyl-chat-input {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--gyl-border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--gyl-text);
+  background: #fff;
+  max-height: 120px;
+  min-height: 38px;
+  line-height: 1.4;
+  outline: none;
+}
+.gyl-chat-input:focus {
+  border-color: var(--gyl-accent);
+  box-shadow: 0 0 0 2px rgba(11, 95, 255, 0.15);
+}
+.gyl-chat-mic,
+.gyl-chat-send {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.gyl-chat-mic {
+  background: #f3f4f6;
+  color: var(--gyl-text);
+  font-size: 18px;
+  min-width: 38px;
+}
+.gyl-chat-mic:hover {
+  background: #e5e7eb;
+}
+.gyl-chat-mic-on {
+  background: #dc2626;
+  color: #fff;
+  animation: gyl-chat-pulse 1.4s ease-in-out infinite;
+}
+.gyl-chat-send {
+  background: var(--gyl-accent);
+  color: var(--gyl-accent-text);
+}
+.gyl-chat-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- mobile: full-screen panel ---- */
+@media (max-width: 520px) {
+  .gyl-chat-panel {
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+  .gyl-chat-launcher {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+/* ---- reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .gyl-chat-launcher,
+  .gyl-chat-listening,
+  .gyl-chat-mic-on {
+    animation: none;
+    transition: none;
+  }
+}
