@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { jobsStore } from "@/lib/jobs-store";
+import { TaskItemDetailModal } from "@/features/tasks/components/task-item-detail-modal";
+import type { Task } from "@/features/tasks/types";
 import {
   Lightbulb,
   ArrowUpRight,
@@ -631,6 +633,7 @@ function SuggestionRow({
 }) {
   const [assignOpen, setAssignOpen] = useState(false);
   const [assigned, setAssigned] = useState<string | undefined>(item.assigned);
+  const [showModal, setShowModal] = useState(false);
 
   const impactStyle: Record<Impact, string> = {
     High: "bg-amber-400/10 text-amber-200 border-amber-400/25",
@@ -639,67 +642,78 @@ function SuggestionRow({
   };
   const effortLabel: Record<Effort, string> = { S: "S · Quick", M: "M · Focused", L: "L · Project" };
 
+  const taskAdapter: Task = {
+    id: item.id,
+    title: item.title,
+    desc: item.desc,
+    assignee: assigned || "Technical SEO Expert",
+    priority: item.impact === "High" ? "high" : item.impact === "Medium" ? "medium" : "low",
+    status: "todo",
+  };
+
   return (
-    <li className={`group relative flex items-start justify-between gap-4 px-5 py-4 transition hover:bg-slate-900/60 ${isNew ? "bg-cyan-400/5 ring-1 ring-inset ring-cyan-400/30" : ""}`}>
-      <div className="flex min-w-0 items-start gap-3">
-        <div
-          className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${accent} text-slate-950`}
-        >
-          <Lightbulb className="h-3.5 w-3.5" />
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <div className="text-sm font-medium text-white leading-snug">{item.title}</div>
-            {isNew && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/40 bg-cyan-400/15 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-100">
-                <Sparkles className="h-2.5 w-2.5" /> New
-              </span>
-            )}
+    <>
+      <li className={`group relative flex items-start justify-between gap-4 px-5 py-4 transition hover:bg-slate-900/60 ${isNew ? "bg-cyan-400/5 ring-1 ring-inset ring-cyan-400/30" : ""}`}>
+        <div className="flex min-w-0 items-start gap-3 cursor-pointer" onClick={() => setShowModal(true)}>
+          <div
+            className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${accent} text-slate-950`}
+          >
+            <Lightbulb className="h-3.5 w-3.5" />
           </div>
-          <div className="mt-0.5 text-xs text-slate-400">{item.desc}</div>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${impactStyle[item.impact]}`}
-            >
-              {item.impact} impact
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
-              {effortLabel[item.effort]}
-            </span>
-            {assigned && (
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-medium text-white leading-snug group-hover:text-cyan-300 transition">{item.title}</div>
+              {isNew && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-cyan-400/40 bg-cyan-400/15 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-cyan-100">
+                  <Sparkles className="h-2.5 w-2.5" /> New
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 text-xs text-slate-400">{item.desc}</div>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <span
-                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider"
-                style={{
-                  color: tint,
-                  background: `color-mix(in oklab, ${tint} 10%, transparent)`,
-                  border: `1px solid color-mix(in oklab, ${tint} 22%, transparent)`,
-                }}
+                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${impactStyle[item.impact]}`}
               >
-                <Users className="h-3 w-3" /> {assigned}
+                {item.impact} impact
               </span>
-            )}
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
+                {effortLabel[item.effort]}
+              </span>
+              {assigned && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider"
+                  style={{
+                    color: tint,
+                    background: `color-mix(in oklab, ${tint} 10%, transparent)`,
+                    border: `1px solid color-mix(in oklab, ${tint} 22%, transparent)`,
+                  }}
+                >
+                  <Users className="h-3 w-3" /> {assigned}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      <div className="relative mt-1 flex shrink-0 items-center gap-1.5">
-        <button
-          type="button"
-          onClick={() => setAssignOpen((v) => !v)}
-          className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition ${
-            assignOpen || assigned
-              ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-100"
-              : "border-slate-700 bg-slate-900/60 text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
-          }`}
-        >
-          <Users className="h-3 w-3" /> {assigned ? "Reassign" : "Assign"}
-        </button>
-        <button
-          type="button"
-          onClick={() => toast.success(`Reviewing: ${item.title}`, { description: assigned ? `Assigned to ${assigned}` : "Unassigned — pick an agent." })}
-          className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] font-medium text-slate-300 transition group-hover:border-cyan-400/40 group-hover:text-cyan-200"
-        >
-          Review <ArrowUpRight className="h-3 w-3" />
-        </button>
+        <div className="relative mt-1 flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setAssignOpen((v) => !v)}
+            className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+              assignOpen || assigned
+                ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-100"
+                : "border-slate-700 bg-slate-900/60 text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+            }`}
+          >
+            <Users className="h-3 w-3" /> {assigned ? "Reassign" : "Assign"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-200 transition hover:bg-cyan-400/20"
+          >
+            Inspect Items & Approve <ArrowUpRight className="h-3 w-3" />
+          </button>
+        </div>
         {assignOpen && (
           <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/95 shadow-xl backdrop-blur">
             <div className="border-b border-slate-800 px-3 py-2 text-[10px] uppercase tracking-wider text-slate-500">
@@ -737,8 +751,20 @@ function SuggestionRow({
             )}
           </div>
         )}
-      </div>
-    </li>
+      </li>
+
+      {showModal && (
+        <TaskItemDetailModal
+          task={taskAdapter}
+          onClose={() => setShowModal(false)}
+          onUpdate={(id, patch) => {
+            if (patch.assignee) setAssigned(patch.assignee);
+            setShowModal(false);
+          }}
+          onDelete={() => setShowModal(false)}
+        />
+      )}
+    </>
   );
 }
 

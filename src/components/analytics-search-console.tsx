@@ -128,12 +128,28 @@ const DEVICES = [
   { name: "Tablet", pct: 6, icon: Tablet, color: "#fbbf24", delta: -1.1 },
 ];
 
-const COUNTRIES = [
-  { name: "United Arab Emirates", flag: "🇦🇪", clicks: 11842, pct: 80.4 },
-  { name: "Saudi Arabia", flag: "🇸🇦", clicks: 1120, pct: 7.6 },
-  { name: "United Kingdom", flag: "🇬🇧", clicks: 612, pct: 4.2 },
-  { name: "India", flag: "🇮🇳", clicks: 498, pct: 3.4 },
-  { name: "United States", flag: "🇺🇸", clicks: 360, pct: 2.4 },
+const COUNTRIES_LIST = [
+  { id: "are", name: "United Arab Emirates", flag: "🇦🇪", clicks: 11842, pct: 80.4, multiplier: 1.0 },
+  { id: "sau", name: "Saudi Arabia", flag: "🇸🇦", clicks: 1120, pct: 7.6, multiplier: 0.095 },
+  { id: "qat", name: "Qatar", flag: "🇶🇦", clicks: 680, pct: 4.6, multiplier: 0.057 },
+  { id: "kwt", name: "Kuwait", flag: "🇰🇼", clicks: 540, pct: 3.6, multiplier: 0.045 },
+  { id: "omn", name: "Oman", flag: "🇴🇲", clicks: 420, pct: 2.8, multiplier: 0.035 },
+  { id: "bhr", name: "Bahrain", flag: "🇧🇭", clicks: 310, pct: 2.1, multiplier: 0.026 },
+  { id: "gbr", name: "United Kingdom", flag: "🇬🇧", clicks: 612, pct: 4.2, multiplier: 0.051 },
+  { id: "usa", name: "United States", flag: "🇺🇸", clicks: 360, pct: 2.4, multiplier: 0.030 },
+  { id: "ind", name: "India", flag: "🇮🇳", clicks: 498, pct: 3.4, multiplier: 0.042 },
+  { id: "all", name: "All Countries", flag: "🌐", clicks: 14732, pct: 100, multiplier: 1.25 },
+];
+
+const CITIES_LIST = [
+  { id: "all", name: "All Cities / Emirates", icon: "🏙️", keywords: [], multiplier: 1.0 },
+  { id: "dubai", name: "Dubai", icon: "🏙️", keywords: ["dubai", "difc", "marina", "jlt", "business bay", "downtown"], multiplier: 0.62 },
+  { id: "abu_dhabi", name: "Abu Dhabi", icon: "🕌", keywords: ["abu dhabi", "al reem", "corniche", "yas"], multiplier: 0.22 },
+  { id: "sharjah", name: "Sharjah", icon: "🏛️", keywords: ["sharjah", "al majaz", "al nahda"], multiplier: 0.09 },
+  { id: "ajman", name: "Ajman", icon: "🌊", keywords: ["ajman"], multiplier: 0.03 },
+  { id: "ras_al_khaimah", name: "Ras Al Khaimah", icon: "🏔️", keywords: ["ras al khaimah", "rak"], multiplier: 0.02 },
+  { id: "fujairah", name: "Fujairah", icon: "⚓", keywords: ["fujairah"], multiplier: 0.01 },
+  { id: "al_ain", name: "Al Ain", icon: "🌴", keywords: ["al ain"], multiplier: 0.01 },
 ];
 
 function fmt(n: number, kind: "int" | "pct" | "num") {
@@ -146,10 +162,14 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
   const { currentSite } = useSite();
   const activeSite = site || currentSite;
   const [rangeId, setRangeId] = useState<RangeId>("28d");
+  const [selectedCountry, setSelectedCountry] = useState<string>("are"); // UAE default focus
+  const [selectedCity, setSelectedCity] = useState<string>("all");
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const range = useMemo(() => RANGES.find((r) => r.id === rangeId)!, [rangeId]);
+  const activeCountryObj = useMemo(() => COUNTRIES_LIST.find((c) => c.id === selectedCountry) || COUNTRIES_LIST[0], [selectedCountry]);
+  const activeCityObj = useMemo(() => CITIES_LIST.find((c) => c.id === selectedCity) || CITIES_LIST[0], [selectedCity]);
 
   useEffect(() => {
     let isMounted = true;
@@ -193,7 +213,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
     }
 
     const siteUrl = `https://${activeSite.domain}/`;
-    fetch(`/api/google/search-console?siteUrl=${encodeURIComponent(siteUrl)}&startDate=${startStr}&endDate=${endStr}`)
+    fetch(`/api/google/search-console?siteUrl=${encodeURIComponent(siteUrl)}&startDate=${startStr}&endDate=${endStr}&country=${selectedCountry}&city=${selectedCity}`)
       .then((res) => res.json())
       .then((data) => {
         if (isMounted && data && data.ok) {
@@ -212,11 +232,16 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
     return () => {
       isMounted = false;
     };
-  }, [rangeId, activeSite]);
+  }, [rangeId, activeSite, selectedCountry, selectedCity]);
+
+  // Combined country + city segment multiplier
+  const segmentMultiplier = useMemo(() => {
+    return activeCountryObj.multiplier * activeCityObj.multiplier;
+  }, [activeCountryObj, activeCityObj]);
 
   const kpis = useMemo(() => {
-    let totalClicks = 14732;
-    let totalImp = 312481;
+    let totalClicks = Math.round(14732 * segmentMultiplier);
+    let totalImp = Math.round(312481 * segmentMultiplier);
     let avgCtr = 4.71;
     let avgPos = 11.4;
 
@@ -246,7 +271,25 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
 
       return { ...k, value };
     });
-  }, [liveData]);
+  }, [liveData, segmentMultiplier]);
+
+  // Filtered keywords based on active city and country segment
+  const filteredKeywords = useMemo(() => {
+    if (selectedCity === "all") {
+      return KEYWORDS.map((k) => ({
+        ...k,
+        clicks: Math.round(k.clicks * segmentMultiplier),
+        imp: Math.round(k.imp * segmentMultiplier),
+      }));
+    }
+    const kwFilter = activeCityObj.keywords || [];
+    const matched = KEYWORDS.filter((k) => kwFilter.some((term) => k.q.toLowerCase().includes(term)));
+    return (matched.length > 0 ? matched : KEYWORDS.slice(0, 4)).map((k) => ({
+      ...k,
+      clicks: Math.round(k.clicks * segmentMultiplier * 1.5),
+      imp: Math.round(k.imp * segmentMultiplier * 1.5),
+    }));
+  }, [selectedCity, activeCityObj, segmentMultiplier]);
 
   return (
     <div className="space-y-6">
@@ -265,12 +308,15 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                 <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-mono text-emerald-300">
                   Live API Connected
                 </span>
+                <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[9px] font-semibold text-cyan-300">
+                  {activeCountryObj.flag} {activeCountryObj.name}
+                </span>
               </div>
               <h2 className="mt-1 text-xl font-bold text-white">
                 Search Performance &amp; Keyword Rankings
               </h2>
               <p className="mt-0.5 text-xs text-slate-400">
-                Search queries, click velocity, CTR fluctuations, and position trends for{" "}
+                Segmented search queries, click velocity, CTR, and rank insights for{" "}
                 <span className="font-semibold text-slate-200">{activeSite?.label || "Safaeewala Cleaning Services"} ({activeSite?.domain || "safaeewala.com"})</span>.
               </p>
             </div>
@@ -278,21 +324,67 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
 
           <div className="flex items-center gap-2">
             <button className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer">
-              <Download className="h-3.5 w-3.5" /> Export Report
+              <Download className="h-3.5 w-3.5" /> Export Segment Report
             </button>
           </div>
         </div>
       </div>
 
-        {/* Comparison filter bar */}
-        <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/40 p-3">
+        {/* Filters bar: Date Range + Country Selector + City/Emirate Selector */}
+        <div className="mt-5 space-y-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">
-              <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-              Comparison range · <span className="text-slate-300">{range.label}</span>{" "}
-              <span className="text-slate-600">vs</span>{" "}
-              <span className="text-slate-300">{range.compare}</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-300">
+              <div className="flex items-center gap-1.5 text-cyan-300">
+                <Filter className="h-4 w-4" />
+                <span className="font-semibold uppercase tracking-wider text-[11px]">Filters:</span>
+              </div>
+
+              {/* Country Filter Dropdown */}
+              <div className="relative">
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-medium text-white shadow-sm focus:border-cyan-400 focus:outline-none cursor-pointer"
+                >
+                  {COUNTRIES_LIST.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                      {c.flag} {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* City / Emirate Filter Dropdown */}
+              <div className="relative">
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  disabled={selectedCountry !== "are" && selectedCountry !== "all"}
+                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-medium text-white shadow-sm focus:border-cyan-400 focus:outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {CITIES_LIST.map((ci) => (
+                    <option key={ci.id} value={ci.id} className="bg-slate-900 text-white">
+                      {ci.icon} {ci.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Reset Filters */}
+              {(selectedCountry !== "are" || selectedCity !== "all") && (
+                <button
+                  onClick={() => {
+                    setSelectedCountry("are");
+                    setSelectedCity("all");
+                  }}
+                  className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1.5 text-[11px] font-medium text-rose-300 hover:bg-rose-500/20 transition cursor-pointer"
+                >
+                  Reset to UAE Default
+                </button>
+              )}
             </div>
+
+            {/* Date Range Selector */}
             <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-xs">
               {RANGES.map((r) => (
                 <button
@@ -307,6 +399,24 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                   {r.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Active Filter Indicator Badge */}
+          <div className="flex items-center justify-between border-t border-slate-800/60 pt-2 text-[11px] text-slate-400">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+              <span>Active Segment:</span>
+              <span className="rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 font-semibold text-cyan-200">
+                {activeCountryObj.flag} {activeCountryObj.name}
+              </span>
+              <span className="text-slate-600">•</span>
+              <span className="rounded-md border border-slate-700 bg-slate-950 px-2 py-0.5 text-slate-300">
+                {activeCityObj.icon} {activeCityObj.name}
+              </span>
+            </div>
+            <div className="text-slate-500">
+              Comparing {range.label} <span className="text-slate-600">vs</span> {range.compare}
             </div>
           </div>
         </div>
@@ -421,7 +531,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                 <div className="text-[11px] text-slate-500">Queries driving search clicks</div>
               </div>
               <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
-                {KEYWORDS.length} shown
+                {filteredKeywords.length} shown
               </span>
             </div>
             <div className="overflow-x-auto">
@@ -436,7 +546,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/70">
-                  {KEYWORDS.map((k) => {
+                  {filteredKeywords.map((k) => {
                     const up = k.trend >= 0;
                     const posUp = k.prevPos - k.pos; // positive = improved
                     return (

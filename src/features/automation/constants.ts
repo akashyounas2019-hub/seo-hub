@@ -28,7 +28,7 @@ export const AGENTS = [
   { id: "meta", name: "Meta Optimizer", role: "Titles & descriptions", icon: Sparkles },
   { id: "outreach", name: "Outreach Agent", role: "Backlinks & pitches", icon: Mail },
   { id: "technical", name: "Technical Agent", role: "CWV, crawl, indexation", icon: Gauge },
-  { id: "research", name: "Research Agent", role: "Keywords & SERP", icon: Search },
+  { id: "auditor", name: "Quality Auditor", role: "Audit, keywords & trends (8 sub-agents)", icon: ShieldCheck },
   { id: "reporting", name: "Reporting Agent", role: "Alerts & reports", icon: Bell },
   { id: "translator", name: "AR/EN Translator", role: "Localization & hreflang", icon: Languages },
 ];

@@ -12,11 +12,15 @@ export const Route = createFileRoute("/api/google/search-console")({
       const startDate = url.searchParams.get("startDate") || "2026-07-15";
       const endDate = url.searchParams.get("endDate") || "2026-08-12";
       const dimension = (url.searchParams.get("dimension") || "date") as any;
+      const country = url.searchParams.get("country") || "are";
+      const city = url.searchParams.get("city") || "all";
 
       const rows = await fetchGSCSearchAnalytics(siteUrl, {
         startDate,
         endDate,
         dimensions: [dimension],
+        country,
+        city,
         rowLimit: 50,
       }).catch(() => []);
 

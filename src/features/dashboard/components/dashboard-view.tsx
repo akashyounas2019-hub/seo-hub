@@ -62,12 +62,11 @@ const ACCENT_CHOICES = [
 
 const CONNECTOR_CLASSES: { left: string; right: string }[] = [
   { left: "hidden", right: "hidden sm:block" },
-  { left: "hidden sm:block", right: "hidden sm:hidden lg:block" },
-  { left: "hidden sm:hidden lg:block", right: "hidden sm:block" },
-  { left: "hidden sm:block", right: "hidden sm:hidden lg:block" },
-  { left: "hidden sm:hidden lg:block", right: "hidden sm:block" },
-  { left: "hidden sm:block", right: "hidden sm:hidden lg:block" },
-  { left: "hidden sm:hidden lg:block", right: "hidden" },
+  { left: "hidden sm:block", right: "hidden sm:block" },
+  { left: "hidden sm:block", right: "hidden sm:block" },
+  { left: "hidden sm:block", right: "hidden sm:block" },
+  { left: "hidden sm:block", right: "hidden sm:block" },
+  { left: "hidden sm:block", right: "hidden" },
 ];
 
 export function DashboardView() {
@@ -219,7 +218,7 @@ export function DashboardView() {
           </div>
 
           {/* Experts grid */}
-          <section className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7">
+          <section className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
             {EXPERTS.map((e, idx) => {
               const Icon = e.icon;
               const isOpen = open === e.id;

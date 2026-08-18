@@ -7,6 +7,8 @@ export interface GSCSearchAnalyticsQuery {
   endDate: string;
   dimensions?: Array<"date" | "query" | "page" | "device" | "country">;
   rowLimit?: number;
+  country?: string;
+  city?: string;
 }
 
 export interface GSCRow {
@@ -36,6 +38,33 @@ export async function fetchGSCSearchAnalytics(
 ): Promise<GSCRow[]> {
   const token = await getGoogleAccessToken(GSC_SCOPE);
   const encodedUrl = encodeURIComponent(siteUrl);
+
+  const dimensionFilterGroups: Array<{ filters: Array<{ dimension: string; operator: string; expression: string }> }> = [];
+  const filters: Array<{ dimension: string; operator: string; expression: string }> = [];
+
+  if (query.country && query.country !== "all") {
+    filters.push({
+      dimension: "country",
+      operator: "equals",
+      expression: query.country.toLowerCase(),
+    });
+  }
+
+  if (filters.length > 0) {
+    dimensionFilterGroups.push({ filters });
+  }
+
+  const payload: Record<string, any> = {
+    startDate: query.startDate,
+    endDate: query.endDate,
+    dimensions: query.dimensions || ["date"],
+    rowLimit: query.rowLimit || 100,
+  };
+
+  if (dimensionFilterGroups.length > 0) {
+    payload.dimensionFilterGroups = dimensionFilterGroups;
+  }
+
   const res = await fetch(
     `https://www.googleapis.com/webmasters/v3/sites/${encodedUrl}/searchAnalytics/query`,
     {
@@ -44,12 +73,7 @@ export async function fetchGSCSearchAnalytics(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        startDate: query.startDate,
-        endDate: query.endDate,
-        dimensions: query.dimensions || ["date"],
-        rowLimit: query.rowLimit || 100,
-      }),
+      body: JSON.stringify(payload),
     },
   );
 

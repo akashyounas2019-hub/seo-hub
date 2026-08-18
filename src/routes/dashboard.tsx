@@ -250,7 +250,7 @@ function DashboardPage() {
                 </div>
                 <div className="mt-4 space-y-3">
                   {[
-                    { l: "Research", v: 82, a: "from-emerald-400 to-teal-500" },
+                    { l: "Quality & Compliance Audit", v: 92, a: "from-rose-400 to-pink-500" },
                     { l: "On-Page", v: 71, a: "from-cyan-400 to-sky-500" },
                     { l: "Off-Page", v: 58, a: "from-violet-400 to-fuchsia-500" },
                     { l: "Technical", v: 94, a: "from-amber-400 to-orange-500" },

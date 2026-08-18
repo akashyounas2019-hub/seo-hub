@@ -10,6 +10,7 @@ export function KanbanCard({
   onDragEnd,
   onRemove,
   onPriorityChange,
+  onClick,
 }: {
   task: Task;
   dragging: boolean;
@@ -17,6 +18,7 @@ export function KanbanCard({
   onDragEnd: () => void;
   onRemove: () => void;
   onPriorityChange: (p: Priority) => void;
+  onClick?: () => void;
 }) {
   const meta = PRIORITY_META[task.priority];
   const due = relativeDue(task.due);
@@ -30,7 +32,11 @@ export function KanbanCard({
         onDragStart();
       }}
       onDragEnd={onDragEnd}
-      className={`group relative cursor-grab overflow-hidden rounded-lg border bg-slate-950/70 p-3 shadow-sm transition active:cursor-grabbing ${
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button") || (e.target as HTMLElement).closest("select")) return;
+        onClick?.();
+      }}
+      className={`group relative cursor-pointer overflow-hidden rounded-lg border bg-slate-950/70 p-3 shadow-sm transition active:cursor-grabbing ${
         dragging
           ? "rotate-1 scale-[0.98] border-cyan-400/60 opacity-70"
           : `border-slate-800 hover:-translate-y-0.5 hover:border-cyan-400/40 hover:shadow-[0_6px_24px_rgba(34,211,238,0.08)] ${meta.ring}`

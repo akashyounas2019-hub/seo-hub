@@ -17,14 +17,20 @@ import agentBot from "@/assets/agent-bot.png";
 import { EXPERTS } from "@/lib/agents";
 import { COLUMNS, PRIORITY_META } from "@/features/tasks/constants";
 import { useTasks } from "@/features/tasks/hooks/use-tasks";
-import type { Priority } from "@/features/tasks/types";
+import type { Priority, Task } from "@/features/tasks/types";
 import { KanbanCard } from "@/features/tasks/components/kanban-card";
 import { KpiCard } from "@/features/tasks/components/kpi-card";
 import { SelectPill } from "@/features/tasks/components/select-pill";
 import { TaskModal } from "@/features/tasks/components/task-modal";
+import { TaskItemDetailModal } from "@/features/tasks/components/task-item-detail-modal";
+import { WorkloadTasksModal } from "@/features/tasks/components/workload-tasks-modal";
 
 export function AgentDashboardView() {
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedWorkloadAgent, setSelectedWorkloadAgent] = useState<string | null>(null);
+
   const {
+    tasks,
     templates,
     agents,
     query,
@@ -101,80 +107,6 @@ export function AgentDashboardView() {
           <KpiCard label="In Flight" value={kpis.inFlight} sub={`${kpis.inFlightPct}% of pipeline`} pct={kpis.inFlightPct} accent="from-violet-400 to-indigo-500" icon={Zap} pulse />
           <KpiCard label="Critical" value={kpis.critical} sub="need attention" pct={kpis.criticalPct} accent="from-rose-500 to-red-500" icon={AlertTriangle} />
           <KpiCard label="Completed" value={kpis.done} sub={`${kpis.donePct}% shipped`} pct={kpis.donePct} accent="from-emerald-400 to-teal-500" icon={CheckCircle2} />
-        </section>
-
-        {/* Workload Management Section */}
-        <section className="mt-8 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/70 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-400 to-fuchsia-500 text-slate-950 shadow">
-                <Activity className="h-4 w-4" />
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold text-white">Workload Management</h2>
-                <div className="text-[11px] text-slate-500">Live agent load & operational status across specialists</div>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] text-cyan-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.9)]" />
-              Live Monitoring
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {workload.map((w) => {
-              const expert = EXPERTS.find((e) => e.title === w.name);
-              const accent = expert?.accent ?? "from-cyan-400 to-blue-500";
-              const status: { label: string; cls: string; pulse?: boolean } =
-                w.critical > 0
-                  ? { label: "Overloaded", cls: "border-rose-500/40 bg-rose-500/10 text-rose-200", pulse: true }
-                  : w.total === 0
-                  ? { label: "Idle", cls: "border-slate-700 bg-slate-900/60 text-slate-400" }
-                  : w.total <= 2
-                  ? { label: "Healthy", cls: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200" }
-                  : { label: "Busy", cls: "border-amber-400/30 bg-amber-400/10 text-amber-200" };
-              return (
-                <div key={w.name} className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60 p-4 transition hover:border-cyan-400/30">
-                  <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
-                  <div className="flex items-center gap-3">
-                    <div className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-900 ring-1 ring-slate-700/60`}>
-                      <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-25`} />
-                      <img src={agentBot} alt="" className="relative h-full w-full object-contain" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-white">{w.name}</div>
-                      <div className="mt-0.5 flex items-center gap-1.5">
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[9px] uppercase tracking-wider ${status.cls}`}>
-                          {status.pulse && (
-                            <span className="relative flex h-1.5 w-1.5">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-70" />
-                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
-                            </span>
-                          )}
-                          {status.label}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex items-baseline justify-between">
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500">Active tasks</div>
-                    <div className="text-lg font-semibold tabular-nums text-white">{w.total}</div>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${accent} transition-all duration-500`}
-                      style={{ width: `${w.pct}%` }}
-                    />
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
-                    <span>{w.critical} critical · {w.high} high</span>
-                    <span className="tabular-nums">{w.pct}%</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </section>
 
         {/* Kanban Board Section */}
@@ -275,6 +207,7 @@ export function AgentDashboardView() {
                         onDragEnd={onDragEnd}
                         onRemove={() => removeTask(t.id)}
                         onPriorityChange={(p: Priority) => updateTask(t.id, { priority: p })}
+                        onClick={() => setSelectedTask(t)}
                       />
                     ))}
                   </div>
@@ -288,6 +221,84 @@ export function AgentDashboardView() {
                   >
                     <Plus className="h-3.5 w-3.5" /> Add to {col.title}
                   </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Workload Management Section */}
+        <section className="mt-8 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/70 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-400 to-fuchsia-500 text-slate-950 shadow">
+                <Activity className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-white">Workload Management</h2>
+                <div className="text-[11px] text-slate-500">Live agent load & operational status — click any agent to view assigned task details</div>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] text-cyan-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_6px_rgba(103,232,249,0.9)]" />
+              Live Monitoring
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {workload.map((w) => {
+              const expert = EXPERTS.find((e) => e.title === w.name);
+              const accent = expert?.accent ?? "from-cyan-400 to-blue-500";
+              const status: { label: string; cls: string; pulse?: boolean } =
+                w.critical > 0
+                  ? { label: "Overloaded", cls: "border-rose-500/40 bg-rose-500/10 text-rose-200", pulse: true }
+                  : w.total === 0
+                  ? { label: "Idle", cls: "border-slate-700 bg-slate-900/60 text-slate-400" }
+                  : w.total <= 2
+                  ? { label: "Healthy", cls: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200" }
+                  : { label: "Busy", cls: "border-amber-400/30 bg-amber-400/10 text-amber-200" };
+              return (
+                <div
+                  key={w.name}
+                  onClick={() => setSelectedWorkloadAgent(w.name)}
+                  className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60 p-4 transition cursor-pointer hover:-translate-y-0.5 hover:border-cyan-400/50 hover:bg-slate-900/80 hover:shadow-[0_0_24px_rgba(34,211,238,0.15)]"
+                >
+                  <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent}`} />
+                  <div className="flex items-center gap-3">
+                    <div className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-900 ring-1 ring-slate-700/60 group-hover:ring-cyan-400/60 transition`}>
+                      <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-25`} />
+                      <img src={agentBot} alt="" className="relative h-full w-full object-contain" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold text-white group-hover:text-cyan-300 transition">{w.name}</div>
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[9px] uppercase tracking-wider ${status.cls}`}>
+                          {status.pulse && (
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-70" />
+                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
+                            </span>
+                          )}
+                          {status.label}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-baseline justify-between">
+                    <div className="text-[10px] uppercase tracking-wider text-slate-500">Active tasks (Click to view)</div>
+                    <div className="text-lg font-semibold tabular-nums text-white group-hover:text-cyan-300">{w.total}</div>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${accent} transition-all duration-500`}
+                      style={{ width: `${w.pct}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
+                    <span>{w.critical} critical · {w.high} high</span>
+                    <span className="tabular-nums">{w.pct}%</span>
+                  </div>
                 </div>
               );
             })}
@@ -311,6 +322,25 @@ export function AgentDashboardView() {
             setShowCreate(false);
             setPrefill(null);
           }}
+        />
+      )}
+
+      {selectedTask && (
+        <TaskItemDetailModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={(id, patch) => updateTask(id, patch)}
+          onDelete={(id) => removeTask(id)}
+        />
+      )}
+
+      {selectedWorkloadAgent && (
+        <WorkloadTasksModal
+          agentName={selectedWorkloadAgent}
+          tasks={tasks}
+          onClose={() => setSelectedWorkloadAgent(null)}
+          onOpenTaskDetail={(t) => setSelectedTask(t)}
+          onFilterKanban={(name) => setAssigneeFilter(name)}
         />
       )}
     </div>

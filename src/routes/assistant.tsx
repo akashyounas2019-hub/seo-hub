@@ -85,7 +85,7 @@ As the leader bot of the AKS SEO fleet, I can orchestrate specific SEO tasks:
 - **Analyze target keywords** (type *"keywords"*)
 - **Draft content outlines** (type *"blog post"*)
 
-Please specify which agent team (On-Page, Technical, Outreach, or Research) you would like me to dispatch!`;
+Please specify which agent team (On-Page, Technical, Outreach, or Quality Auditor) you would like me to dispatch!`;
 }
 
 function formatMessageText(text: string) {

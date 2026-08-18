@@ -51,21 +51,8 @@ export const EXPERTS: Expert[] = [
     ],
   },
   {
-    id: "research",
-    title: "Researcher",
-    tag: "Intelligence & Trends",
-    icon: Search,
-    accent: "from-emerald-400 to-teal-500",
-    subs: [
-      { name: "Keyword Miner", desc: "Volume, difficulty, intent" },
-      { name: "SERP Analyst", desc: "Competitor SERP dissection" },
-      { name: "Trend Watcher", desc: "Emerging query patterns" },
-      { name: "Audience Profiler", desc: "Persona & intent mapping" },
-    ],
-  },
-  {
     id: "auditor",
-    title: "Auditor",
+    title: "Quality Auditor",
     tag: "Quality & Compliance",
     icon: ShieldCheck,
     accent: "from-rose-400 to-pink-500",
@@ -74,6 +61,10 @@ export const EXPERTS: Expert[] = [
       { name: "Content QA", desc: "E-E-A-T & accuracy checks" },
       { name: "Compliance Bot", desc: "Guidelines & policy review" },
       { name: "Report Generator", desc: "Exec-ready summaries" },
+      { name: "Keyword Miner", desc: "Volume, difficulty, intent" },
+      { name: "SERP Analytics Analyst", desc: "Competitor SERP dissection & analytics" },
+      { name: "Trend Breacher", desc: "Emerging query patterns & trend detection" },
+      { name: "Audience Profiler", desc: "Persona & intent mapping" },
     ],
   },
   {
@@ -107,8 +98,7 @@ export const DEFAULT_SKILLS: Record<string, string> = {
   onpage: "SEO copywriting, on-page optimization, schema markup, keyword targeting, content structuring",
   offpage: "Link building, digital PR, outreach, brand mentions, disavow management",
   technical: "Core Web Vitals, crawl budget, log analysis, JS rendering, indexation",
-  research: "Keyword research, SERP analysis, competitor intelligence, trend detection",
-  auditor: "Site auditing, E-E-A-T review, compliance, executive reporting",
+  auditor: "Site auditing, E-E-A-T review, compliance, executive reporting, keyword research, SERP analytics, trend detection, audience profiling",
   geo: "Generative Engine Optimization (GEO), AI Overviews, Perplexity citation engineering, entity grounding",
   international: "Geo-grid heatmaps, Google Business Profile review sentiment automation, hreflang validation, En/Ar localization",
 };
