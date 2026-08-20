@@ -23,6 +23,7 @@ export async function fetchGSCSites() {
   const token = await getGoogleAccessToken(GSC_SCOPE);
   const res = await fetch("https://www.googleapis.com/webmasters/v3/sites", {
     headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(4000),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -74,6 +75,7 @@ export async function fetchGSCSearchAnalytics(
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(4000),
     },
   );
 

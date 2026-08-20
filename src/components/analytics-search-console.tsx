@@ -661,7 +661,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
               <MapPin className="h-4 w-4 text-slate-500" />
             </div>
             <ul className="mt-4 space-y-3">
-              {COUNTRIES.map((c) => (
+              {COUNTRIES_LIST.filter((c) => c.id !== "all").map((c) => (
                 <li key={c.name}>
                   <div className="flex items-center justify-between text-xs text-slate-300">
                     <span className="inline-flex items-center gap-2">

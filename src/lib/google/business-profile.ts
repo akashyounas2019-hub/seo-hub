@@ -8,6 +8,7 @@ export async function fetchGBPAccounts() {
   const token = await getGoogleAccessToken(GBP_SCOPE);
   const res = await fetch("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", {
     headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(4000),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -24,6 +25,7 @@ export async function fetchGBPLocations(accountId: string) {
     `https://mybusinessbusinessinformation.googleapis.com/v1/${cleanAccountId}/locations?readMask=name,title,storefrontAddress,websiteUri,phoneNumbers`,
     {
       headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(4000),
     },
   );
   if (!res.ok) {

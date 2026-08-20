@@ -5,7 +5,7 @@ import { tmpdir, hostname, userInfo } from "node:os";
 import { join } from "node:path";
 
 // ─── Configuration ───
-const PORTAL_URL    = process.env.PORTAL_URL || "http://localhost:8080";
+const PORTAL_URL    = process.env.PORTAL_URL || "http://localhost:3030";
 const WORKER_SECRET = process.env.WORKER_SECRET || "aks-secret-key-2026";
 const POLL_MS       = Number(process.env.POLL_MS ?? 5000); // 5s poll default
 const CLAUDE_BIN    = process.env.CLAUDE_BIN ?? "claude";
@@ -161,8 +161,19 @@ async function main() {
   console.log(`• Claude Model     : ${MODEL}`);
   console.log(`================================================================\n`);
 
+  let loopCount = 0;
   while (true) {
     try {
+      loopCount++;
+      // Periodically trigger background sync for dashboard tabs (every 60s)
+      if (loopCount % 12 === 0) {
+        fetch(`${PORTAL_URL}/api/analytics/sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-SEO-Hub-Secret": WORKER_SECRET },
+          body: JSON.stringify({ siteId: "safaeewala", source: "worker_cron" }),
+        }).catch(() => {});
+      }
+
       const job = await claimOnce();
       if (job) {
         await workOne(job);

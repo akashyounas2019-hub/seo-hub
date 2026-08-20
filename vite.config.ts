@@ -9,7 +9,8 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 export default defineConfig({
   vite: {
     server: {
-      port: 8080,
+      host: true,
+      port: Number(process.env.PORT) || 3333,
     },
   },
   tanstackStart: {

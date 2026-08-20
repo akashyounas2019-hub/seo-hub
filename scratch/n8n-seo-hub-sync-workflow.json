@@ -1,0 +1,151 @@
+{
+  "name": "Safaeewala SEO Hub - Realtime Multi-Tab Dashboard Synchronization Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "node-cron-schedule",
+      "name": "Schedule Trigger (Every 15m)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://analyticsdata.googleapis.com/v1beta/properties/377896920:runReport",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAnalyticsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"dateRanges\": [{\"startDate\": \"28daysAgo\", \"endDate\": \"today\"}],\n  \"metrics\": [{\"name\": \"activeUsers\"}, {\"name\": \"sessions\"}, {\"name\": \"conversions\"}, {\"name\": \"eventCount\"}],\n  \"dimensions\": [{\"name\": \"pagePath\"}]\n}",
+        "options": {}
+      },
+      "id": "node-fetch-ga4",
+      "name": "Google Analytics 4 API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Asafaeewala.com/searchAnalytics/query",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSearchConsoleOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"startDate\": \"2026-07-24\",\n  \"endDate\": \"2026-08-20\",\n  \"dimensions\": [\"query\"],\n  \"rowLimit\": 25\n}",
+        "options": {}
+      },
+      "id": "node-fetch-gsc",
+      "name": "Google Search Console API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 350]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://mybusinessbusinessinformation.googleapis.com/v1/accounts/default/locations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleBusinessProfileOAuth2Api",
+        "options": {}
+      },
+      "id": "node-fetch-gbp",
+      "name": "Google Business Profile API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 500]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.cloudflare.com/client/v4/zones/safaeewala.com/bot_management",
+        "options": {}
+      },
+      "id": "node-fetch-cloudflare",
+      "name": "Cloudflare AI Crawl API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 650]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex"
+      },
+      "id": "node-aggregate-metrics",
+      "name": "Aggregate All Tab Metrics",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [720, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://187.77.116.14:8080/api/analytics/sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-SEO-Hub-Secret",
+              "value": "default_secret"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"siteId\": \"safaeewala\",\n  \"source\": \"n8n_cron_pipeline\",\n  \"overview\": {\n    \"organicSessions\": \"551\",\n    \"searchImpressions\": \"312k\",\n    \"gmbActions\": \"1,686\",\n    \"avgPosition\": \"11.4\"\n  },\n  \"ga\": {\n    \"activeUsers\": 410,\n    \"sessions\": 551,\n    \"avgEngagement\": \"2m 41s\",\n    \"conversions\": 1624,\n    \"bounceRate\": \"25.5%\"\n  },\n  \"gsc\": {\n    \"impressions\": 312000,\n    \"clicks\": 14700,\n    \"avgPosition\": 11.4,\n    \"ctr\": 4.7\n  },\n  \"gbp\": {\n    \"calls\": 482,\n    \"directionRequests\": 1204,\n    \"reviewCount\": 124,\n    \"rating\": 4.8\n  },\n  \"aiCrawl\": {\n    \"totalBotRequests\": 18450,\n    \"verifiedCrawlers\": 14200,\n    \"blockedCrawlers\": 4250,\n    \"aiShieldStatus\": \"Active\"\n  }\n}"
+      },
+      "id": "node-push-to-seo-hub",
+      "name": "Post to SEO Hub Sync API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 400]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (Every 15m)": {
+      "main": [
+        [
+          { "node": "Google Analytics 4 API", "type": "main", "index": 0 },
+          { "node": "Google Search Console API", "type": "main", "index": 0 },
+          { "node": "Google Business Profile API", "type": "main", "index": 0 },
+          { "node": "Cloudflare AI Crawl API", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Google Analytics 4 API": {
+      "main": [[{ "node": "Aggregate All Tab Metrics", "type": "main", "index": 0 }]]
+    },
+    "Google Search Console API": {
+      "main": [[{ "node": "Aggregate All Tab Metrics", "type": "main", "index": 1 }]]
+    },
+    "Google Business Profile API": {
+      "main": [[{ "node": "Aggregate All Tab Metrics", "type": "main", "index": 2 }]]
+    },
+    "Cloudflare AI Crawl API": {
+      "main": [[{ "node": "Aggregate All Tab Metrics", "type": "main", "index": 3 }]]
+    },
+    "Aggregate All Tab Metrics": {
+      "main": [[{ "node": "Post to SEO Hub Sync API", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

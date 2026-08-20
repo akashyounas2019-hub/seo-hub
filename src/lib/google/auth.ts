@@ -25,10 +25,12 @@ export async function getGoogleAccessToken(scopes: string[]): Promise<string> {
     } else {
       const fs = await import("node:fs/promises");
       const path = await import("node:path");
-      const fileContent = await fs.readFile(
-        path.join(process.cwd(), "gmb-service-account.json"),
-        "utf-8",
-      );
+      const filePath = path.join(process.cwd(), "gmb-service-account.json");
+      const exists = await fs.access(filePath).then(() => true).catch(() => false);
+      if (!exists) {
+        throw new Error("gmb-service-account.json file not found");
+      }
+      const fileContent = await fs.readFile(filePath, "utf-8");
       creds = JSON.parse(fileContent);
     }
   } catch (err: any) {
@@ -74,6 +76,7 @@ export async function getGoogleAccessToken(scopes: string[]): Promise<string> {
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: jwt,
     }),
+    signal: AbortSignal.timeout(3000),
   });
 
   if (!res.ok) {

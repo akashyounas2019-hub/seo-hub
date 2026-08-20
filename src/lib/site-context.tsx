@@ -196,6 +196,9 @@ type SiteContextType = {
   currentSite: ConnectedSite;
   allSites: ConnectedSite[];
   isHydrated: boolean;
+  isSyncing: boolean;
+  lastSyncTime: string;
+  triggerSync: () => Promise<void>;
   setCurrentSiteId: (id: string) => void;
   deleteSite: (id: string) => void;
 };
@@ -222,6 +225,8 @@ function getDeletedSiteIds(): string[] {
 
 export function SiteProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string>("Just now");
 
   const [allSites, setAllSites] = useState<ConnectedSite[]>(() => {
     const deleted = getDeletedSiteIds();
@@ -249,11 +254,75 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     }
   });
 
+  const fetchLiveSync = async (targetId: string) => {
+    try {
+      setIsSyncing(true);
+      const res = await fetch(`/api/analytics/sync?siteId=${encodeURIComponent(targetId)}`);
+      if (!res.ok) return;
+      const json = await res.json();
+
+      if (json?.data) {
+        const synced = json.data;
+        setAllSites((prev) =>
+          prev.map((s) => {
+            if (s.id !== targetId) return s;
+
+            const updatedOverviewKpis = s.overviewKpis.map((kpi) => {
+              if (kpi.tab === "ga" && synced.ga?.sessions) {
+                return { ...kpi, v: String(synced.ga.sessions) };
+              }
+              if (kpi.tab === "gsc" && kpi.k === "Search Impressions" && synced.gsc?.impressions) {
+                return { ...kpi, v: `${Math.round(synced.gsc.impressions / 1000)}k` };
+              }
+              if (kpi.tab === "gsc" && kpi.k === "Avg Position" && synced.gsc?.avgPosition) {
+                return { ...kpi, v: String(synced.gsc.avgPosition) };
+              }
+              if (kpi.tab === "gbp" && synced.gbp?.calls) {
+                return { ...kpi, v: String(synced.gbp.calls + (synced.gbp.directionRequests || 0)) };
+              }
+              return kpi;
+            });
+
+            return {
+              ...s,
+              lastSync: "Just now",
+              overviewKpis: updatedOverviewKpis,
+              trafficTrend: synced.overview?.trafficTrend || s.trafficTrend,
+              impressionsTrend: synced.overview?.impressionsTrend || s.impressionsTrend,
+              topQueries: synced.gsc?.topQueries || s.topQueries,
+              topPages: synced.ga?.topPages || s.topPages,
+              gmbReviews: synced.gbp?.reviewsList || s.gmbReviews,
+              acquisitionChannels: synced.ga?.acquisitionChannels || s.acquisitionChannels,
+            };
+          }),
+        );
+        setLastSyncTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+      }
+    } catch {
+      /* ignore poll errors */
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const triggerSync = async () => {
+    try {
+      setIsSyncing(true);
+      await fetch("/api/analytics/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId, source: "manual_trigger" }),
+      });
+      await fetchLiveSync(siteId);
+    } catch {
+      setIsSyncing(false);
+    }
+  };
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const deleted = getDeletedSiteIds();
-      // Ensure defaults are saved in deleted tracker
       window.localStorage.setItem(DELETED_STORAGE_KEY, JSON.stringify(deleted));
 
       const stored = window.localStorage.getItem(SITES_STORAGE_KEY);
@@ -271,7 +340,15 @@ export function SiteProvider({ children }: { children: ReactNode }) {
       /* ignore */
     }
     setIsHydrated(true);
-  }, []);
+
+    // Initial fetch and 30-second interval polling
+    fetchLiveSync(siteId);
+    const interval = setInterval(() => {
+      fetchLiveSync(siteId);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [siteId]);
 
   const setCurrentSiteId = (id: string) => {
     setSiteId(id);
@@ -314,6 +391,9 @@ export function SiteProvider({ children }: { children: ReactNode }) {
         currentSite,
         allSites,
         isHydrated,
+        isSyncing,
+        lastSyncTime,
+        triggerSync,
         setCurrentSiteId,
         deleteSite,
       }}

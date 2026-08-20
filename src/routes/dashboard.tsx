@@ -54,7 +54,7 @@ export const Route = createFileRoute("/dashboard")({
 type TabType = "overview" | "ga" | "gsc" | "gbp" | "ai-overview";
 
 function DashboardPage() {
-  const { currentSite, allSites, setCurrentSiteId } = useSite();
+  const { currentSite, allSites, setCurrentSiteId, isSyncing, lastSyncTime, triggerSync } = useSite();
 
   const [activeTab, setActiveTabState] = useState<TabType>(() => {
     if (typeof window === "undefined") return "overview";
@@ -110,20 +110,30 @@ function DashboardPage() {
               {site.label}
             </h1>
             <p className="mt-1 text-sm text-slate-400">
-              Connected website in <span className="font-semibold text-slate-200">{site.location}</span> · Refreshed 3 min ago.
+              Connected website in <span className="font-semibold text-slate-200">{site.location}</span> · Refreshed {lastSyncTime}.
             </p>
           </div>
 
           <div className="flex flex-col items-end gap-3">
-            {/* Individual Connection Status Indicators */}
+            {/* n8n Live Sync Trigger & Status */}
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => triggerSync()}
+                disabled={isSyncing}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-400/20 disabled:opacity-50 cursor-pointer shadow-[0_0_15px_rgba(34,211,238,0.2)]"
+              >
+                <Zap className={`h-3.5 w-3.5 text-cyan-300 ${isSyncing ? "animate-spin" : ""}`} />
+                <span>{isSyncing ? "Syncing n8n Pipelines..." : "Sync All Tabs Now"}</span>
+              </button>
+
               <div className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold ${
                 site.gaConnected
                   ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
                   : "border-slate-800 bg-slate-900/50 text-slate-500"
               }`}>
                 <span className={`h-2 w-2 rounded-full ${site.gaConnected ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" : "bg-slate-600"}`} />
-                <span>GA4: {site.gaConnected ? "Connected" : "Disconnected"}</span>
+                <span>GA4</span>
               </div>
 
               <div className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold ${
@@ -132,7 +142,7 @@ function DashboardPage() {
                   : "border-slate-800 bg-slate-900/50 text-slate-500"
               }`}>
                 <span className={`h-2 w-2 rounded-full ${site.gscConnected ? "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.9)]" : "bg-slate-600"}`} />
-                <span>GSC: {site.gscConnected ? "Connected" : "Not Connected"}</span>
+                <span>GSC</span>
               </div>
 
               <div className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold ${
@@ -141,7 +151,7 @@ function DashboardPage() {
                   : "border-slate-800 bg-slate-900/50 text-slate-500"
               }`}>
                 <span className={`h-2 w-2 rounded-full ${site.gbpConnected ? "bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.9)]" : "bg-slate-600"}`} />
-                <span>GBP: {site.gbpConnected ? "Connected" : "Not Connected"}</span>
+                <span>GBP</span>
               </div>
             </div>
           </div>

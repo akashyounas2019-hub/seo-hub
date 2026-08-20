@@ -17,6 +17,7 @@ dist-ssr
 *.local
 .env
 gmb-service-account.json
+.data/
 
 # Wrangler / Cloudflare
 .wrangler/

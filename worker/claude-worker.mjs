@@ -11,7 +11,7 @@ import { writeFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir, hostname, userInfo } from "node:os";
 import { join } from "node:path";
 
-const PORTAL = process.env.GYL_PORTAL_URL || "http://localhost:8080";
+const PORTAL = process.env.GYL_PORTAL_URL || "http://localhost:3030";
 const SECRET = process.env.GYL_WORKER_SECRET || "default_secret";
 const POLL_INTERVAL_MS = Number(process.env.GYL_POLL_INTERVAL_MS ?? 30_000);
 const WORKER_ID = process.env.GYL_WORKER_ID ?? `${userInfo().username}@${hostname()}`;

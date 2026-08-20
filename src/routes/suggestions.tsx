@@ -649,6 +649,7 @@ function SuggestionRow({
     assignee: assigned || "Technical SEO Expert",
     priority: item.impact === "High" ? "high" : item.impact === "Medium" ? "medium" : "low",
     status: "todo",
+    createdAt: new Date().toISOString(),
   };
 
   return (

@@ -27,6 +27,7 @@ export async function fetchGA4Report(query: GA4ReportQuery) {
         metrics: query.metrics.map((m) => ({ name: m })),
         dimensions: (query.dimensions || []).map((d) => ({ name: d })),
       }),
+      signal: AbortSignal.timeout(4000),
     },
   );
 

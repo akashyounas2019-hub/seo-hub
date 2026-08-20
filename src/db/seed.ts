@@ -161,7 +161,7 @@ async function main() {
     }
   }
 
-  console.log("\nSeed complete. Start the app with `npm run dev` → http://localhost:8080");
+  console.log(`\nSeed complete. Start the app with \`npm run dev\` → http://localhost:${process.env.PORT || 3333}`);
   process.exit();
 }
 
