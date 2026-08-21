@@ -234,7 +234,6 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
     };
   }, [rangeId, activeSite, selectedCountry, selectedCity]);
 
-  // Combined country + city segment multiplier
   const segmentMultiplier = useMemo(() => {
     return activeCountryObj.multiplier * activeCityObj.multiplier;
   }, [activeCountryObj, activeCityObj]);
@@ -253,11 +252,23 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
     return map[rangeId] || 1.0;
   }, [rangeId]);
 
+  const RANGE_METRICS: Record<string, { clicks: number; imp: number; ctr: number; pos: number }> = useMemo(() => ({
+    "7d": { clicks: 43, imp: 8150, ctr: 0.5, pos: 25.7 },
+    "14v14": { clicks: 88, imp: 14800, ctr: 0.55, pos: 26.5 },
+    "28d": { clicks: 182, imp: 28900, ctr: 0.6, pos: 28.7 },
+    "this_month": { clicks: 142, imp: 22400, ctr: 0.58, pos: 27.2 },
+    "last_month": { clicks: 182, imp: 28900, ctr: 0.6, pos: 28.7 },
+    "3m": { clicks: 540, imp: 86400, ctr: 0.62, pos: 28.2 },
+    "6m": { clicks: 1080, imp: 172800, ctr: 0.63, pos: 28.0 },
+    "12m": { clicks: 2160, imp: 345600, ctr: 0.63, pos: 27.8 },
+  }), []);
+
   const kpis = useMemo(() => {
-    let totalClicks = Math.round(182 * segmentMultiplier * rangeMultiplier);
-    let totalImp = Math.round(28900 * segmentMultiplier * rangeMultiplier);
-    let avgCtr = 0.6;
-    let avgPos = 28.7;
+    const preset = RANGE_METRICS[rangeId] || RANGE_METRICS["28d"];
+    let totalClicks = Math.round(preset.clicks * segmentMultiplier);
+    let totalImp = Math.round(preset.imp * segmentMultiplier);
+    let avgCtr = preset.ctr;
+    let avgPos = preset.pos;
 
     if (liveData?.rows?.length) {
       let clicks = 0;
@@ -272,8 +283,8 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
 
       totalClicks = clicks;
       totalImp = imp;
-      avgCtr = imp > 0 ? (clicks / imp) * 100 : 0;
-      avgPos = imp > 0 ? sumPos / imp : 0;
+      avgCtr = imp > 0 ? parseFloat(((clicks / imp) * 100).toFixed(2)) : 0;
+      avgPos = imp > 0 ? parseFloat((sumPos / imp).toFixed(1)) : 0;
     }
 
     return BASE_KPIS.map((k) => {
@@ -285,7 +296,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
 
       return { ...k, value };
     });
-  }, [liveData, segmentMultiplier, rangeMultiplier]);
+  }, [liveData, rangeId, segmentMultiplier, RANGE_METRICS]);
 
   // Filtered keywords based on activeSite topQueries, active city, country, and date range segment
   const filteredKeywords = useMemo(() => {
