@@ -71,17 +71,17 @@ function getDateRangeParams(rangeId: RangeId) {
 }
 
 const BASE_KPIS = [
-  { key: "sessions", label: "Total Sessions", base: 551, delta: 12.4, icon: Users, from: "#fb923c", to: "#f59e0b", format: "int" as const },
-  { key: "users", label: "Active Users", base: 410, delta: 9.1, icon: Users, from: "#a78bfa", to: "#ec4899", format: "int" as const },
-  { key: "engagement", label: "Avg Engagement", base: 41, delta: 3.1, icon: Clock, from: "#22d3ee", to: "#3b82f6", format: "time" as const },
+  { key: "sessions", label: "Total Sessions", base: 543, delta: 12.4, icon: Users, from: "#fb923c", to: "#f59e0b", format: "int" as const },
+  { key: "users", label: "Active Users", base: 415, delta: 9.1, icon: Users, from: "#a78bfa", to: "#ec4899", format: "int" as const },
+  { key: "engagement", label: "Avg Engagement", base: 49, delta: 3.1, icon: Clock, from: "#22d3ee", to: "#3b82f6", format: "time" as const },
   { key: "conversions", label: "Goal Conversions", base: 185, delta: 8.7, icon: MousePointerClick, from: "#34d399", to: "#14b8a6", format: "int" as const },
 ];
 
 const SECONDARY_KPIS = [
   { key: "revenue", label: "Event Count", value: "2.5K", delta: 14.6, icon: DollarSign, from: "#34d399", to: "#059669" },
-  { key: "bounce", label: "Bounce Rate", value: "29.9%", delta: -2.4, icon: TrendingDown, from: "#22d3ee", to: "#3b82f6", goodDown: true },
+  { key: "bounce", label: "Bounce Rate", value: "31.6%", delta: -2.4, icon: TrendingDown, from: "#22d3ee", to: "#3b82f6", goodDown: true },
   { key: "pps", label: "Pages / Session", value: "2.8", delta: 6.1, icon: Eye, from: "#a78bfa", to: "#ec4899" },
-  { key: "new", label: "New vs Returning", value: "390 / 20", delta: 4.2, icon: Repeat, from: "#fbbf24", to: "#f97316" },
+  { key: "new", label: "New vs Returning", value: "390 / 25", delta: 4.2, icon: Repeat, from: "#fbbf24", to: "#f97316" },
   { key: "events", label: "Total Events", value: "2.5K", delta: 11.8, icon: Zap, from: "#f472b6", to: "#a855f7" },
 ];
 

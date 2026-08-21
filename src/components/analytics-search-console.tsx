@@ -66,10 +66,10 @@ function getDateRangeParams(rangeId: RangeId) {
 }
 
 const BASE_KPIS = [
-  { key: "clicks", label: "Total Clicks", base: 14732, delta: 9.4, prev: 13469, icon: MousePointerClick, from: "#22d3ee", to: "#3b82f6", format: "int" as const },
-  { key: "imp", label: "Total Impressions", base: 312481, delta: 18.2, prev: 264366, icon: Eye, from: "#a78bfa", to: "#ec4899", format: "int" as const },
-  { key: "ctr", label: "Average CTR", base: 4.71, delta: -0.6, prev: 4.74, icon: TrendingUp, from: "#fbbf24", to: "#f97316", format: "pct" as const },
-  { key: "pos", label: "Average Position", base: 11.4, delta: 1.6, prev: 11.6, icon: Search, from: "#34d399", to: "#14b8a6", format: "num" as const },
+  { key: "clicks", label: "Total Clicks", base: 182, delta: 9.4, prev: 168, icon: MousePointerClick, from: "#22d3ee", to: "#3b82f6", format: "int" as const },
+  { key: "imp", label: "Total Impressions", base: 28900, delta: 18.2, prev: 24450, icon: Eye, from: "#a78bfa", to: "#ec4899", format: "int" as const },
+  { key: "ctr", label: "Average CTR", base: 0.6, delta: -0.1, prev: 0.7, icon: TrendingUp, from: "#fbbf24", to: "#f97316", format: "pct" as const },
+  { key: "pos", label: "Average Position", base: 28.7, delta: 1.6, prev: 30.3, icon: Search, from: "#34d399", to: "#14b8a6", format: "num" as const },
 ];
 
 const KEYWORDS = [
@@ -240,10 +240,10 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
   }, [activeCountryObj, activeCityObj]);
 
   const kpis = useMemo(() => {
-    let totalClicks = Math.round(14732 * segmentMultiplier);
-    let totalImp = Math.round(312481 * segmentMultiplier);
-    let avgCtr = 4.71;
-    let avgPos = 11.4;
+    let totalClicks = Math.round(182 * segmentMultiplier);
+    let totalImp = Math.round(28900 * segmentMultiplier);
+    let avgCtr = 0.6;
+    let avgPos = 28.7;
 
     if (liveData?.rows?.length) {
       let clicks = 0;
