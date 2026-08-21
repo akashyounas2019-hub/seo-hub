@@ -287,23 +287,40 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
     });
   }, [liveData, segmentMultiplier, rangeMultiplier]);
 
-  // Filtered keywords based on active city and country segment
+  // Filtered keywords based on activeSite topQueries, active city, country, and date range segment
   const filteredKeywords = useMemo(() => {
-    if (selectedCity === "all") {
-      return KEYWORDS.map((k) => ({
-        ...k,
-        clicks: Math.round(k.clicks * segmentMultiplier),
-        imp: Math.round(k.imp * segmentMultiplier),
-      }));
+    let baseKws = activeSite?.topQueries?.length
+      ? activeSite.topQueries.map((tq) => ({
+          q: tq.q,
+          clicks: tq.clicks,
+          imp: tq.imp,
+          ctr: tq.ctr,
+          pos: tq.pos,
+          prevPos: parseFloat((tq.pos + 0.5).toFixed(1)),
+          trend: tq.delta || 5,
+        }))
+      : KEYWORDS;
+
+    if (selectedCity !== "all") {
+      const kwFilter = activeCityObj.keywords || [];
+      const matched = baseKws.filter((k) => kwFilter.some((term) => k.q.toLowerCase().includes(term)));
+      if (matched.length > 0) baseKws = matched;
     }
-    const kwFilter = activeCityObj.keywords || [];
-    const matched = KEYWORDS.filter((k) => kwFilter.some((term) => k.q.toLowerCase().includes(term)));
-    return (matched.length > 0 ? matched : KEYWORDS.slice(0, 4)).map((k) => ({
+
+    return baseKws.map((k) => ({
       ...k,
-      clicks: Math.round(k.clicks * segmentMultiplier * 1.5),
-      imp: Math.round(k.imp * segmentMultiplier * 1.5),
+      clicks: Math.max(1, Math.round(k.clicks * segmentMultiplier * rangeMultiplier)),
+      imp: Math.max(5, Math.round(k.imp * segmentMultiplier * rangeMultiplier)),
     }));
-  }, [selectedCity, activeCityObj, segmentMultiplier]);
+  }, [activeSite, selectedCity, activeCityObj, segmentMultiplier, rangeMultiplier]);
+
+  const filteredPages = useMemo(() => {
+    return PAGES.map((p) => ({
+      ...p,
+      clicks: Math.max(1, Math.round(p.clicks * segmentMultiplier * rangeMultiplier)),
+      imp: Math.max(10, Math.round(p.imp * segmentMultiplier * rangeMultiplier)),
+    }));
+  }, [segmentMultiplier, rangeMultiplier]);
 
   return (
     <div className="space-y-6">
@@ -596,11 +613,11 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                 <div className="text-[11px] text-slate-500">Best URLs by clicks · delta vs {range.compare}</div>
               </div>
               <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
-                {PAGES.length} pages
+                {filteredPages.length} pages
               </span>
             </div>
             <ul className="divide-y divide-slate-800/70">
-              {PAGES.map((p) => {
+              {filteredPages.map((p) => {
                 const up = p.delta >= 0;
                 return (
                   <li key={p.url} className="flex items-center justify-between gap-3 px-5 py-3 transition hover:bg-slate-900/60">
