@@ -199,17 +199,31 @@ export function GoogleAnalyticsDrilldown({ site }: { site?: ConnectedSite }) {
     };
   }, [rangeId, activeSite]);
 
+  const rangeMultiplier = useMemo(() => {
+    const map: Record<string, number> = {
+      "7d": 0.25,
+      "14v14": 0.5,
+      "28d": 1.0,
+      "this_month": 0.78,
+      "last_month": 1.0,
+      "3m": 3.2,
+      "6m": 6.4,
+      "12m": 13.0,
+    };
+    return map[rangeId] || 1.0;
+  }, [rangeId]);
+
   const kpis = useMemo(() => {
-    let baseSessions = 551;
-    let baseUsers = 410;
-    let baseDuration = 41;
-    let baseConversions = 185;
+    let baseSessions = Math.round(543 * rangeMultiplier);
+    let baseUsers = Math.round(415 * rangeMultiplier);
+    let baseDuration = 49;
+    let baseConversions = Math.round(185 * rangeMultiplier);
 
     if (liveData?.overview?.rows?.[0]?.metricValues) {
       const vals = liveData.overview.rows[0].metricValues;
-      baseUsers = parseInt(vals[0]?.value || "410", 10);
-      baseSessions = parseInt(vals[1]?.value || "551", 10);
-      const rawDur = parseFloat(vals[4]?.value || "41");
+      baseUsers = parseInt(vals[0]?.value || "415", 10);
+      baseSessions = parseInt(vals[1]?.value || "543", 10);
+      const rawDur = parseFloat(vals[4]?.value || "49");
       baseDuration = baseUsers > 0 && rawDur > 1000 ? Math.round(rawDur / baseUsers) : Math.round(rawDur);
       baseConversions = parseInt(vals[5]?.value || "185", 10);
     }
@@ -223,7 +237,7 @@ export function GoogleAnalyticsDrilldown({ site }: { site?: ConnectedSite }) {
 
       return { ...k, value: base };
     });
-  }, [liveData]);
+  }, [liveData, rangeMultiplier]);
 
   const secondaryKpis = useMemo(() => {
     let eventCount = "2,519";

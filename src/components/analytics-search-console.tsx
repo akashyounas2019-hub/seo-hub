@@ -239,9 +239,23 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
     return activeCountryObj.multiplier * activeCityObj.multiplier;
   }, [activeCountryObj, activeCityObj]);
 
+  const rangeMultiplier = useMemo(() => {
+    const map: Record<string, number> = {
+      "7d": 0.25,
+      "14v14": 0.5,
+      "28d": 1.0,
+      "this_month": 0.78,
+      "last_month": 1.0,
+      "3m": 3.2,
+      "6m": 6.4,
+      "12m": 13.0,
+    };
+    return map[rangeId] || 1.0;
+  }, [rangeId]);
+
   const kpis = useMemo(() => {
-    let totalClicks = Math.round(182 * segmentMultiplier);
-    let totalImp = Math.round(28900 * segmentMultiplier);
+    let totalClicks = Math.round(182 * segmentMultiplier * rangeMultiplier);
+    let totalImp = Math.round(28900 * segmentMultiplier * rangeMultiplier);
     let avgCtr = 0.6;
     let avgPos = 28.7;
 
@@ -271,7 +285,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
 
       return { ...k, value };
     });
-  }, [liveData, segmentMultiplier]);
+  }, [liveData, segmentMultiplier, rangeMultiplier]);
 
   // Filtered keywords based on active city and country segment
   const filteredKeywords = useMemo(() => {
