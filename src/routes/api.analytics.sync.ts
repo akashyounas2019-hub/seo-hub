@@ -66,22 +66,22 @@ export async function handleAnalyticsSyncRequest(request: Request) {
       const nowIso = new Date().toISOString();
 
       const gaData = body.ga || {
-        activeUsers: body.activeUsers ?? 410,
+        activeUsers: body.activeUsers ?? 415,
         newUsers: body.newUsers ?? 390,
-        sessions: body.sessions ?? 551,
-        avgEngagement: body.avgEngagement ?? "2m 41s",
-        eventCount: body.eventCount ?? 2500,
-        bounceRate: body.bounceRate ?? "25.5%",
+        sessions: body.sessions ?? 543,
+        avgEngagement: body.avgEngagement ?? "49s",
+        eventCount: body.eventCount ?? 2519,
+        bounceRate: body.bounceRate ?? "31.6%",
         realtimeUsers: body.realtimeUsers ?? 42,
         acquisitionChannels: body.acquisitionChannels,
         topPages: body.topPages,
       };
 
       const gscData = body.gsc || {
-        impressions: body.impressions ?? 312000,
-        clicks: body.clicks ?? 14700,
-        avgPosition: body.avgPosition ?? 11.4,
-        ctr: body.ctr ?? 4.7,
+        impressions: body.impressions ?? 28900,
+        clicks: body.clicks ?? 182,
+        avgPosition: body.avgPosition ?? 28.7,
+        ctr: body.ctr ?? 0.6,
         topQueries: body.topQueries,
       };
 
@@ -103,10 +103,10 @@ export async function handleAnalyticsSyncRequest(request: Request) {
       };
 
       const overviewData = body.overview || {
-        organicSessions: String(gaData.sessions || 551),
-        searchImpressions: `${Math.round((gscData.impressions || 312000) / 1000)}k`,
+        organicSessions: String(gaData.sessions || 543),
+        searchImpressions: `${Math.round((gscData.impressions || 28900) / 1000)}k`,
         gmbActions: String((gbpData.calls || 482) + (gbpData.directionRequests || 1204)),
-        avgPosition: String(gscData.avgPosition || 11.4),
+        avgPosition: String(gscData.avgPosition || 28.7),
         trafficTrend: body.trafficTrend,
         impressionsTrend: body.impressionsTrend,
       };
