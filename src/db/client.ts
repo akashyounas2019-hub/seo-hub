@@ -102,9 +102,11 @@ export async function ensureSchema(): Promise<void> {
         city text,
         region text,
         knowledge_base text,
+        structured_kb jsonb NOT NULL DEFAULT '{}'::jsonb,
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS structured_kb jsonb DEFAULT '{}'::jsonb;
       CREATE UNIQUE INDEX IF NOT EXISTS sites_slug_uq ON sites(slug);
       CREATE UNIQUE INDEX IF NOT EXISTS sites_domain_uq ON sites(domain);
 

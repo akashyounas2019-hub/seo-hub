@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: seo-hub-db
+    restart: always
+    environment:
+      - POSTGRES_DB=seo_hub
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=seo_hub_secret_pass_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d seo_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   seo-hub:
     build:
       context: .
@@ -8,16 +26,22 @@ services:
     container_name: seo-hub-app
     restart: always
     ports:
-      - "8080:8080"
+      - "3333:3333"
     environment:
-      - PORT=8080
+      - PORT=3333
       - HOST=0.0.0.0
       - NODE_ENV=production
       - ADMIN_EMAIL=admin@example.com
       - ADMIN_PASSWORD=changeme123
       - GYL_WORKER_SECRET=default_secret
+      - DATABASE_URL=postgres://postgres:seo_hub_secret_pass_2026@postgres:5432/seo_hub
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - seo_hub_data:/app/.data
 
 volumes:
   seo_hub_data:
+  postgres_data:
+

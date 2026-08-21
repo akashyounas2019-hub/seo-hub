@@ -166,7 +166,7 @@ export async function handleAnalyticsSyncRequest(request: Request) {
           lastSyncedAt: nowIso,
           data: syncedRecord,
         }),
-        { headers: { "Content-Type": "application/json" } },
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -181,12 +181,12 @@ export async function handleAnalyticsSyncRequest(request: Request) {
         lastSyncedAt: currentSynced?.lastSyncedAt || null,
         data: currentSynced || null,
       }),
-      { headers: { "Content-Type": "application/json" } },
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (err: any) {
     return new Response(
       JSON.stringify({ error: err.message || "Failed to sync analytics" }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
@@ -201,3 +201,5 @@ export const Route = createFileRoute("/api/analytics/sync")({
   },
   component: () => null,
 });
+
+

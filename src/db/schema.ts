@@ -35,6 +35,65 @@ export const taskStatusEnum = pgEnum("task_status", [
 ]);
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "normal", "high", "urgent"]);
 
+export interface KbServiceItem {
+  id: string;
+  name: string;
+  category?: string;
+  description?: string;
+  priceAed?: string;
+  turnaround?: string;
+  keywords?: string[];
+  features?: string[];
+}
+
+export interface KbFaqItem {
+  id: string;
+  category?: string;
+  question: string;
+  answer: string;
+}
+
+export interface KbPolicyItem {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface KbCompetitorItem {
+  id: string;
+  name: string;
+  domain?: string;
+  counterStrategy?: string;
+}
+
+export interface KbBusinessProfile {
+  businessName?: string;
+  niche?: string;
+  phone?: string;
+  whatsapp?: string;
+  address?: string;
+  workingHours?: string;
+  tradeLicense?: string;
+  establishedYear?: string;
+}
+
+export interface KbBrandTone {
+  tone?: string;
+  usps?: string[];
+  rulesDos?: string[];
+  rulesDonts?: string[];
+  targetPersonas?: string[];
+}
+
+export interface StructuredKnowledgeBase {
+  businessProfile?: KbBusinessProfile;
+  services?: KbServiceItem[];
+  brandTone?: KbBrandTone;
+  faqs?: KbFaqItem[];
+  policies?: KbPolicyItem[];
+  competitors?: KbCompetitorItem[];
+}
+
 export const sites = pgTable(
   "sites",
   {
@@ -45,6 +104,10 @@ export const sites = pgTable(
     city: text("city"),
     region: text("region"),
     knowledgeBase: text("knowledge_base"),
+    structuredKb: jsonb("structured_kb")
+      .$type<StructuredKnowledgeBase>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -53,6 +116,7 @@ export const sites = pgTable(
     domainIdx: uniqueIndex("sites_domain_uq").on(t.domain),
   }),
 );
+
 
 export const apiKeys = pgTable(
   "api_keys",

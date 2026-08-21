@@ -37,6 +37,7 @@ import {
   Check,
   Plus,
   LayoutDashboard,
+  Database,
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
@@ -78,6 +79,7 @@ const workspaceItems: NavItem[] = [
 // Agents — config, sub-agents, skills, tool integrations, orchestration
 const agentItems: NavItem[] = [
   { title: "Agent Dashboard", url: "/agent-dashboard", icon: LayoutDashboard },
+  { title: "Knowledge Base", url: "/knowledge-base", icon: Database, badge: "RAG" },
   { title: "Agents", url: "/", icon: Zap, badge: "12" },
   { title: "Build Agent", url: "/build-agent", icon: Hammer },
   { title: "Assistant", url: "/assistant", icon: Bot },

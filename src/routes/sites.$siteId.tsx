@@ -11,8 +11,17 @@ import {
   ChevronDown,
   Trash2,
   Plus,
+  Layers,
+  Sparkles,
+  ShieldAlert,
+  HelpCircle,
+  FileText,
+  Building2,
+  Tag,
   type LucideIcon,
 } from "lucide-react";
+import type { StructuredKnowledgeBase, KbServiceItem, KbFaqItem, KbPolicyItem, KbCompetitorItem } from "../db/schema";
+import { compileFullKnowledge, formatStructuredKb } from "../lib/ai-knowledge";
 
 type SiteDetail = {
   id: string;
@@ -25,6 +34,7 @@ type SiteDetail = {
   newLeads: number;
   openFixes: number;
   aiKnowledge: string;
+  structuredKb?: StructuredKnowledgeBase;
   apiKey: {
     keyId: string;
     status: "ACTIVE" | "REVOKED";
@@ -63,6 +73,86 @@ HOURS: Sun–Thu 8am–8pm, Fri+Sat 9am–8pm. WhatsApp dispatch 8am–10pm dail
 POLICIES:
 - Free cancellation up to 24 hours before the appointment
 - Insured team, background-checked staff, uniformed`,
+    structuredKb: {
+      businessProfile: {
+        businessName: "Safaeewala Cleaning Services LLC",
+        niche: "Residential & Commercial Deep Cleaning",
+        phone: "+971 4 399 0000",
+        whatsapp: "+971 50 123 4567",
+        address: "Cluster T, Jumeirah Lakes Towers, Dubai, UAE",
+        workingHours: "Sun-Thu: 8:00 AM - 8:00 PM, Fri-Sat: 9:00 AM - 6:00 PM",
+        tradeLicense: "CN-1094829",
+        establishedYear: "2019",
+      },
+      services: [
+        {
+          id: "s1",
+          name: "Villa Deep Cleaning",
+          category: "Deep Clean",
+          description: "Handover-grade villa refresh using written 60-point checklist",
+          priceAed: "499",
+          turnaround: "4-6 Hours",
+          keywords: ["villa deep cleaning dubai", "villa handover clean"],
+          features: ["Inside appliance clean", "Balcony washing", "AC vent dusting"],
+        },
+        {
+          id: "s2",
+          name: "Move-in / Move-out Cleaning",
+          category: "Tenancy Clean",
+          description: "Tenancy agreement handover clean guaranteed to return deposit",
+          priceAed: "349",
+          turnaround: "3-5 Hours",
+          keywords: ["move out cleaning dubai", "tenancy cleaning dubai"],
+          features: ["Cabinet interior scrubbing", "Grout steam cleaning"],
+        },
+        {
+          id: "s3",
+          name: "Sofa & Upholstery Steam Clean",
+          category: "Specialized",
+          description: "On-site hot water extraction and germ disinfection",
+          priceAed: "199",
+          turnaround: "1-2 Hours",
+          keywords: ["sofa cleaning dubai", "carpet steam clean"],
+          features: ["Stain removal", "Quick-dry extraction"],
+        },
+      ],
+      brandTone: {
+        tone: "Professional, punctual, trustworthy, Dubai-market localized",
+        usps: ["60-point quality audit checklist", "Insured & background-checked staff", "Eco-friendly non-toxic products"],
+        rulesDos: ["Emphasize Dubai Municipality compliance", "Provide clear AED quotes upfront", "Highlight English & Arabic customer service"],
+        rulesDonts: ["Never make unverified medical claims", "Never omit VAT info in quotes"],
+        targetPersonas: ["Expats moving into new villas", "Property managers", "Families requiring seasonal deep cleans"],
+      },
+      faqs: [
+        {
+          id: "f1",
+          category: "Booking",
+          question: "Are cleaning equipment and supplies provided?",
+          answer: "Yes, our team brings all professional tools, eco-friendly detergents, steam machines, and vacuums at no extra charge.",
+        },
+        {
+          id: "f2",
+          category: "Policies",
+          question: "What is your cancellation policy?",
+          answer: "Free cancellation or rescheduling up to 24 hours prior to appointment time.",
+        },
+      ],
+      policies: [
+        {
+          id: "p1",
+          title: "Deposit Return Guarantee",
+          description: "If your landlord or property manager flags any cleaning defect within 48 hours, we re-clean for free.",
+        },
+      ],
+      competitors: [
+        {
+          id: "c1",
+          name: "JustClean / UrbanCompany",
+          domain: "justclean.com",
+          counterStrategy: "Emphasize dedicated in-house staff rather than unvetted gig marketplace freelancers.",
+        },
+      ],
+    },
     apiKey: {
       keyId: "key_86339a887beffbb61",
       status: "ACTIVE",
@@ -293,27 +383,8 @@ function SiteDetailPage() {
           </button>
         </Card>
 
-        {/* AI Knowledge */}
-        <Card
-          title="AI assistant knowledge"
-          subtitle="Paste plain-text facts about this site — service area, services, policies, hours, FAQs. The chat widget and voice booking assistant read this verbatim and use it to answer customer questions."
-        >
-          <div className="mb-1 text-[11px] text-slate-500">{site.aiKnowledge.length} / 8000 chars</div>
-          <textarea
-            defaultValue={site.aiKnowledge}
-            rows={12}
-            className="w-full rounded-md border border-slate-800 bg-slate-950/70 p-3 font-mono text-[11px] text-slate-200 focus:border-cyan-400/50 focus:outline-none"
-          />
-          <p className="mt-2 text-[11px] text-slate-500">
-            Tip: write the facts once, keep it under 4-8k chars. Do not include booking prices/URLs here — the AI answers only from what you provide to avoid customer confusion.
-          </p>
-          <button
-            onClick={() => toast.success("AI knowledge saved")}
-            className="mt-2 rounded-md bg-emerald-500/20 px-3 py-1.5 text-[12px] font-semibold text-emerald-200 ring-1 ring-emerald-400/30 hover:bg-emerald-500/30"
-          >
-            Save knowledge
-          </button>
-        </Card>
+        {/* AI Agent Knowledge Studio */}
+        <KnowledgeStudio site={site} />
 
         {/* API keys */}
         <Card
@@ -603,3 +674,359 @@ function IntegrationBlock({
     </div>
   );
 }
+
+function KnowledgeStudio({ site }: { site: SiteDetail }) {
+  const [activeTab, setActiveTab] = useState<
+    "text" | "services" | "brand" | "faqs" | "policies" | "competitors" | "preview"
+  >("services");
+
+  const [plainText, setPlainText] = useState(site.aiKnowledge);
+  const [structured, setStructured] = useState<StructuredKnowledgeBase>(
+    site.structuredKb || {
+      businessProfile: {
+        businessName: site.label,
+        niche: "Cleaning Services",
+        phone: "+971 4 000 0000",
+        workingHours: "Sun-Thu 8am-8pm",
+      },
+      services: [],
+      faqs: [],
+      policies: [],
+      competitors: [],
+    }
+  );
+
+  const [newServiceName, setNewServiceName] = useState("");
+  const [newServicePrice, setNewServicePrice] = useState("");
+  const [newServiceCat, setNewServiceCat] = useState("");
+  const [newFaqQ, setNewFaqQ] = useState("");
+  const [newFaqA, setNewFaqA] = useState("");
+
+  const addService = () => {
+    if (!newServiceName.trim()) return;
+    const item: KbServiceItem = {
+      id: `s_${Date.now()}`,
+      name: newServiceName.trim(),
+      priceAed: newServicePrice.trim() || undefined,
+      category: newServiceCat.trim() || "General",
+    };
+    setStructured((prev) => ({
+      ...prev,
+      services: [...(prev.services || []), item],
+    }));
+    setNewServiceName("");
+    setNewServicePrice("");
+    setNewServiceCat("");
+    toast.success(`Added service: ${item.name}`);
+  };
+
+  const addFaq = () => {
+    if (!newFaqQ.trim() || !newFaqA.trim()) return;
+    const item: KbFaqItem = {
+      id: `f_${Date.now()}`,
+      question: newFaqQ.trim(),
+      answer: newFaqA.trim(),
+    };
+    setStructured((prev) => ({
+      ...prev,
+      faqs: [...(prev.faqs || []), item],
+    }));
+    setNewFaqQ("");
+    setNewFaqA("");
+    toast.success("Added new FAQ item");
+  };
+
+  const compiledPrompt = compileFullKnowledge({
+    siteName: site.label,
+    city: site.location,
+    plainTextKb: plainText,
+    structuredKb: structured,
+  });
+
+  return (
+    <Card
+      title="AI Agent Knowledge Studio"
+      subtitle="Comprehensive knowledge hub containing website project facts, service catalogs, pricing rules, brand voice, FAQs, and competitor positioning. All background AI agents read this data to ground their outputs."
+      right={
+        <button
+          onClick={() => toast.success("Knowledge Studio updated & saved to PostgreSQL")}
+          className="rounded-md bg-emerald-500/20 px-3 py-1.5 text-[12px] font-semibold text-emerald-200 ring-1 ring-emerald-400/30 hover:bg-emerald-500/30"
+        >
+          Save Knowledge Studio
+        </button>
+      }
+    >
+      {/* Studio Sub-Tabs */}
+      <div className="mb-4 flex flex-wrap gap-1 border-b border-slate-800 pb-2">
+        {[
+          { id: "services", label: "Services & Pricing", icon: Layers, count: structured.services?.length },
+          { id: "brand", label: "Brand Voice & Personas", icon: Sparkles },
+          { id: "faqs", label: "FAQs & Q&A", icon: HelpCircle, count: structured.faqs?.length },
+          { id: "policies", label: "Policies & Guarantees", icon: ShieldAlert, count: structured.policies?.length },
+          { id: "competitors", label: "Competitors", icon: Tag, count: structured.competitors?.length },
+          { id: "text", label: "Raw Plain-Text Facts", icon: FileText },
+          { id: "preview", label: "Agent Prompt Dry-Run", icon: Bot },
+        ].map((t) => {
+          const active = activeTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as any)}
+              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-medium transition ${
+                active
+                  ? "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/30 font-semibold"
+                  : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
+              }`}
+            >
+              <t.icon className="h-3.5 w-3.5" />
+              {t.label}
+              {t.count !== undefined && t.count > 0 && (
+                <span className="ml-1 rounded-full bg-slate-800 px-1.5 py-0.2 text-[9px] text-cyan-300">
+                  {t.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 1. Services & Pricing Catalog Tab */}
+      {activeTab === "services" && (
+        <div className="space-y-4">
+          <div className="grid gap-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:grid-cols-4">
+            <input
+              placeholder="Service Name (e.g. Sofa Steam Clean)"
+              value={newServiceName}
+              onChange={(e) => setNewServiceName(e.target.value)}
+              className="rounded-md border border-slate-800 bg-slate-900/60 px-2.5 py-1.5 text-[12px] text-slate-100 focus:border-cyan-400/50 focus:outline-none"
+            />
+            <input
+              placeholder="Category (e.g. Deep Clean)"
+              value={newServiceCat}
+              onChange={(e) => setNewServiceCat(e.target.value)}
+              className="rounded-md border border-slate-800 bg-slate-900/60 px-2.5 py-1.5 text-[12px] text-slate-100 focus:border-cyan-400/50 focus:outline-none"
+            />
+            <input
+              placeholder="Price AED (e.g. 299)"
+              value={newServicePrice}
+              onChange={(e) => setNewServicePrice(e.target.value)}
+              className="rounded-md border border-slate-800 bg-slate-900/60 px-2.5 py-1.5 text-[12px] text-slate-100 focus:border-cyan-400/50 focus:outline-none"
+            />
+            <button
+              onClick={addService}
+              className="inline-flex items-center justify-center gap-1 rounded-md bg-cyan-500/20 px-3 py-1.5 text-[12px] font-semibold text-cyan-200 ring-1 ring-cyan-400/30 hover:bg-cyan-500/30"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add Service
+            </button>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-slate-800">
+            <table className="w-full text-[12px]">
+              <thead className="bg-slate-900/60 text-[10px] uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="px-3 py-2 text-left">Service</th>
+                  <th className="px-3 py-2 text-left">Category</th>
+                  <th className="px-3 py-2 text-left">Price (AED)</th>
+                  <th className="px-3 py-2 text-left">Turnaround</th>
+                  <th className="px-3 py-2 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(structured.services || []).map((s) => (
+                  <tr key={s.id} className="border-t border-slate-800/60 hover:bg-slate-900/30">
+                    <td className="px-3 py-2 font-medium text-white">
+                      {s.name}
+                      {s.description && <div className="text-[10px] text-slate-400">{s.description}</div>}
+                    </td>
+                    <td className="px-3 py-2 text-slate-300">{s.category || "General"}</td>
+                    <td className="px-3 py-2 font-mono text-cyan-300">{s.priceAed ? `${s.priceAed} AED` : "Quote"}</td>
+                    <td className="px-3 py-2 text-slate-400">{s.turnaround || "Same Day"}</td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        onClick={() => {
+                          setStructured((prev) => ({
+                            ...prev,
+                            services: prev.services?.filter((item) => item.id !== s.id),
+                          }));
+                          toast.info("Service removed");
+                        }}
+                        className="text-[11px] text-rose-400 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {(!structured.services || structured.services.length === 0) && (
+                  <tr>
+                    <td colSpan={5} className="py-6 text-center text-slate-500">
+                      No services added to catalog yet. Add your first service above.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Brand Voice & Personas Tab */}
+      {activeTab === "brand" && (
+        <div className="space-y-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-slate-500">Tone of Voice</div>
+            <input
+              defaultValue={structured.brandTone?.tone || "Professional, punctual, trustworthy, Dubai-market localized"}
+              onChange={(e) =>
+                setStructured((prev) => ({
+                  ...prev,
+                  brandTone: { ...(prev.brandTone || {}), tone: e.target.value },
+                }))
+              }
+              className="mt-1 w-full rounded-md border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-[12px] text-slate-200 focus:border-cyan-400/50 focus:outline-none"
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">Brand Rules - DOs (semicolon separated)</div>
+              <textarea
+                rows={3}
+                defaultValue={(structured.brandTone?.rulesDos || []).join("; ")}
+                onChange={(e) =>
+                  setStructured((prev) => ({
+                    ...prev,
+                    brandTone: {
+                      ...(prev.brandTone || {}),
+                      rulesDos: e.target.value.split(";").map((s) => s.trim()).filter(Boolean),
+                    },
+                  }))
+                }
+                className="mt-1 w-full rounded-md border border-slate-800 bg-slate-950/70 p-2 text-[11px] text-slate-200 focus:border-cyan-400/50 focus:outline-none"
+              />
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">Brand Rules - DON'Ts (semicolon separated)</div>
+              <textarea
+                rows={3}
+                defaultValue={(structured.brandTone?.rulesDonts || []).join("; ")}
+                onChange={(e) =>
+                  setStructured((prev) => ({
+                    ...prev,
+                    brandTone: {
+                      ...(prev.brandTone || {}),
+                      rulesDonts: e.target.value.split(";").map((s) => s.trim()).filter(Boolean),
+                    },
+                  }))
+                }
+                className="mt-1 w-full rounded-md border border-slate-800 bg-slate-950/70 p-2 text-[11px] text-slate-200 focus:border-cyan-400/50 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. FAQs Tab */}
+      {activeTab === "faqs" && (
+        <div className="space-y-4">
+          <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+            <input
+              placeholder="Question (e.g. What is included in villa deep clean?)"
+              value={newFaqQ}
+              onChange={(e) => setNewFaqQ(e.target.value)}
+              className="w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-1.5 text-[12px] text-slate-100 focus:border-cyan-400/50 focus:outline-none"
+            />
+            <textarea
+              placeholder="Verified Answer for AI response grounding..."
+              rows={2}
+              value={newFaqA}
+              onChange={(e) => setNewFaqA(e.target.value)}
+              className="w-full rounded-md border border-slate-800 bg-slate-900/60 p-3 text-[12px] text-slate-100 focus:border-cyan-400/50 focus:outline-none"
+            />
+            <button
+              onClick={addFaq}
+              className="inline-flex items-center gap-1 rounded-md bg-cyan-500/20 px-3 py-1.5 text-[12px] font-semibold text-cyan-200 ring-1 ring-cyan-400/30 hover:bg-cyan-500/30"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add FAQ Item
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {(structured.faqs || []).map((f) => (
+              <div key={f.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="font-semibold text-cyan-200 text-[12px]">Q: {f.question}</div>
+                  <button
+                    onClick={() => {
+                      setStructured((prev) => ({
+                        ...prev,
+                        faqs: prev.faqs?.filter((item) => item.id !== f.id),
+                      }));
+                      toast.info("FAQ removed");
+                    }}
+                    className="text-[10px] text-rose-400 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-300">A: {f.answer}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Policies Tab */}
+      {activeTab === "policies" && (
+        <div className="space-y-2">
+          {(structured.policies || []).map((p) => (
+            <div key={p.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+              <div className="font-semibold text-white text-[12px]">{p.title}</div>
+              <div className="mt-1 text-[11px] text-slate-400">{p.description}</div>
+            </div>
+          ))}
+          <p className="text-[11px] text-slate-500">
+            Policies defined here dictate return guarantees, deposit refunds, and insurance terms for AI response validation.
+          </p>
+        </div>
+      )}
+
+      {/* 5. Competitors Tab */}
+      {activeTab === "competitors" && (
+        <div className="space-y-2">
+          {(structured.competitors || []).map((c) => (
+            <div key={c.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+              <div className="font-semibold text-white text-[12px]">{c.name} {c.domain && `(${c.domain})`}</div>
+              <div className="mt-1 text-[11px] text-slate-400">Counter Strategy: {c.counterStrategy}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 6. Raw Plain Text Tab */}
+      {activeTab === "text" && (
+        <div>
+          <div className="mb-1 text-[11px] text-slate-500">{plainText.length} / 8000 chars</div>
+          <textarea
+            value={plainText}
+            onChange={(e) => setPlainText(e.target.value)}
+            rows={10}
+            className="w-full rounded-md border border-slate-800 bg-slate-950/70 p-3 font-mono text-[11px] text-slate-200 focus:border-cyan-400/50 focus:outline-none"
+          />
+        </div>
+      )}
+
+      {/* 7. Live Agent Prompt Dry-Run Preview */}
+      {activeTab === "preview" && (
+        <div>
+          <div className="mb-2 text-[11px] text-slate-400">
+            Live compiled Knowledge Base text injected into AI worker prompts when executing tasks for this site:
+          </div>
+          <pre className="max-h-[350px] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/90 p-4 font-mono text-[11px] text-cyan-200">
+            {compiledPrompt}
+          </pre>
+        </div>
+      )}
+    </Card>
+  );
+}
+

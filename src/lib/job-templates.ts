@@ -92,9 +92,44 @@ History: ${JSON.stringify(input.history || [])}`;
   },
 };
 
+import { compileFullKnowledge } from "./ai-knowledge";
+
 export function buildPromptForKind(kind: string, input: Record<string, any>): string {
+  let basePrompt = "";
   const template = TEMPLATES[kind];
-  if (template) return template.buildPrompt(input);
-  if (input.prompt) return input.prompt;
-  return `Process the following task:\nKind: ${kind}\nInput: ${JSON.stringify(input, null, 2)}`;
+  if (template) {
+    basePrompt = template.buildPrompt(input);
+  } else if (input.prompt) {
+    basePrompt = input.prompt;
+  } else {
+    basePrompt = `Process the following task:\nKind: ${kind}\nInput: ${JSON.stringify(input, null, 2)}`;
+  }
+
+  // Prepend rich website project Knowledge Base context if available
+  let kbSection = "";
+  if (input.knowledgeContext) {
+    kbSection = input.knowledgeContext;
+  } else if (input.siteKb || input.structuredKb || input.plainTextKb) {
+    kbSection = compileFullKnowledge({
+      siteName: input.siteName || input.domain || "Target Website",
+      city: input.city || input.location,
+      plainTextKb: input.plainTextKb || input.siteKb,
+      structuredKb: input.structuredKb,
+    });
+  }
+
+  if (kbSection) {
+    return `================================================================================
+WEBSITE KNOWLEDGE BASE & GROUNDING SPECIFICATIONS:
+================================================================================
+${kbSection}
+
+================================================================================
+AGENT TASK INSTRUCTIONS:
+================================================================================
+${basePrompt}`;
+  }
+
+  return basePrompt;
 }
+
