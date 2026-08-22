@@ -25,14 +25,13 @@ import { type ConnectedSite, useSite } from "@/lib/site-context";
 // Comparison-period presets.
 // ────────────────────────────────────────────────────────────────────────────
 const RANGES = [
-  { id: "7d", label: "Last 7 days", compare: "prev 7d" },
-  { id: "14v14", label: "14d vs 14d", compare: "prev 14d" },
-  { id: "28d", label: "Last 28 days", compare: "prev 28d" },
-  { id: "this_month", label: "This month", compare: "last month" },
+  { id: "7d", label: "7 days", compare: "prev 7d" },
+  { id: "14v14", label: "14 days", compare: "prev 14d" },
+  { id: "28d", label: "28 days", compare: "prev 28d" },
   { id: "last_month", label: "Last month", compare: "prev month" },
-  { id: "3m", label: "Last 3 months", compare: "prev 3m" },
-  { id: "6m", label: "Last 6 months", compare: "prev 6m" },
-  { id: "12m", label: "Last 12 months", compare: "YoY" },
+  { id: "3m", label: "3 months", compare: "prev 3m" },
+  { id: "6m", label: "6 months", compare: "prev 6m" },
+  { id: "12m", label: "12 months", compare: "YoY" },
 ] as const;
 type RangeId = (typeof RANGES)[number]["id"];
 
@@ -41,10 +40,6 @@ function getDateRangeParams(rangeId: RangeId) {
   const year = now.getFullYear();
   const month = now.getMonth();
 
-  if (rangeId === "this_month") {
-    const startStr = `${year}-${String(month + 1).padStart(2, "0")}-01`;
-    return { startDate: startStr, endDate: "today" };
-  }
   if (rangeId === "last_month") {
     const lastMonthYear = month === 0 ? year - 1 : year;
     const lastMonthNum = month === 0 ? 12 : month;
@@ -243,7 +238,6 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
       "7d": 0.25,
       "14v14": 0.5,
       "28d": 1.0,
-      "this_month": 0.78,
       "last_month": 1.0,
       "3m": 3.2,
       "6m": 6.4,
