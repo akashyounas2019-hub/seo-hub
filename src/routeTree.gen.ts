@@ -40,6 +40,7 @@ import { Route as SeoSuiteToolIdRouteImport } from './routes/seo-suite.$toolId'
 import { Route as SitesSiteIdRouteImport } from './routes/sites.$siteId'
 import { Route as ApiAnalyticsSyncRouteImport } from './routes/api.analytics.sync'
 import { Route as ApiAutomationFlowsRouteImport } from './routes/api.automation.flows'
+import { Route as ApiCloudflareAiShieldRouteImport } from './routes/api.cloudflare.ai-shield'
 import { Route as ApiEventsIngestRouteImport } from './routes/api.events.ingest'
 import { Route as ApiGoogleAnalyticsRouteImport } from './routes/api.google.analytics'
 import { Route as ApiGoogleGa4RouteImport } from './routes/api.google.ga4'
@@ -212,6 +213,11 @@ const ApiAutomationFlowsRoute = ApiAutomationFlowsRouteImport.update({
   path: '/api/automation/flows',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCloudflareAiShieldRoute = ApiCloudflareAiShieldRouteImport.update({
+  id: '/api/cloudflare/ai-shield',
+  path: '/api/cloudflare/ai-shield',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiEventsIngestRoute = ApiEventsIngestRouteImport.update({
   id: '/api/events/ingest',
   path: '/api/events/ingest',
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/seo-suite/': typeof SeoSuiteIndexRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
+  '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/seo-suite': typeof SeoSuiteIndexRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
+  '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
@@ -410,6 +418,7 @@ export interface FileRoutesById {
   '/seo-suite/': typeof SeoSuiteIndexRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
+  '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
@@ -459,6 +468,7 @@ export interface FileRouteTypes {
     | '/seo-suite/'
     | '/api/analytics/sync'
     | '/api/automation/flows'
+    | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
     | '/api/google/analytics'
     | '/api/google/ga4'
@@ -506,6 +516,7 @@ export interface FileRouteTypes {
     | '/seo-suite'
     | '/api/analytics/sync'
     | '/api/automation/flows'
+    | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
     | '/api/google/analytics'
     | '/api/google/ga4'
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/seo-suite/'
     | '/api/analytics/sync'
     | '/api/automation/flows'
+    | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
     | '/api/google/analytics'
     | '/api/google/ga4'
@@ -601,6 +613,7 @@ export interface RootRouteChildren {
   SeoSuiteIndexRoute: typeof SeoSuiteIndexRoute
   ApiAnalyticsSyncRoute: typeof ApiAnalyticsSyncRoute
   ApiAutomationFlowsRoute: typeof ApiAutomationFlowsRouteWithChildren
+  ApiCloudflareAiShieldRoute: typeof ApiCloudflareAiShieldRoute
   ApiEventsIngestRoute: typeof ApiEventsIngestRoute
   ApiGoogleAnalyticsRoute: typeof ApiGoogleAnalyticsRoute
   ApiGoogleGa4Route: typeof ApiGoogleGa4Route
@@ -835,6 +848,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAutomationFlowsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cloudflare/ai-shield': {
+      id: '/api/cloudflare/ai-shield'
+      path: '/api/cloudflare/ai-shield'
+      fullPath: '/api/cloudflare/ai-shield'
+      preLoaderRoute: typeof ApiCloudflareAiShieldRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/events/ingest': {
       id: '/api/events/ingest'
       path: '/api/events/ingest'
@@ -979,6 +999,7 @@ const rootRouteChildren: RootRouteChildren = {
   SeoSuiteIndexRoute: SeoSuiteIndexRoute,
   ApiAnalyticsSyncRoute: ApiAnalyticsSyncRoute,
   ApiAutomationFlowsRoute: ApiAutomationFlowsRouteWithChildren,
+  ApiCloudflareAiShieldRoute: ApiCloudflareAiShieldRoute,
   ApiEventsIngestRoute: ApiEventsIngestRoute,
   ApiGoogleAnalyticsRoute: ApiGoogleAnalyticsRoute,
   ApiGoogleGa4Route: ApiGoogleGa4Route,
