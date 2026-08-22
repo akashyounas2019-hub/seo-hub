@@ -247,10 +247,9 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
   }, [rangeId]);
 
   const RANGE_METRICS: Record<string, { clicks: number; imp: number; ctr: number; pos: number }> = useMemo(() => ({
-    "7d": { clicks: 43, imp: 8150, ctr: 0.5, pos: 25.7 },
+    "7d": { clicks: 60, imp: 9610, ctr: 0.6, pos: 24.6 },
     "14v14": { clicks: 88, imp: 14800, ctr: 0.55, pos: 26.5 },
     "28d": { clicks: 182, imp: 28900, ctr: 0.6, pos: 28.7 },
-    "this_month": { clicks: 142, imp: 22400, ctr: 0.58, pos: 27.2 },
     "last_month": { clicks: 182, imp: 28900, ctr: 0.6, pos: 28.7 },
     "3m": { clicks: 540, imp: 86400, ctr: 0.62, pos: 28.2 },
     "6m": { clicks: 1080, imp: 172800, ctr: 0.63, pos: 28.0 },
