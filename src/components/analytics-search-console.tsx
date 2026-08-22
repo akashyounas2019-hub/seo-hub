@@ -300,7 +300,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
           imp: tq.imp,
           ctr: tq.ctr,
           pos: tq.pos,
-          prevPos: parseFloat((tq.pos + 0.5).toFixed(1)),
+          prevPos: parseFloat((tq.pos + (tq.delta > 0 ? -0.8 : 0.8)).toFixed(1)),
           trend: tq.delta || 5,
         }))
       : KEYWORDS;
@@ -311,20 +311,79 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
       if (matched.length > 0) baseKws = matched;
     }
 
-    return baseKws.map((k) => ({
-      ...k,
-      clicks: Math.max(1, Math.round(k.clicks * segmentMultiplier * rangeMultiplier)),
-      imp: Math.max(5, Math.round(k.imp * segmentMultiplier * rangeMultiplier)),
-    }));
-  }, [activeSite, selectedCity, activeCityObj, segmentMultiplier, rangeMultiplier]);
+    // Range-based position & CTR shift factors so rank drops and CTR gains vary per filter (7d, 28d, 3m, etc.)
+    const rangeFactor = rangeId === "7d" ? 0.35 : rangeId === "14v14" ? 0.6 : rangeId === "3m" ? 3.1 : rangeId === "12m" ? 12.0 : 1.0;
+    const posShiftMap: Record<string, number> = {
+      "7d": -0.4,
+      "14v14": -0.2,
+      "28d": 0.0,
+      "last_month": 0.2,
+      "3m": 1.2,
+      "6m": 2.4,
+      "12m": 3.8,
+    };
+    const shift = posShiftMap[rangeId] || 0.0;
+
+    return baseKws.map((k, idx) => {
+      const clicks = Math.max(1, Math.round(k.clicks * segmentMultiplier * rangeFactor));
+      const imp = Math.max(5, Math.round(k.imp * segmentMultiplier * rangeFactor));
+      const computedCtr = parseFloat(((clicks / imp) * 100).toFixed(1));
+      const pos = parseFloat(Math.max(1.0, k.pos + (idx % 2 === 0 ? shift : -shift)).toFixed(1));
+      const prevPos = parseFloat(Math.max(1.1, pos + (idx % 3 === 0 ? 1.4 : -1.1)).toFixed(1));
+      const trend = parseFloat((k.trend * (rangeFactor > 1 ? 1.2 : 0.8)).toFixed(1));
+
+      return {
+        ...k,
+        clicks,
+        imp,
+        ctr: computedCtr,
+        pos,
+        prevPos,
+        trend,
+      };
+    });
+  }, [activeSite, selectedCity, activeCityObj, segmentMultiplier, rangeId]);
+
+  const dynamicCtrGainers = useMemo(() => {
+    return filteredKeywords
+      .map((k) => ({ q: k.q, ctr: k.ctr, delta: parseFloat(((k.ctr * 0.15) + 0.4).toFixed(1)) }))
+      .sort((a, b) => b.delta - a.delta)
+      .slice(0, 4);
+  }, [filteredKeywords]);
+
+  const dynamicCtrLosers = useMemo(() => {
+    return filteredKeywords
+      .map((k) => ({ q: k.q, ctr: parseFloat((k.ctr * 0.7).toFixed(1)), delta: -parseFloat(((k.ctr * 0.12) + 0.3).toFixed(1)) }))
+      .sort((a, b) => a.delta - b.delta)
+      .slice(0, 4);
+  }, [filteredKeywords]);
+
+  const dynamicRankDrops = useMemo(() => {
+    return filteredKeywords
+      .map((k) => ({
+        q: k.q,
+        pos: parseFloat((k.pos + 3.2).toFixed(1)),
+        prevPos: k.pos,
+        drop: 3.2,
+      }))
+      .slice(0, 4);
+  }, [filteredKeywords]);
 
   const filteredPages = useMemo(() => {
-    return PAGES.map((p) => ({
-      ...p,
-      clicks: Math.max(1, Math.round(p.clicks * segmentMultiplier * rangeMultiplier)),
-      imp: Math.max(10, Math.round(p.imp * segmentMultiplier * rangeMultiplier)),
-    }));
-  }, [segmentMultiplier, rangeMultiplier]);
+    const rangeFactor = rangeId === "7d" ? 0.35 : rangeId === "14v14" ? 0.6 : rangeId === "3m" ? 3.1 : rangeId === "12m" ? 12.0 : 1.0;
+    return PAGES.map((p) => {
+      const clicks = Math.max(1, Math.round(p.clicks * segmentMultiplier * rangeFactor));
+      const imp = Math.max(10, Math.round(p.imp * segmentMultiplier * rangeFactor));
+      const ctr = parseFloat(((clicks / imp) * 100).toFixed(1));
+      return {
+        ...p,
+        clicks,
+        imp,
+        ctr,
+        delta: parseFloat((p.delta * (rangeFactor > 1 ? 1.15 : 0.85)).toFixed(1)),
+      };
+    });
+  }, [segmentMultiplier, rangeId]);
 
   return (
     <div className="space-y-6">
@@ -523,7 +582,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
             subtitle="Queries with higher click-through"
             tone="up"
             icon={TrendingUp}
-            rows={CTR_GAINERS.map((g) => ({
+            rows={dynamicCtrGainers.map((g) => ({
               label: g.q,
               value: `${g.ctr}%`,
               delta: g.delta,
@@ -535,7 +594,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
             subtitle="Queries losing click share"
             tone="down"
             icon={TrendingDown}
-            rows={CTR_LOSERS.map((g) => ({
+            rows={dynamicCtrLosers.map((g) => ({
               label: g.q,
               value: `${g.ctr}%`,
               delta: g.delta,
@@ -547,7 +606,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
             subtitle="Keywords slipping down SERPs"
             tone="down"
             icon={AlertTriangle}
-            rows={RANK_DROPS.map((r) => ({
+            rows={dynamicRankDrops.map((r) => ({
               label: r.q,
               value: `#${r.pos}`,
               sub: `was #${r.prevPos}`,
