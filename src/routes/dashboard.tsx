@@ -23,6 +23,7 @@ import {
   Gauge,
   Clock,
   ExternalLink,
+  RefreshCw,
   LayoutDashboard,
   Monitor,
   Smartphone,
@@ -123,8 +124,8 @@ function DashboardPage() {
                 disabled={isSyncing}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-400/20 disabled:opacity-50 cursor-pointer shadow-[0_0_15px_rgba(34,211,238,0.2)]"
               >
-                <Zap className={`h-3.5 w-3.5 text-cyan-300 ${isSyncing ? "animate-spin" : ""}`} />
-                <span>{isSyncing ? "Syncing n8n Pipelines..." : "Sync All Tabs Now"}</span>
+                <RefreshCw className={`h-3.5 w-3.5 text-cyan-300 ${isSyncing ? "animate-spin" : ""}`} />
+                <span>{isSyncing ? "Refreshing Live Data..." : "Refresh Live Data"}</span>
               </button>
 
               <div className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold ${

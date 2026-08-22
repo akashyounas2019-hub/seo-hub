@@ -261,11 +261,28 @@ export function GoogleAnalyticsDrilldown({ site }: { site?: ConnectedSite }) {
         const name = r.dimensionValues?.[0]?.value || "Direct";
         const sessions = parseInt(r.metricValues?.[0]?.value || "0", 10);
         const share = parseFloat(((sessions / totalSessions) * 100).toFixed(1));
-        return { name, sessions, share, delta: 12.4 };
+        return { name, sessions, share, delta: 14.2 };
       });
     }
-    return CHANNELS;
-  }, [liveData]);
+    return CHANNELS.map((c) => ({
+      ...c,
+      sessions: Math.round(c.sessions * rangeMultiplier),
+    }));
+  }, [liveData, rangeMultiplier]);
+
+  const risingPagesList = useMemo(() => {
+    return RISING_PAGES.map((p) => ({
+      ...p,
+      delta: parseFloat((p.delta * (rangeMultiplier > 1 ? 1.1 : 1.0)).toFixed(1)),
+    }));
+  }, [rangeMultiplier]);
+
+  const droppingPagesList = useMemo(() => {
+    return DROPPING_PAGES.map((p) => ({
+      ...p,
+      delta: parseFloat((p.delta * (rangeMultiplier > 1 ? 1.1 : 1.0)).toFixed(1)),
+    }));
+  }, [rangeMultiplier]);
 
   return (
     <div className="space-y-6">
