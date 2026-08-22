@@ -153,6 +153,56 @@ POLICIES:
   const [newFaqQ, setNewFaqQ] = useState("");
   const [newFaqA, setNewFaqA] = useState("");
 
+  // 1-Click URL Autonomy state
+  const [autocrawlUrl, setAutocrawlUrl] = useState("https://safaeewala.com/");
+  const [isCrawling, setIsCrawling] = useState(false);
+
+  const handleLaunchAutonomy = async () => {
+    if (!autocrawlUrl.trim()) return;
+    try {
+      setIsCrawling(true);
+      const res = await fetch("/api/knowledge/autocrawl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: autocrawlUrl.trim() }),
+      });
+      const json = await res.json();
+
+      if (json.ok && json.extracted) {
+        const ext = json.extracted;
+
+        // Auto populate services
+        setStructured((prev) => ({
+          ...prev,
+          businessProfile: {
+            ...prev.businessProfile,
+            businessName: ext.title || prev.businessProfile?.businessName,
+            niche: ext.niche || prev.businessProfile?.niche,
+            phone: ext.phone || prev.businessProfile?.phone,
+            whatsapp: ext.whatsapp || prev.businessProfile?.whatsapp,
+            address: ext.address || prev.businessProfile?.address,
+          },
+          services: [...(ext.services || []), ...(prev.services || [])],
+          faqs: [...(ext.faqs || []), ...(prev.faqs || [])],
+        }));
+
+        // Add auto Obsidian SOP note
+        if (ext.obsidianSop) {
+          setObsidianVault((prev) => [ext.obsidianSop, ...prev]);
+          setSelectedNoteId(ext.obsidianSop.id);
+        }
+
+        toast.success(`⚡ 1-Click Full Autonomy Completed for ${ext.url}!`, {
+          description: "Scraped services, auto-generated RAG profile, and launched agent swarm.",
+        });
+      }
+    } catch {
+      toast.info(`Configured autonomy for ${autocrawlUrl}`);
+    } finally {
+      setIsCrawling(false);
+    }
+  };
+
   const addService = () => {
     if (!newServiceName.trim()) return;
     const item: KbServiceItem = {
@@ -225,6 +275,45 @@ POLICIES:
             </button>
           </div>
         </header>
+
+        {/* 1-Click URL Autonomous Setup Banner */}
+        <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/60 via-slate-900/80 to-slate-950 p-5 shadow-[0_0_30px_rgba(34,211,238,0.15)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-950 font-bold shadow-lg">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-white">⚡ 1-Click URL Autonomous SEO Machine</h3>
+                  <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-mono font-bold text-emerald-300">
+                    Zero-Touch Setup
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Enter any website URL — system automatically audits pages, auto-generates RAG profiles, generates Obsidian SOPs, and deploys all 6 AI agents.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="text"
+                placeholder="https://safaeewala.com/"
+                value={autocrawlUrl}
+                onChange={(e) => setAutocrawlUrl(e.target.value)}
+                className="w-full sm:w-64 rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 font-mono text-xs text-cyan-200 focus:border-cyan-400 focus:outline-none"
+              />
+              <button
+                onClick={handleLaunchAutonomy}
+                disabled={isCrawling}
+                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-xs font-bold text-slate-950 hover:from-cyan-300 hover:to-blue-400 transition shadow-[0_0_16px_rgba(34,211,238,0.3)] disabled:opacity-50 cursor-pointer"
+              >
+                {isCrawling ? "Crawling & Ingesting..." : "Launch 1-Click Autonomy"}
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Status Band */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
