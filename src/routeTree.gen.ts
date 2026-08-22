@@ -41,6 +41,7 @@ import { Route as SitesSiteIdRouteImport } from './routes/sites.$siteId'
 import { Route as ApiAnalyticsSyncRouteImport } from './routes/api.analytics.sync'
 import { Route as ApiAutomationFlowsRouteImport } from './routes/api.automation.flows'
 import { Route as ApiEventsIngestRouteImport } from './routes/api.events.ingest'
+import { Route as ApiGoogleAnalyticsRouteImport } from './routes/api.google.analytics'
 import { Route as ApiGoogleGa4RouteImport } from './routes/api.google.ga4'
 import { Route as ApiGoogleGbpRouteImport } from './routes/api.google.gbp'
 import { Route as ApiGoogleSearchConsoleRouteImport } from './routes/api.google.search-console'
@@ -216,6 +217,11 @@ const ApiEventsIngestRoute = ApiEventsIngestRouteImport.update({
   path: '/api/events/ingest',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGoogleAnalyticsRoute = ApiGoogleAnalyticsRouteImport.update({
+  id: '/api/google/analytics',
+  path: '/api/google/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGoogleGa4Route = ApiGoogleGa4RouteImport.update({
   id: '/api/google/ga4',
   path: '/api/google/ga4',
@@ -310,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/events/ingest': typeof ApiEventsIngestRoute
+  '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
@@ -356,6 +363,7 @@ export interface FileRoutesByTo {
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/events/ingest': typeof ApiEventsIngestRoute
+  '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
@@ -403,6 +411,7 @@ export interface FileRoutesById {
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/events/ingest': typeof ApiEventsIngestRoute
+  '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
@@ -451,6 +460,7 @@ export interface FileRouteTypes {
     | '/api/analytics/sync'
     | '/api/automation/flows'
     | '/api/events/ingest'
+    | '/api/google/analytics'
     | '/api/google/ga4'
     | '/api/google/gbp'
     | '/api/google/search-console'
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/api/analytics/sync'
     | '/api/automation/flows'
     | '/api/events/ingest'
+    | '/api/google/analytics'
     | '/api/google/ga4'
     | '/api/google/gbp'
     | '/api/google/search-console'
@@ -543,6 +554,7 @@ export interface FileRouteTypes {
     | '/api/analytics/sync'
     | '/api/automation/flows'
     | '/api/events/ingest'
+    | '/api/google/analytics'
     | '/api/google/ga4'
     | '/api/google/gbp'
     | '/api/google/search-console'
@@ -590,6 +602,7 @@ export interface RootRouteChildren {
   ApiAnalyticsSyncRoute: typeof ApiAnalyticsSyncRoute
   ApiAutomationFlowsRoute: typeof ApiAutomationFlowsRouteWithChildren
   ApiEventsIngestRoute: typeof ApiEventsIngestRoute
+  ApiGoogleAnalyticsRoute: typeof ApiGoogleAnalyticsRoute
   ApiGoogleGa4Route: typeof ApiGoogleGa4Route
   ApiGoogleGbpRoute: typeof ApiGoogleGbpRoute
   ApiGoogleSearchConsoleRoute: typeof ApiGoogleSearchConsoleRoute
@@ -829,6 +842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEventsIngestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/google/analytics': {
+      id: '/api/google/analytics'
+      path: '/api/google/analytics'
+      fullPath: '/api/google/analytics'
+      preLoaderRoute: typeof ApiGoogleAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/google/ga4': {
       id: '/api/google/ga4'
       path: '/api/google/ga4'
@@ -960,6 +980,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAnalyticsSyncRoute: ApiAnalyticsSyncRoute,
   ApiAutomationFlowsRoute: ApiAutomationFlowsRouteWithChildren,
   ApiEventsIngestRoute: ApiEventsIngestRoute,
+  ApiGoogleAnalyticsRoute: ApiGoogleAnalyticsRoute,
   ApiGoogleGa4Route: ApiGoogleGa4Route,
   ApiGoogleGbpRoute: ApiGoogleGbpRoute,
   ApiGoogleSearchConsoleRoute: ApiGoogleSearchConsoleRoute,

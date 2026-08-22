@@ -174,7 +174,7 @@ export function GoogleAnalyticsDrilldown({ site }: { site?: ConnectedSite }) {
 
     setLoading(true);
     const { startDate, endDate } = getDateRangeParams(rangeId);
-    fetch(`/api/google/ga4?propertyId=${propertyId}&startDate=${startDate}&endDate=${endDate}`)
+    fetch(`/api/google/analytics?propertyId=${propertyId}&startDate=${startDate}&endDate=${endDate}`)
       .then((res) => res.json())
       .then((data) => {
         if (isMounted && data && data.ok) {
