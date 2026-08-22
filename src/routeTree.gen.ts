@@ -46,6 +46,7 @@ import { Route as ApiGoogleGbpRouteImport } from './routes/api.google.gbp'
 import { Route as ApiGoogleSearchConsoleRouteImport } from './routes/api.google.search-console'
 import { Route as ApiJobsIndexRouteImport } from './routes/api.jobs.index'
 import { Route as ApiJobsClaimRouteImport } from './routes/api.jobs.claim'
+import { Route as ApiKnowledgeObsidianRouteImport } from './routes/api.knowledge.obsidian'
 import { Route as ApiTasksIndexRouteImport } from './routes/api.tasks.index'
 import { Route as ApiTasksIdRouteImport } from './routes/api.tasks.$id'
 import { Route as ApiAutomationFlowsIdRouteImport } from './routes/api.automation.flows.$id'
@@ -240,6 +241,11 @@ const ApiJobsClaimRoute = ApiJobsClaimRouteImport.update({
   path: '/api/jobs/claim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiKnowledgeObsidianRoute = ApiKnowledgeObsidianRouteImport.update({
+  id: '/api/knowledge/obsidian',
+  path: '/api/knowledge/obsidian',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTasksIndexRoute = ApiTasksIndexRouteImport.update({
   id: '/api/tasks/',
   path: '/api/tasks/',
@@ -308,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
   '/api/jobs/claim': typeof ApiJobsClaimRoute
+  '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
   '/api/tasks/': typeof ApiTasksIndexRoute
@@ -353,6 +360,7 @@ export interface FileRoutesByTo {
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
   '/api/jobs/claim': typeof ApiJobsClaimRoute
+  '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/jobs': typeof ApiJobsIndexRoute
   '/api/tasks': typeof ApiTasksIndexRoute
@@ -399,6 +407,7 @@ export interface FileRoutesById {
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
   '/api/jobs/claim': typeof ApiJobsClaimRoute
+  '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
   '/api/tasks/': typeof ApiTasksIndexRoute
@@ -446,6 +455,7 @@ export interface FileRouteTypes {
     | '/api/google/gbp'
     | '/api/google/search-console'
     | '/api/jobs/claim'
+    | '/api/knowledge/obsidian'
     | '/api/tasks/$id'
     | '/api/jobs/'
     | '/api/tasks/'
@@ -491,6 +501,7 @@ export interface FileRouteTypes {
     | '/api/google/gbp'
     | '/api/google/search-console'
     | '/api/jobs/claim'
+    | '/api/knowledge/obsidian'
     | '/api/tasks/$id'
     | '/api/jobs'
     | '/api/tasks'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/api/google/gbp'
     | '/api/google/search-console'
     | '/api/jobs/claim'
+    | '/api/knowledge/obsidian'
     | '/api/tasks/$id'
     | '/api/jobs/'
     | '/api/tasks/'
@@ -582,6 +594,7 @@ export interface RootRouteChildren {
   ApiGoogleGbpRoute: typeof ApiGoogleGbpRoute
   ApiGoogleSearchConsoleRoute: typeof ApiGoogleSearchConsoleRoute
   ApiJobsClaimRoute: typeof ApiJobsClaimRoute
+  ApiKnowledgeObsidianRoute: typeof ApiKnowledgeObsidianRoute
   ApiTasksIdRoute: typeof ApiTasksIdRoute
   ApiJobsIndexRoute: typeof ApiJobsIndexRoute
   ApiTasksIndexRoute: typeof ApiTasksIndexRoute
@@ -851,6 +864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiJobsClaimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/knowledge/obsidian': {
+      id: '/api/knowledge/obsidian'
+      path: '/api/knowledge/obsidian'
+      fullPath: '/api/knowledge/obsidian'
+      preLoaderRoute: typeof ApiKnowledgeObsidianRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tasks/': {
       id: '/api/tasks/'
       path: '/api/tasks'
@@ -944,6 +964,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGoogleGbpRoute: ApiGoogleGbpRoute,
   ApiGoogleSearchConsoleRoute: ApiGoogleSearchConsoleRoute,
   ApiJobsClaimRoute: ApiJobsClaimRoute,
+  ApiKnowledgeObsidianRoute: ApiKnowledgeObsidianRoute,
   ApiTasksIdRoute: ApiTasksIdRoute,
   ApiJobsIndexRoute: ApiJobsIndexRoute,
   ApiTasksIndexRoute: ApiTasksIndexRoute,
