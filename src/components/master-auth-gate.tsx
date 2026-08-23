@@ -74,7 +74,6 @@ export function MasterAuthGate({ children }: { children: ReactNode }) {
               <span className="flex items-center gap-1.5">
                 <KeyRound className="h-3.5 w-3.5 text-cyan-400" /> Master Access Password
               </span>
-              <span className="text-[10px] text-slate-500 font-mono">03335148974@...</span>
             </label>
 
             <div className="relative">
