@@ -138,17 +138,31 @@ export function BusinessProfileDrilldown({ site }: { site?: ConnectedSite }) {
         </section>
 
         <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold text-white">
+            <MapPin className="h-4 w-4 text-fuchsia-300" /> Location
+          </div>
+          <p className="mt-1 text-xs text-slate-400">
+            Business Bay, Dubai · Serving Dubai Marina, JLT, DIFC, JVC and surrounding areas.
+          </p>
+        </section>
+
+        {/* Graphical Widget Moved to Bottom: Profile Views vs Calls Chart */}
+        <section className="mt-6 rounded-2xl border border-violet-500/20 bg-slate-900/40 p-3.5 sm:p-4 backdrop-blur-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
             <div>
-              <div className="text-sm font-semibold text-white">Profile Views vs Calls</div>
-              <div className="text-[11px] text-slate-500">Weekly trend · last 12 weeks</div>
+              <div className="text-sm font-semibold text-white flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-violet-400" /> Profile Views vs Calls Trend
+              </div>
+              <div className="mt-0.5 text-[11px] text-slate-400">Weekly GMB engagement &amp; conversion timeline · last 12 weeks</div>
             </div>
-            <div className="flex items-center gap-3 text-[11px] text-slate-400">
+            <div className="flex items-center gap-3 text-[11px] text-slate-300 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
               <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-fuchsia-400" /> Views</span>
               <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-cyan-400" /> Calls</span>
             </div>
           </div>
-          <DualChart data={TREND} />
+          <div className="mt-3">
+            <DualChart data={TREND} />
+          </div>
         </section>
 
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">

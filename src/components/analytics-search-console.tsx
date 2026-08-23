@@ -566,24 +566,6 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
           })}
         </section>
 
-        {/* Chart */}
-        <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold text-white">Clicks vs Impressions</div>
-              <div className="mt-0.5 text-[11px] text-slate-500">12-week trend · CTR overlay</div>
-            </div>
-            <div className="flex items-center gap-3 text-[11px] text-slate-400">
-              <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-cyan-400" /> Clicks</span>
-              <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-violet-400" /> Impressions</span>
-              <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-300" /> CTR</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <DualChart data={CTR_SERIES} />
-          </div>
-        </section>
-
         {/* CTR Gainers / Losers / Rank Drops - Rendered when Compare is active */}
         {isCompareActive && (
           <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -727,14 +709,14 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
 
         {/* Devices + Countries */}
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-white">Devices</h2>
                 <div className="text-[11px] text-slate-500">Share of clicks by device</div>
               </div>
             </div>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-3 space-y-2.5">
               {DEVICES.map((d) => {
                 const Icon = d.icon;
                 const up = d.delta >= 0;
@@ -751,10 +733,10 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                         </span>
                       </span>
                     </div>
-                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-800">
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
                       <div
-                        className="h-full rounded-full transition-[width] duration-700"
-                        style={{ width: `${d.pct}%`, background: `linear-gradient(to right, ${d.color}, ${d.color}80)` }}
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${d.pct}%`, background: d.color }}
                       />
                     </div>
                   </li>
@@ -763,31 +745,21 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-white">Top Countries</h2>
-                <div className="text-[11px] text-slate-500">Where searches are coming from</div>
+                <div className="text-[11px] text-slate-500">Search impressions &amp; click distribution</div>
               </div>
-              <MapPin className="h-4 w-4 text-slate-500" />
             </div>
-            <ul className="mt-4 space-y-3">
-              {COUNTRIES_LIST.filter((c) => c.id !== "all").map((c) => (
-                <li key={c.name}>
-                  <div className="flex items-center justify-between text-xs text-slate-300">
-                    <span className="inline-flex items-center gap-2">
-                      <span className="text-base leading-none">{c.flag}</span> {c.name}
-                    </span>
-                    <span className="tabular-nums text-slate-400">
-                      {c.clicks.toLocaleString()} · {c.pct}%
-                    </span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-sky-500 transition-[width] duration-700"
-                      style={{ width: `${c.pct}%` }}
-                    />
-                  </div>
+            <ul className="mt-3 space-y-2.5">
+              {COUNTRIES_LIST.slice(0, 5).map((c) => (
+                <li key={c.id} className="flex items-center justify-between text-xs text-slate-300">
+                  <span className="inline-flex items-center gap-2">
+                    <span>{c.flag}</span>
+                    <span>{c.name}</span>
+                  </span>
+                  <span className="tabular-nums font-mono text-[11px] text-cyan-300">{Math.round(c.clicks * rangeMultiplier).toLocaleString()} clicks</span>
                 </li>
               ))}
             </ul>

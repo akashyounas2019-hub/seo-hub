@@ -406,21 +406,6 @@ export function GoogleAnalyticsDrilldown({ site }: { site?: ConnectedSite }) {
           })}
         </section>
 
-        {/* Chart */}
-        <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-semibold text-white">Sessions vs Users</div>
-              <div className="text-[11px] text-slate-500">Weekly trend · last 12 weeks</div>
-            </div>
-            <div className="flex items-center gap-3 text-[11px] text-slate-400">
-              <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-orange-400" /> Sessions</span>
-              <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-fuchsia-400" /> Users</span>
-            </div>
-          </div>
-          <DualChart data={TREND} />
-        </section>
-
         {/* Movers */}
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <MoversCard
