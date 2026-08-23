@@ -157,6 +157,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
   const { currentSite } = useSite();
   const activeSite = site || currentSite;
   const [rangeId, setRangeId] = useState<RangeId>("28d");
+  const [isCompareActive, setIsCompareActive] = useState<boolean>(true);
   const [selectedCountry, setSelectedCountry] = useState<string>("are"); // UAE default focus
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [liveData, setLiveData] = useState<any>(null);
@@ -478,39 +479,39 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
               )}
             </div>
 
-            {/* Date Range Selector */}
-            <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-xs">
-              {RANGES.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => setRangeId(r.id)}
-                  className={`rounded-md px-2.5 py-1.5 font-medium transition ${
-                    r.id === rangeId
-                      ? "bg-cyan-400/15 text-cyan-200 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </div>
+            {/* Date Range Selector & Compare Checkbox */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-xs">
+                {RANGES.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setRangeId(r.id)}
+                    className={`rounded-md px-2.5 py-1.5 font-medium transition ${
+                      r.id === rangeId
+                        ? "bg-cyan-400/15 text-cyan-200 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
 
-          {/* Active Filter Indicator Badge */}
-          <div className="flex items-center justify-between border-t border-slate-800/60 pt-2 text-[11px] text-slate-400">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-              <span>Active Segment:</span>
-              <span className="rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 font-semibold text-cyan-200">
-                {activeCountryObj.flag} {activeCountryObj.name}
-              </span>
-              <span className="text-slate-600">•</span>
-              <span className="rounded-md border border-slate-700 bg-slate-950 px-2 py-0.5 text-slate-300">
-                {activeCityObj.icon} {activeCityObj.name}
-              </span>
-            </div>
-            <div className="text-slate-500">
-              Comparing {range.label} <span className="text-slate-600">vs</span> {range.compare}
+              {/* Compare Checkbox Toggle */}
+              <label className="flex items-center gap-2 cursor-pointer select-none rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1.5 text-xs text-slate-300 hover:border-cyan-400/40 hover:bg-slate-900 transition">
+                <input
+                  type="checkbox"
+                  checked={isCompareActive}
+                  onChange={(e) => setIsCompareActive(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-slate-950 cursor-pointer"
+                />
+                <span className="font-semibold text-cyan-200">Compare</span>
+                {isCompareActive ? (
+                  <span className="text-[10px] text-slate-400">(vs previous period)</span>
+                ) : (
+                  <span className="text-[10px] text-slate-500">(Single period view)</span>
+                )}
+              </label>
             </div>
           </div>
         </div>
@@ -538,18 +539,26 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                   {fmt(k.value, k.format)}
                 </div>
                 <div className="mt-1 flex items-center justify-between">
-                  <div
-                    className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
-                      up
-                        ? "bg-emerald-400/10 text-emerald-300"
-                        : "bg-rose-400/10 text-rose-300"
-                    }`}
-                  >
-                    {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                    {Math.abs(k.delta)}
-                    {k.format === "num" ? " pts" : "%"}
-                  </div>
-                  <div className="text-[10px] text-slate-500">vs {range.compare}</div>
+                  {isCompareActive ? (
+                    <>
+                      <div
+                        className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
+                          up
+                            ? "bg-emerald-400/10 text-emerald-300"
+                            : "bg-rose-400/10 text-rose-300"
+                        }`}
+                      >
+                        {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                        {Math.abs(k.delta)}
+                        {k.format === "num" ? " pts" : "%"}
+                      </div>
+                      <div className="text-[10px] text-slate-500">vs {range.compare}</div>
+                    </>
+                  ) : (
+                    <div className="inline-flex items-center gap-1 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium text-cyan-300">
+                      Selected Period ({range.label})
+                    </div>
+                  )}
                 </div>
                 <MiniSpark from={k.from} to={k.to} up={up || isPos} />
               </div>
@@ -575,46 +584,48 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
           </div>
         </section>
 
-        {/* CTR Gainers / Losers / Rank Drops */}
-        <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <MoversCard
-            title="CTR increased"
-            subtitle="Queries with higher click-through"
-            tone="up"
-            icon={TrendingUp}
-            rows={dynamicCtrGainers.map((g) => ({
-              label: g.q,
-              value: `${g.ctr}%`,
-              delta: g.delta,
-              suffix: "pts",
-            }))}
-          />
-          <MoversCard
-            title="CTR decreased"
-            subtitle="Queries losing click share"
-            tone="down"
-            icon={TrendingDown}
-            rows={dynamicCtrLosers.map((g) => ({
-              label: g.q,
-              value: `${g.ctr}%`,
-              delta: g.delta,
-              suffix: "pts",
-            }))}
-          />
-          <MoversCard
-            title="Dropped in rank"
-            subtitle="Keywords slipping down SERPs"
-            tone="down"
-            icon={AlertTriangle}
-            rows={dynamicRankDrops.map((r) => ({
-              label: r.q,
-              value: `#${r.pos}`,
-              sub: `was #${r.prevPos}`,
-              delta: -r.drop,
-              suffix: "pos",
-            }))}
-          />
-        </section>
+        {/* CTR Gainers / Losers / Rank Drops - Rendered when Compare is active */}
+        {isCompareActive && (
+          <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <MoversCard
+              title="CTR increased"
+              subtitle="Queries with higher click-through"
+              tone="up"
+              icon={TrendingUp}
+              rows={dynamicCtrGainers.map((g) => ({
+                label: g.q,
+                value: `${g.ctr}%`,
+                delta: g.delta,
+                suffix: "pts",
+              }))}
+            />
+            <MoversCard
+              title="CTR decreased"
+              subtitle="Queries losing click share"
+              tone="down"
+              icon={TrendingDown}
+              rows={dynamicCtrLosers.map((g) => ({
+                label: g.q,
+                value: `${g.ctr}%`,
+                delta: g.delta,
+                suffix: "pts",
+              }))}
+            />
+            <MoversCard
+              title="Dropped in rank"
+              subtitle="Keywords slipping down SERPs"
+              tone="down"
+              icon={AlertTriangle}
+              rows={dynamicRankDrops.map((r) => ({
+                label: r.q,
+                value: `#${r.pos}`,
+                sub: `was #${r.prevPos}`,
+                delta: -r.drop,
+                suffix: "pos",
+              }))}
+            />
+          </section>
+        )}
 
         {/* Two-column: Keywords + Pages */}
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -650,16 +661,22 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                         <td className="px-3 py-2.5 text-right tabular-nums text-slate-300">{k.ctr}%</td>
                         <td className="px-3 py-2.5 text-right tabular-nums">
                           <span className="text-slate-300">{k.pos}</span>
-                          <span className={`ml-1 text-[10px] ${posUp >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                            {posUp >= 0 ? "▲" : "▼"}
-                            {Math.abs(posUp).toFixed(1)}
-                          </span>
+                          {isCompareActive && (
+                            <span className={`ml-1 text-[10px] ${posUp >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                              {posUp >= 0 ? "▲" : "▼"}
+                              {Math.abs(posUp).toFixed(1)}
+                            </span>
+                          )}
                         </td>
-                        <td className={`px-5 py-2.5 text-right text-[11px] font-medium ${up ? "text-emerald-300" : "text-rose-300"}`}>
-                          <span className="inline-flex items-center gap-0.5">
-                            {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                            {Math.abs(k.trend)}%
-                          </span>
+                        <td className={`px-5 py-2.5 text-right text-[11px] font-medium ${isCompareActive ? (up ? "text-emerald-300" : "text-rose-300") : "text-slate-400"}`}>
+                          {isCompareActive ? (
+                            <span className="inline-flex items-center gap-0.5">
+                              {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                              {up ? "+" : ""}{k.trend}%
+                            </span>
+                          ) : (
+                            <span>—</span>
+                          )}
                         </td>
                       </tr>
                     );
