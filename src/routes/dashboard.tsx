@@ -34,6 +34,7 @@ import {
   ShieldCheck,
   Check,
   Bot,
+  Share2,
 } from "lucide-react";
 import { useSite } from "@/lib/site-context";
 
@@ -41,6 +42,7 @@ import { GoogleAnalyticsDrilldown } from "@/components/analytics-google-analytic
 import { SearchConsoleDrilldown } from "@/components/analytics-search-console";
 import { BusinessProfileDrilldown } from "@/components/analytics-business-profile";
 import { CloudflareAiOverview } from "@/components/analytics-ai-overview";
+import { VisualsEcosystemPipeline } from "@/components/visuals-ecosystem-pipeline";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -52,7 +54,7 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type TabType = "overview" | "ga" | "gsc" | "gbp" | "ai-overview";
+type TabType = "overview" | "ga" | "gsc" | "gbp" | "ai-overview" | "visuals";
 
 function DashboardPage() {
   const { currentSite, allSites, setCurrentSiteId, isSyncing, lastSyncTime, triggerSync } = useSite();
@@ -167,6 +169,7 @@ function DashboardPage() {
               { id: "gsc", label: "Search Console", icon: Search, desc: "Queries & Rankings", badge: "GSC", accent: "text-cyan-400" },
               { id: "gbp", label: "Business Profile", icon: MapPin, desc: "Local Maps & Calls", badge: "GBP", accent: "text-violet-400" },
               { id: "ai-overview", label: "AI Crawl Control", icon: Bot, desc: "Cloudflare AI Shield", badge: "Cloudflare", accent: "text-orange-400" },
+              { id: "visuals", label: "Visuals Engine", icon: Share2, desc: "Topology & Data Flow", badge: "Live Map", accent: "text-emerald-400" },
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               const Icon = tab.icon;
@@ -420,6 +423,13 @@ function DashboardPage() {
         {activeTab === "ai-overview" && (
           <div className="mt-6 animate-in fade-in duration-200">
             <CloudflareAiOverview site={currentSite} />
+          </div>
+        )}
+
+        {/* TAB 6: VISUALS ECOSYSTEM MAP */}
+        {activeTab === "visuals" && (
+          <div className="mt-6 animate-in fade-in duration-200">
+            <VisualsEcosystemPipeline />
           </div>
         )}
 
