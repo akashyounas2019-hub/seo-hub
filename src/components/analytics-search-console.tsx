@@ -21,6 +21,92 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { type ConnectedSite, useSite } from "@/lib/site-context";
+import { EntriesModal100, type ModalEntry } from "@/components/entries-modal-100";
+
+const DUMMY_SERVICES = [
+  "deep cleaning", "villa cleaning", "sofa shampoo", "carpet cleaning", "move in move out cleaning",
+  "office cleaning", "maid service", "window cleaning", "sanitization service", "water tank cleaning",
+  "kitchen deep clean", "mattress cleaning", "curtain cleaning", "marble polishing", "pest control"
+];
+const DUMMY_LOCATIONS = [
+  "dubai marina", "business bay", "jlt", "difc", "jvc", "downtown dubai", "palm jumeirah",
+  "arabian ranches", "mirdif", "al barsha", "silicon oasis", "sports city", "motor city", "damac hills"
+];
+
+function generate100Keywords() {
+  const list = [
+    { q: "deep cleaning services dubai", clicks: 1420, imp: 18420, ctr: 7.7, pos: 3.2, prevPos: 4.8, trend: 12.4 },
+    { q: "villa cleaning dubai marina", clicks: 986, imp: 12040, ctr: 8.2, pos: 2.8, prevPos: 3.9, trend: 22.1 },
+    { q: "sofa shampoo cleaning dubai", clicks: 742, imp: 9840, ctr: 7.5, pos: 4.1, prevPos: 4.5, trend: 6.7 },
+    { q: "move in move out cleaning uae", clicks: 611, imp: 8210, ctr: 7.4, pos: 4.8, prevPos: 4.4, trend: -3.2 },
+    { q: "maid service difc", clicks: 528, imp: 6720, ctr: 7.8, pos: 3.5, prevPos: 5.1, trend: 14.9 },
+    { q: "carpet cleaning jlt", clicks: 402, imp: 5980, ctr: 6.7, pos: 5.2, prevPos: 5.4, trend: 8.1 },
+    { q: "office cleaning business bay", clicks: 361, imp: 5220, ctr: 6.9, pos: 5.9, prevPos: 6.1, trend: 4.4 },
+    { q: "ramadan deep clean dubai", clicks: 289, imp: 4110, ctr: 7.0, pos: 6.4, prevPos: 9.8, trend: 41.2 },
+  ];
+  let i = 0;
+  for (const svc of DUMMY_SERVICES) {
+    for (const loc of DUMMY_LOCATIONS) {
+      if (list.length >= 100) break;
+      const q = `${svc} ${loc}`;
+      if (!list.some(k => k.q === q)) {
+        i++;
+        const clicks = Math.max(12, 1400 - i * 13);
+        const imp = clicks * 12 + i * 45;
+        const pos = parseFloat((2.8 + (i * 0.22) % 24).toFixed(1));
+        const prevPos = parseFloat((pos + (i % 3 === 0 ? 1.8 : -1.2)).toFixed(1));
+        const ctr = parseFloat(((clicks / imp) * 100).toFixed(1));
+        list.push({
+          q,
+          clicks,
+          imp,
+          ctr,
+          pos,
+          prevPos,
+          trend: parseFloat(((clicks % 25) - 10.5).toFixed(1)),
+        });
+      }
+    }
+  }
+  return list.slice(0, 100);
+}
+
+function generate100Pages() {
+  const list = [
+    { url: "/services/deep-cleaning-dubai", clicks: 2840, imp: 34200, ctr: 8.3, pos: 3.4, delta: 14.6 },
+    { url: "/areas/dubai-marina", clicks: 1712, imp: 22100, ctr: 7.7, pos: 3.9, delta: 9.2 },
+    { url: "/services/sofa-shampoo", clicks: 1204, imp: 16820, ctr: 7.2, pos: 4.6, delta: 5.4 },
+    { url: "/areas/business-bay", clicks: 986, imp: 13940, ctr: 7.1, pos: 5.1, delta: 3.1 },
+    { url: "/blog/ramadan-deep-clean-guide", clicks: 742, imp: 9240, ctr: 8.0, pos: 4.3, delta: 41.8 },
+    { url: "/services/move-in-cleaning", clicks: 611, imp: 8620, ctr: 7.1, pos: 5.4, delta: -6.2 },
+  ];
+  let i = 0;
+  for (const svc of DUMMY_SERVICES) {
+    for (const loc of DUMMY_LOCATIONS) {
+      if (list.length >= 100) break;
+      const slug = `/services/${svc.replace(/ /g, "-")}-${loc.replace(/ /g, "-")}`;
+      if (!list.some(p => p.url === slug)) {
+        i++;
+        const clicks = Math.max(8, 2800 - i * 25);
+        const imp = clicks * 11 + i * 40;
+        const ctr = parseFloat(((clicks / imp) * 100).toFixed(1));
+        const pos = parseFloat((2.4 + (i * 0.28) % 26).toFixed(1));
+        list.push({
+          url: slug,
+          clicks,
+          imp,
+          ctr,
+          pos,
+          delta: parseFloat(((i % 24) - 9.5).toFixed(1)),
+        });
+      }
+    }
+  }
+  return list.slice(0, 100);
+}
+
+const ALL_100_KEYWORDS = generate100Keywords();
+const ALL_100_PAGES = generate100Pages();
 
 // Comparison-period presets.
 // ────────────────────────────────────────────────────────────────────────────
@@ -158,6 +244,7 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
   const activeSite = site || currentSite;
   const [rangeId, setRangeId] = useState<RangeId>("28d");
   const [isCompareActive, setIsCompareActive] = useState<boolean>(true);
+  const [activeModal, setActiveModal] = useState<"keywords" | "pages" | "movers" | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>("are"); // UAE default focus
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [liveData, setLiveData] = useState<any>(null);
@@ -166,6 +253,36 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
   const range = useMemo(() => RANGES.find((r) => r.id === rangeId)!, [rangeId]);
   const activeCountryObj = useMemo(() => COUNTRIES_LIST.find((c) => c.id === selectedCountry) || COUNTRIES_LIST[0], [selectedCountry]);
   const activeCityObj = useMemo(() => CITIES_LIST.find((c) => c.id === selectedCity) || CITIES_LIST[0], [selectedCity]);
+
+  const segmentMultiplier = useMemo(() => {
+    return activeCountryObj.multiplier * activeCityObj.multiplier;
+  }, [activeCountryObj, activeCityObj]);
+
+  const all100KeywordEntries: ModalEntry[] = useMemo(() => {
+    const rangeFactor = rangeId === "7d" ? 0.35 : rangeId === "14v14" ? 0.6 : rangeId === "3m" ? 3.1 : rangeId === "12m" ? 12.0 : 1.0;
+    return ALL_100_KEYWORDS.map((k, idx) => ({
+      id: `kw-${idx}`,
+      title: k.q,
+      clicks: Math.max(1, Math.round(k.clicks * segmentMultiplier * rangeFactor)),
+      imp: Math.max(5, Math.round(k.imp * segmentMultiplier * rangeFactor)),
+      ctr: k.ctr,
+      pos: k.pos,
+      delta: k.trend,
+    }));
+  }, [rangeId, segmentMultiplier]);
+
+  const all100PageEntries: ModalEntry[] = useMemo(() => {
+    const rangeFactor = rangeId === "7d" ? 0.35 : rangeId === "14v14" ? 0.6 : rangeId === "3m" ? 3.1 : rangeId === "12m" ? 12.0 : 1.0;
+    return ALL_100_PAGES.map((p, idx) => ({
+      id: `pg-${idx}`,
+      title: p.url,
+      clicks: Math.max(1, Math.round(p.clicks * segmentMultiplier * rangeFactor)),
+      imp: Math.max(10, Math.round(p.imp * segmentMultiplier * rangeFactor)),
+      ctr: p.ctr,
+      pos: p.pos,
+      delta: p.delta,
+    }));
+  }, [rangeId, segmentMultiplier]);
 
   useEffect(() => {
     let isMounted = true;
@@ -617,67 +734,83 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                 <h2 className="text-sm font-semibold text-white">Top Ranking Keywords</h2>
                 <div className="text-[11px] text-slate-500">Queries driving search clicks</div>
               </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveModal("keywords")}
+                className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer"
+              >
+                View All (100)
+              </button>
               <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
                 {filteredKeywords.length} shown
               </span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="text-[10px] uppercase tracking-wider text-slate-500">
-                  <tr>
-                    <th className="px-5 py-2 font-medium">Query</th>
-                    <th className="px-3 py-2 font-medium text-right">Clicks</th>
-                    <th className="px-3 py-2 font-medium text-right">CTR</th>
-                    <th className="px-3 py-2 font-medium text-right">Pos</th>
-                    <th className="px-5 py-2 font-medium text-right">Trend</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/70">
-                  {filteredKeywords.map((k) => {
-                    const up = k.trend >= 0;
-                    const posUp = k.prevPos - k.pos; // positive = improved
-                    return (
-                      <tr key={k.q} className="transition hover:bg-slate-900/60">
-                        <td className="px-5 py-2.5 text-slate-200">{k.q}</td>
-                        <td className="px-3 py-2.5 text-right tabular-nums text-slate-300">{k.clicks.toLocaleString()}</td>
-                        <td className="px-3 py-2.5 text-right tabular-nums text-slate-300">{k.ctr}%</td>
-                        <td className="px-3 py-2.5 text-right tabular-nums">
-                          <span className="text-slate-300">{k.pos}</span>
-                          {isCompareActive && (
-                            <span className={`ml-1 text-[10px] ${posUp >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                              {posUp >= 0 ? "▲" : "▼"}
-                              {Math.abs(posUp).toFixed(1)}
-                            </span>
-                          )}
-                        </td>
-                        <td className={`px-5 py-2.5 text-right text-[11px] font-medium ${isCompareActive ? (up ? "text-emerald-300" : "text-rose-300") : "text-slate-400"}`}>
-                          {isCompareActive ? (
-                            <span className="inline-flex items-center gap-0.5">
-                              {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                              {up ? "+" : ""}{k.trend}%
-                            </span>
-                          ) : (
-                            <span>—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
           </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="text-[10px] uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="px-5 py-2 font-medium">Query</th>
+                  <th className="px-3 py-2 font-medium text-right">Clicks</th>
+                  <th className="px-3 py-2 font-medium text-right">CTR</th>
+                  <th className="px-3 py-2 font-medium text-right">Pos</th>
+                  <th className="px-5 py-2 font-medium text-right">Trend</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/70">
+                {filteredKeywords.map((k) => {
+                  const up = k.trend >= 0;
+                  const posUp = k.prevPos - k.pos;
+                  return (
+                    <tr key={k.q} className="transition hover:bg-slate-900/60">
+                      <td className="px-5 py-2.5 text-slate-200">{k.q}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums text-slate-300">{k.clicks.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums text-slate-300">{k.ctr}%</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        <span className="text-slate-300">{k.pos}</span>
+                        {isCompareActive && (
+                          <span className={`ml-1 text-[10px] ${posUp >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                            {posUp >= 0 ? "▲" : "▼"}
+                            {Math.abs(posUp).toFixed(1)}
+                          </span>
+                        )}
+                      </td>
+                      <td className={`px-5 py-2.5 text-right text-[11px] font-medium ${isCompareActive ? (up ? "text-emerald-300" : "text-rose-300") : "text-slate-400"}`}>
+                        {isCompareActive ? (
+                          <span className="inline-flex items-center gap-0.5">
+                            {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                            {up ? "+" : ""}{k.trend}%
+                          </span>
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40">
-            <div className="flex items-center justify-between border-b border-slate-800/70 px-5 py-4">
-              <div>
-                <h2 className="text-sm font-semibold text-white">Top Performing Pages</h2>
-                <div className="text-[11px] text-slate-500">Best URLs by clicks · delta vs {range.compare}</div>
-              </div>
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40">
+          <div className="flex items-center justify-between border-b border-slate-800/70 px-5 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Top Performing Pages</h2>
+              <div className="text-[11px] text-slate-500">Best URLs by clicks · delta vs {range.compare}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveModal("pages")}
+                className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer"
+              >
+                View All (100)
+              </button>
               <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
                 {filteredPages.length} pages
               </span>
             </div>
+          </div>
             <ul className="divide-y divide-slate-800/70">
               {filteredPages.map((p) => {
                 const up = p.delta >= 0;
@@ -765,6 +898,22 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
             </ul>
           </div>
         </section>
+
+        {/* EntriesModal100 for 100 Recent Entries */}
+        <EntriesModal100
+          isOpen={activeModal !== null}
+          onClose={() => setActiveModal(null)}
+          title={
+            activeModal === "keywords"
+              ? "All 100 Top Ranking Keywords"
+              : activeModal === "pages"
+              ? "All 100 Top Performing Pages"
+              : "CTR & Rank Performance Movers"
+          }
+          subtitle={`Segmented query performance, clicks, impressions, CTR, position and delta for ${range.label}`}
+          type={activeModal === "pages" ? "pages" : "keywords"}
+          entries={activeModal === "pages" ? all100PageEntries : all100KeywordEntries}
+        />
 
         <div aria-hidden className="h-16" />
     </div>

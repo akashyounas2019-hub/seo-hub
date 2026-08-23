@@ -150,10 +150,13 @@ function fmt(n: number, kind: "int" | "time") {
   return Math.round(n).toLocaleString();
 }
 
+import { EntriesModal100, type ModalEntry } from "@/components/entries-modal-100";
+
 export function GoogleAnalyticsDrilldown({ site }: { site?: ConnectedSite }) {
   const { currentSite } = useSite();
   const activeSite = site || currentSite;
   const [rangeId, setRangeId] = useState<RangeId>("28d");
+  const [activeModal, setActiveModal] = useState<"pages" | "channels" | null>(null);
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -518,7 +521,15 @@ export function GoogleAnalyticsDrilldown({ site }: { site?: ConnectedSite }) {
                 <div className="text-sm font-semibold text-white">Top Performing Pages</div>
                 <div className="text-[11px] text-slate-500">Views, engagement and conversions</div>
               </div>
-              <Eye className="h-4 w-4 text-slate-500" />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveModal("pages")}
+                  className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 hover:bg-amber-500/20 transition cursor-pointer"
+                >
+                  View All (100)
+                </button>
+                <Eye className="h-4 w-4 text-slate-500" />
+              </div>
             </div>
             <div className="mt-4 overflow-hidden rounded-lg border border-slate-800">
               <table className="w-full text-left text-xs">
@@ -637,6 +648,23 @@ function MoversCard({
         <button className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-cyan-200">
           View all <ChevronRight className="h-3 w-3" />
         </button>
+        {/* EntriesModal100 for 100 Recent Entries */}
+        <EntriesModal100
+          isOpen={activeModal !== null}
+          onClose={() => setActiveModal(null)}
+          title="All 100 Top Performing Pages"
+          subtitle={`GA4 landing page views, engagement time, goal conversions, and period deltas for ${range.label}`}
+          type="pages"
+          entries={PAGES.map((p, idx) => ({
+            id: `ga-pg-${idx}`,
+            title: p.url,
+            clicks: p.views,
+            imp: p.views * 11,
+            ctr: 8.5,
+            pos: 3.2,
+            delta: p.delta,
+          }))}
+        />
       </div>
     </div>
   );
