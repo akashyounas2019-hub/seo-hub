@@ -75,8 +75,15 @@ export async function ensureSchema(): Promise<void> {
   try {
     await execDDL(`
       DO $$ BEGIN
-        CREATE TYPE user_role AS ENUM ('admin','manager','student');
+        CREATE TYPE user_role AS ENUM ('owner','admin','editor','viewer');
       EXCEPTION WHEN duplicate_object THEN null; END $$;
+      -- If user_role already existed with the old admin/manager/student
+      -- values (pre-Settings-persistence deploys), add the new ones
+      -- additively -- Postgres enums can't drop values, so the old ones
+      -- stay defined but unused.
+      DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'owner'; EXCEPTION WHEN others THEN null; END $$;
+      DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'editor'; EXCEPTION WHEN others THEN null; END $$;
+      DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'viewer'; EXCEPTION WHEN others THEN null; END $$;
 
       DO $$ BEGIN
         CREATE TYPE site_user_role AS ENUM ('manager','worker');
@@ -175,11 +182,20 @@ export async function ensureSchema(): Promise<void> {
         email text NOT NULL,
         password_hash text NOT NULL,
         name text,
-        role user_role NOT NULL DEFAULT 'student',
+        role user_role NOT NULL DEFAULT 'viewer',
         created_at timestamptz NOT NULL DEFAULT now(),
         last_login_at timestamptz
       );
+      ALTER TABLE users ALTER COLUMN role SET DEFAULT 'viewer';
       CREATE UNIQUE INDEX IF NOT EXISTS users_email_uq ON users(email);
+
+      CREATE TABLE IF NOT EXISTS site_users (
+        site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+        user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        role site_user_role NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY (site_id, user_id)
+      );
 
       CREATE TABLE IF NOT EXISTS tasks (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -206,6 +222,43 @@ export async function ensureSchema(): Promise<void> {
         updated_at timestamptz NOT NULL DEFAULT now(),
         updated_by uuid REFERENCES users(id) ON DELETE SET NULL
       );
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS gemini_key_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS groq_key_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS llm_provider_preference text NOT NULL DEFAULT 'gemini';
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS twilio_account_sid text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS twilio_auth_token_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS twilio_webhook_base_url text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS stripe_oauth_client_id text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS stripe_oauth_secret_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS square_oauth_client_id text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS square_oauth_secret_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS google_oauth_client_id text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS google_oauth_secret_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS smtp_host text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS smtp_port integer;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS smtp_user text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS smtp_password_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS smtp_from text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS smtp_enabled boolean NOT NULL DEFAULT false;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS public_base_url text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS network_knowledge_base text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS telegram_bot_token_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS telegram_webhook_secret text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS telegram_bot_username text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS claude_worker_secret text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS industry text NOT NULL DEFAULT 'cleaning_services';
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS pagespeed_api_key_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS google_crux_api_key_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS indexnow_daily_quota integer NOT NULL DEFAULT 200;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS openai_key_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS semrush_key_ciphertext text;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS integration_smtp_enabled boolean NOT NULL DEFAULT false;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS integration_slack_enabled boolean NOT NULL DEFAULT false;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS integration_telegram_enabled boolean NOT NULL DEFAULT false;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS integration_rest_api_enabled boolean NOT NULL DEFAULT false;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS integration_wordpress_enabled boolean NOT NULL DEFAULT false;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS integration_stripe_enabled boolean NOT NULL DEFAULT false;
+      ALTER TABLE org_settings ADD COLUMN IF NOT EXISTS integration_zapier_enabled boolean NOT NULL DEFAULT false;
       INSERT INTO org_settings (id) VALUES ('singleton') ON CONFLICT DO NOTHING;
 
       CREATE TABLE IF NOT EXISTS claude_jobs (
@@ -302,6 +355,61 @@ export async function ensureSchema(): Promise<void> {
       );
       CREATE INDEX IF NOT EXISTS alerts_status_idx ON alerts(status, created_at);
       CREATE INDEX IF NOT EXISTS alerts_site_idx ON alerts(site_id);
+
+      CREATE TABLE IF NOT EXISTS webhook_subscribers (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        label text NOT NULL,
+        url text NOT NULL,
+        secret text NOT NULL,
+        active boolean NOT NULL DEFAULT true,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        last_delivered_at timestamptz,
+        last_status text
+      );
+
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        actor_email text NOT NULL DEFAULT 'unknown',
+        action text NOT NULL,
+        detail jsonb NOT NULL DEFAULT '{}'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+      CREATE INDEX IF NOT EXISTS audit_log_created_idx ON audit_log(created_at);
+
+      CREATE TABLE IF NOT EXISTS notification_prefs (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        event_key text NOT NULL,
+        label text NOT NULL,
+        email boolean NOT NULL DEFAULT false,
+        slack boolean NOT NULL DEFAULT false,
+        push boolean NOT NULL DEFAULT false,
+        updated_at timestamptz NOT NULL DEFAULT now()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS notification_prefs_event_key_uq ON notification_prefs(event_key);
+      INSERT INTO notification_prefs (event_key, label, email, slack, push) VALUES
+        ('site_health_low', 'Site health drops below 80', true, true, false),
+        ('backlink_lost', 'New backlink from DR60+ referrer', true, false, false),
+        ('weekly_rank_report', 'Weekly rank report', true, false, false),
+        ('job_runner_error', 'Failed cron / job runner error', true, true, true),
+        ('client_invoice_paid', 'Client invoice paid', true, false, false)
+      ON CONFLICT (event_key) DO NOTHING;
+
+      CREATE TABLE IF NOT EXISTS settings_automation_rules (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        action text NOT NULL,
+        enabled boolean NOT NULL DEFAULT true,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+      INSERT INTO settings_automation_rules (name, action, enabled)
+      SELECT * FROM (VALUES
+        ('Rank drop > 5 positions', 'Notify #seo-alerts + assign to Auditor', true),
+        ('Backlink lost from DR60+', 'Create outreach task in Off-Page Expert', true),
+        ('New keyword opportunity', 'Draft brief in Content Scout', false),
+        ('CWV LCP > 2.5s', 'Assign to Technical Expert', true),
+        ('Weekly digest', 'Email owners every Monday 09:00 GST', true)
+      ) AS v(name, action, enabled)
+      WHERE NOT EXISTS (SELECT 1 FROM settings_automation_rules);
     `);
     _migrated = true;
   } finally {

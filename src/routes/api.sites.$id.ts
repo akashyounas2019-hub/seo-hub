@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { actorEmailFromRequest, logAudit } from "@/lib/audit";
 
 const ALLOWED_FIELDS = [
   "name",
@@ -62,12 +63,18 @@ export const Route = createFileRoute("/api/sites/$id")({
 
           await d.update(sites).set(updates).where(eq(sites.id, params.id));
           const [updated] = await d.select().from(sites).where(eq(sites.id, params.id)).limit(1);
+
+          const changedFields = Object.keys(updates).filter((k) => k !== "updatedAt");
+          if (changedFields.length > 0) {
+            await logAudit(actorEmailFromRequest(request), "site.updated", { siteId: params.id, fields: changedFields });
+          }
+
           return Response.json({ ok: true, site: updated || null });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message }, { status: 500 });
         }
       },
-      DELETE: async ({ params }) => {
+      DELETE: async ({ params, request }) => {
         try {
           const { db, ensureSchema } = await import("@/db/client");
           const { sites } = await import("@/db/schema");
@@ -76,6 +83,7 @@ export const Route = createFileRoute("/api/sites/$id")({
           await ensureSchema();
           const d = db();
           await d.delete(sites).where(eq(sites.id, params.id));
+          await logAudit(actorEmailFromRequest(request), "site.deleted", { siteId: params.id });
           return Response.json({ ok: true, siteId: params.id });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message }, { status: 500 });

@@ -52,7 +52,14 @@ import { Route as ApiJobsIdRouteImport } from './routes/api.jobs.$id'
 import { Route as ApiJobsClaimRouteImport } from './routes/api.jobs.claim'
 import { Route as ApiKnowledgeAutocrawlRouteImport } from './routes/api.knowledge.autocrawl'
 import { Route as ApiKnowledgeObsidianRouteImport } from './routes/api.knowledge.obsidian'
+import { Route as ApiSettingsApikeysRouteImport } from './routes/api.settings.apikeys'
+import { Route as ApiSettingsAuditRouteImport } from './routes/api.settings.audit'
+import { Route as ApiSettingsAutomationRulesRouteImport } from './routes/api.settings.automation-rules'
 import { Route as ApiSettingsGeneralRouteImport } from './routes/api.settings.general'
+import { Route as ApiSettingsIntegrationsRouteImport } from './routes/api.settings.integrations'
+import { Route as ApiSettingsNotificationsRouteImport } from './routes/api.settings.notifications'
+import { Route as ApiSettingsRolesRouteImport } from './routes/api.settings.roles'
+import { Route as ApiSettingsWebhooksRouteImport } from './routes/api.settings.webhooks'
 import { Route as ApiSitesIndexRouteImport } from './routes/api.sites.index'
 import { Route as ApiSitesIdRouteImport } from './routes/api.sites.$id'
 import { Route as ApiTasksIndexRouteImport } from './routes/api.tasks.index'
@@ -61,6 +68,10 @@ import { Route as ApiAutomationFlowsIdRouteImport } from './routes/api.automatio
 import { Route as ApiJobsIdCompleteRouteImport } from './routes/api.jobs.$id.complete'
 import { Route as ApiJobsIdFailRouteImport } from './routes/api.jobs.$id.fail'
 import { Route as ApiJobsIdHeartbeatRouteImport } from './routes/api.jobs.$id.heartbeat'
+import { Route as ApiSettingsAutomationRulesIdRouteImport } from './routes/api.settings.automation-rules.$id'
+import { Route as ApiSettingsRolesIdRouteImport } from './routes/api.settings.roles.$id'
+import { Route as ApiSettingsWebhooksIdRouteImport } from './routes/api.settings.webhooks.$id'
+import { Route as ApiSettingsWebhooksIdTestRouteImport } from './routes/api.settings.webhooks.$id.test'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -279,9 +290,46 @@ const ApiKnowledgeObsidianRoute = ApiKnowledgeObsidianRouteImport.update({
   path: '/api/knowledge/obsidian',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSettingsApikeysRoute = ApiSettingsApikeysRouteImport.update({
+  id: '/api/settings/apikeys',
+  path: '/api/settings/apikeys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSettingsAuditRoute = ApiSettingsAuditRouteImport.update({
+  id: '/api/settings/audit',
+  path: '/api/settings/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSettingsAutomationRulesRoute =
+  ApiSettingsAutomationRulesRouteImport.update({
+    id: '/api/settings/automation-rules',
+    path: '/api/settings/automation-rules',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiSettingsGeneralRoute = ApiSettingsGeneralRouteImport.update({
   id: '/api/settings/general',
   path: '/api/settings/general',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSettingsIntegrationsRoute = ApiSettingsIntegrationsRouteImport.update({
+  id: '/api/settings/integrations',
+  path: '/api/settings/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSettingsNotificationsRoute =
+  ApiSettingsNotificationsRouteImport.update({
+    id: '/api/settings/notifications',
+    path: '/api/settings/notifications',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiSettingsRolesRoute = ApiSettingsRolesRouteImport.update({
+  id: '/api/settings/roles',
+  path: '/api/settings/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSettingsWebhooksRoute = ApiSettingsWebhooksRouteImport.update({
+  id: '/api/settings/webhooks',
+  path: '/api/settings/webhooks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSitesIndexRoute = ApiSitesIndexRouteImport.update({
@@ -324,6 +372,28 @@ const ApiJobsIdHeartbeatRoute = ApiJobsIdHeartbeatRouteImport.update({
   path: '/heartbeat',
   getParentRoute: () => ApiJobsIdRoute,
 } as any)
+const ApiSettingsAutomationRulesIdRoute =
+  ApiSettingsAutomationRulesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => ApiSettingsAutomationRulesRoute,
+  } as any)
+const ApiSettingsRolesIdRoute = ApiSettingsRolesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiSettingsRolesRoute,
+} as any)
+const ApiSettingsWebhooksIdRoute = ApiSettingsWebhooksIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiSettingsWebhooksRoute,
+} as any)
+const ApiSettingsWebhooksIdTestRoute =
+  ApiSettingsWebhooksIdTestRouteImport.update({
+    id: '/test',
+    path: '/test',
+    getParentRoute: () => ApiSettingsWebhooksIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -367,7 +437,14 @@ export interface FileRoutesByFullPath {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
+  '/api/settings/audit': typeof ApiSettingsAuditRoute
+  '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
   '/api/settings/general': typeof ApiSettingsGeneralRoute
+  '/api/settings/integrations': typeof ApiSettingsIntegrationsRoute
+  '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
+  '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
+  '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
@@ -378,6 +455,10 @@ export interface FileRoutesByFullPath {
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
   '/api/jobs/$id/fail': typeof ApiJobsIdFailRoute
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
+  '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
+  '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
+  '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
+  '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -421,7 +502,14 @@ export interface FileRoutesByTo {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
+  '/api/settings/audit': typeof ApiSettingsAuditRoute
+  '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
   '/api/settings/general': typeof ApiSettingsGeneralRoute
+  '/api/settings/integrations': typeof ApiSettingsIntegrationsRoute
+  '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
+  '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
+  '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/alerts': typeof ApiAlertsIndexRoute
@@ -432,6 +520,10 @@ export interface FileRoutesByTo {
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
   '/api/jobs/$id/fail': typeof ApiJobsIdFailRoute
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
+  '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
+  '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
+  '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
+  '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -476,7 +568,14 @@ export interface FileRoutesById {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
+  '/api/settings/audit': typeof ApiSettingsAuditRoute
+  '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
   '/api/settings/general': typeof ApiSettingsGeneralRoute
+  '/api/settings/integrations': typeof ApiSettingsIntegrationsRoute
+  '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
+  '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
+  '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
@@ -487,6 +586,10 @@ export interface FileRoutesById {
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
   '/api/jobs/$id/fail': typeof ApiJobsIdFailRoute
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
+  '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
+  '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
+  '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
+  '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -532,7 +635,14 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/settings/apikeys'
+    | '/api/settings/audit'
+    | '/api/settings/automation-rules'
     | '/api/settings/general'
+    | '/api/settings/integrations'
+    | '/api/settings/notifications'
+    | '/api/settings/roles'
+    | '/api/settings/webhooks'
     | '/api/sites/$id'
     | '/api/tasks/$id'
     | '/api/alerts/'
@@ -543,6 +653,10 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/complete'
     | '/api/jobs/$id/fail'
     | '/api/jobs/$id/heartbeat'
+    | '/api/settings/automation-rules/$id'
+    | '/api/settings/roles/$id'
+    | '/api/settings/webhooks/$id'
+    | '/api/settings/webhooks/$id/test'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -586,7 +700,14 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/settings/apikeys'
+    | '/api/settings/audit'
+    | '/api/settings/automation-rules'
     | '/api/settings/general'
+    | '/api/settings/integrations'
+    | '/api/settings/notifications'
+    | '/api/settings/roles'
+    | '/api/settings/webhooks'
     | '/api/sites/$id'
     | '/api/tasks/$id'
     | '/api/alerts'
@@ -597,6 +718,10 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/complete'
     | '/api/jobs/$id/fail'
     | '/api/jobs/$id/heartbeat'
+    | '/api/settings/automation-rules/$id'
+    | '/api/settings/roles/$id'
+    | '/api/settings/webhooks/$id'
+    | '/api/settings/webhooks/$id/test'
   id:
     | '__root__'
     | '/'
@@ -640,7 +765,14 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/settings/apikeys'
+    | '/api/settings/audit'
+    | '/api/settings/automation-rules'
     | '/api/settings/general'
+    | '/api/settings/integrations'
+    | '/api/settings/notifications'
+    | '/api/settings/roles'
+    | '/api/settings/webhooks'
     | '/api/sites/$id'
     | '/api/tasks/$id'
     | '/api/alerts/'
@@ -651,6 +783,10 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/complete'
     | '/api/jobs/$id/fail'
     | '/api/jobs/$id/heartbeat'
+    | '/api/settings/automation-rules/$id'
+    | '/api/settings/roles/$id'
+    | '/api/settings/webhooks/$id'
+    | '/api/settings/webhooks/$id/test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -695,7 +831,14 @@ export interface RootRouteChildren {
   ApiJobsClaimRoute: typeof ApiJobsClaimRoute
   ApiKnowledgeAutocrawlRoute: typeof ApiKnowledgeAutocrawlRoute
   ApiKnowledgeObsidianRoute: typeof ApiKnowledgeObsidianRoute
+  ApiSettingsApikeysRoute: typeof ApiSettingsApikeysRoute
+  ApiSettingsAuditRoute: typeof ApiSettingsAuditRoute
+  ApiSettingsAutomationRulesRoute: typeof ApiSettingsAutomationRulesRouteWithChildren
   ApiSettingsGeneralRoute: typeof ApiSettingsGeneralRoute
+  ApiSettingsIntegrationsRoute: typeof ApiSettingsIntegrationsRoute
+  ApiSettingsNotificationsRoute: typeof ApiSettingsNotificationsRoute
+  ApiSettingsRolesRoute: typeof ApiSettingsRolesRouteWithChildren
+  ApiSettingsWebhooksRoute: typeof ApiSettingsWebhooksRouteWithChildren
   ApiSitesIdRoute: typeof ApiSitesIdRoute
   ApiTasksIdRoute: typeof ApiTasksIdRoute
   ApiAlertsIndexRoute: typeof ApiAlertsIndexRoute
@@ -1007,11 +1150,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiKnowledgeObsidianRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/settings/apikeys': {
+      id: '/api/settings/apikeys'
+      path: '/api/settings/apikeys'
+      fullPath: '/api/settings/apikeys'
+      preLoaderRoute: typeof ApiSettingsApikeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/audit': {
+      id: '/api/settings/audit'
+      path: '/api/settings/audit'
+      fullPath: '/api/settings/audit'
+      preLoaderRoute: typeof ApiSettingsAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/automation-rules': {
+      id: '/api/settings/automation-rules'
+      path: '/api/settings/automation-rules'
+      fullPath: '/api/settings/automation-rules'
+      preLoaderRoute: typeof ApiSettingsAutomationRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/settings/general': {
       id: '/api/settings/general'
       path: '/api/settings/general'
       fullPath: '/api/settings/general'
       preLoaderRoute: typeof ApiSettingsGeneralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/integrations': {
+      id: '/api/settings/integrations'
+      path: '/api/settings/integrations'
+      fullPath: '/api/settings/integrations'
+      preLoaderRoute: typeof ApiSettingsIntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/notifications': {
+      id: '/api/settings/notifications'
+      path: '/api/settings/notifications'
+      fullPath: '/api/settings/notifications'
+      preLoaderRoute: typeof ApiSettingsNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/roles': {
+      id: '/api/settings/roles'
+      path: '/api/settings/roles'
+      fullPath: '/api/settings/roles'
+      preLoaderRoute: typeof ApiSettingsRolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/webhooks': {
+      id: '/api/settings/webhooks'
+      path: '/api/settings/webhooks'
+      fullPath: '/api/settings/webhooks'
+      preLoaderRoute: typeof ApiSettingsWebhooksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/sites/': {
@@ -1070,6 +1262,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiJobsIdHeartbeatRouteImport
       parentRoute: typeof ApiJobsIdRoute
     }
+    '/api/settings/automation-rules/$id': {
+      id: '/api/settings/automation-rules/$id'
+      path: '/$id'
+      fullPath: '/api/settings/automation-rules/$id'
+      preLoaderRoute: typeof ApiSettingsAutomationRulesIdRouteImport
+      parentRoute: typeof ApiSettingsAutomationRulesRoute
+    }
+    '/api/settings/roles/$id': {
+      id: '/api/settings/roles/$id'
+      path: '/$id'
+      fullPath: '/api/settings/roles/$id'
+      preLoaderRoute: typeof ApiSettingsRolesIdRouteImport
+      parentRoute: typeof ApiSettingsRolesRoute
+    }
+    '/api/settings/webhooks/$id': {
+      id: '/api/settings/webhooks/$id'
+      path: '/$id'
+      fullPath: '/api/settings/webhooks/$id'
+      preLoaderRoute: typeof ApiSettingsWebhooksIdRouteImport
+      parentRoute: typeof ApiSettingsWebhooksRoute
+    }
+    '/api/settings/webhooks/$id/test': {
+      id: '/api/settings/webhooks/$id/test'
+      path: '/test'
+      fullPath: '/api/settings/webhooks/$id/test'
+      preLoaderRoute: typeof ApiSettingsWebhooksIdTestRouteImport
+      parentRoute: typeof ApiSettingsWebhooksIdRoute
+    }
   }
 }
 
@@ -1099,6 +1319,55 @@ const ApiJobsIdRouteChildren: ApiJobsIdRouteChildren = {
 const ApiJobsIdRouteWithChildren = ApiJobsIdRoute._addFileChildren(
   ApiJobsIdRouteChildren,
 )
+
+interface ApiSettingsAutomationRulesRouteChildren {
+  ApiSettingsAutomationRulesIdRoute: typeof ApiSettingsAutomationRulesIdRoute
+}
+
+const ApiSettingsAutomationRulesRouteChildren: ApiSettingsAutomationRulesRouteChildren =
+  {
+    ApiSettingsAutomationRulesIdRoute: ApiSettingsAutomationRulesIdRoute,
+  }
+
+const ApiSettingsAutomationRulesRouteWithChildren =
+  ApiSettingsAutomationRulesRoute._addFileChildren(
+    ApiSettingsAutomationRulesRouteChildren,
+  )
+
+interface ApiSettingsRolesRouteChildren {
+  ApiSettingsRolesIdRoute: typeof ApiSettingsRolesIdRoute
+}
+
+const ApiSettingsRolesRouteChildren: ApiSettingsRolesRouteChildren = {
+  ApiSettingsRolesIdRoute: ApiSettingsRolesIdRoute,
+}
+
+const ApiSettingsRolesRouteWithChildren =
+  ApiSettingsRolesRoute._addFileChildren(ApiSettingsRolesRouteChildren)
+
+interface ApiSettingsWebhooksIdRouteChildren {
+  ApiSettingsWebhooksIdTestRoute: typeof ApiSettingsWebhooksIdTestRoute
+}
+
+const ApiSettingsWebhooksIdRouteChildren: ApiSettingsWebhooksIdRouteChildren = {
+  ApiSettingsWebhooksIdTestRoute: ApiSettingsWebhooksIdTestRoute,
+}
+
+const ApiSettingsWebhooksIdRouteWithChildren =
+  ApiSettingsWebhooksIdRoute._addFileChildren(
+    ApiSettingsWebhooksIdRouteChildren,
+  )
+
+interface ApiSettingsWebhooksRouteChildren {
+  ApiSettingsWebhooksIdRoute: typeof ApiSettingsWebhooksIdRouteWithChildren
+}
+
+const ApiSettingsWebhooksRouteChildren: ApiSettingsWebhooksRouteChildren = {
+  ApiSettingsWebhooksIdRoute: ApiSettingsWebhooksIdRouteWithChildren,
+}
+
+const ApiSettingsWebhooksRouteWithChildren =
+  ApiSettingsWebhooksRoute._addFileChildren(ApiSettingsWebhooksRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1142,7 +1411,14 @@ const rootRouteChildren: RootRouteChildren = {
   ApiJobsClaimRoute: ApiJobsClaimRoute,
   ApiKnowledgeAutocrawlRoute: ApiKnowledgeAutocrawlRoute,
   ApiKnowledgeObsidianRoute: ApiKnowledgeObsidianRoute,
+  ApiSettingsApikeysRoute: ApiSettingsApikeysRoute,
+  ApiSettingsAuditRoute: ApiSettingsAuditRoute,
+  ApiSettingsAutomationRulesRoute: ApiSettingsAutomationRulesRouteWithChildren,
   ApiSettingsGeneralRoute: ApiSettingsGeneralRoute,
+  ApiSettingsIntegrationsRoute: ApiSettingsIntegrationsRoute,
+  ApiSettingsNotificationsRoute: ApiSettingsNotificationsRoute,
+  ApiSettingsRolesRoute: ApiSettingsRolesRouteWithChildren,
+  ApiSettingsWebhooksRoute: ApiSettingsWebhooksRouteWithChildren,
   ApiSitesIdRoute: ApiSitesIdRoute,
   ApiTasksIdRoute: ApiTasksIdRoute,
   ApiAlertsIndexRoute: ApiAlertsIndexRoute,

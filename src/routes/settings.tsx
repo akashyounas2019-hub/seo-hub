@@ -282,23 +282,91 @@ function GeneralPanel() {
   );
 }
 
+const API_PROVIDERS = [
+  { key: "gemini", name: "GOOGLE GEMINI", desc: "Free tier · 1,500 req/day", badge: "RECOMMENDED" },
+  { key: "groq", name: "GROQ", desc: "Free tier · 14,400 req/day", badge: "BACKUP" },
+  { key: "anthropic", name: "ANTHROPIC", desc: "Pay-as-you-go", badge: null },
+  { key: "pagespeed", name: "PAGESPEED", desc: "CWV field data", badge: null },
+  { key: "openai", name: "OPENAI", desc: "GPT-4o & o4 models", badge: null },
+  { key: "semrush", name: "SEMRUSH", desc: "Keyword + backlink data", badge: "PRO" },
+] as const;
+
 function ApiPanel() {
-  const keys = [
-    { name: "GOOGLE GEMINI", desc: "Free tier · 1,500 req/day", badge: "RECOMMENDED", set: true },
-    { name: "GROQ", desc: "Free tier · 14,400 req/day", badge: "BACKUP", set: false },
-    { name: "ANTHROPIC", desc: "Pay-as-you-go", badge: null, set: true },
-    { name: "PAGESPEED", desc: "CWV field data", badge: null, set: false },
-    { name: "OPENAI", desc: "GPT-4o & o4 models", badge: null, set: true },
-    { name: "SEMRUSH", desc: "Keyword + backlink data", badge: "PRO", set: true },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [set, setSet] = useState<Record<string, boolean>>({});
+  const [encryptionConfigured, setEncryptionConfigured] = useState(true);
+  const [inputs, setInputs] = useState<Record<string, string>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+
+  const load = () => {
+    fetch("/api/settings/apikeys")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok) {
+          setSet(json.set || {});
+          setEncryptionConfigured(json.encryptionConfigured !== false);
+        }
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const saveKey = async (provider: string) => {
+    const value = (inputs[provider] || "").trim();
+    if (!value) return;
+    setSavingKey(provider);
+    try {
+      const res = await fetch("/api/settings/apikeys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, value }),
+      });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success(`${provider} key saved (encrypted)`);
+        setSet((prev) => ({ ...prev, [provider]: true }));
+        setInputs((prev) => ({ ...prev, [provider]: "" }));
+      } else {
+        toast.error(json?.error || "Failed to save key");
+      }
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
+  const removeKey = async (provider: string) => {
+    setSavingKey(provider);
+    try {
+      const res = await fetch("/api/settings/apikeys", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success(`${provider} key removed`);
+        setSet((prev) => ({ ...prev, [provider]: false }));
+      } else {
+        toast.error(json?.error || "Failed to remove key");
+      }
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 text-[11px] text-amber-200">
-        Not yet connected to real secret storage — entries below do not persist.
-      </div>
+      {!loading && !encryptionConfigured && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-2.5 text-[11px] text-rose-200">
+          SETTINGS_ENCRYPTION_KEY is not configured on the server — keys cannot be saved until it's set.
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-2">
-      {keys.map((k) => (
-        <div key={k.name} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+      {API_PROVIDERS.map((k) => (
+        <div key={k.key} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -307,16 +375,36 @@ function ApiPanel() {
               </div>
               <p className="mt-1 text-[11px] text-slate-400">{k.desc}</p>
             </div>
-            <span className={`rounded-full border px-2 py-0.5 text-[9px] uppercase tracking-wider ${k.set ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-rose-400/30 bg-rose-400/10 text-rose-300"}`}>
-              {k.set ? "Set" : "Not set"}
+            <span className={`rounded-full border px-2 py-0.5 text-[9px] uppercase tracking-wider ${set[k.key] ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-rose-400/30 bg-rose-400/10 text-rose-300"}`}>
+              {loading ? "…" : set[k.key] ? "Set" : "Not set"}
             </span>
           </div>
           <input
             type="password"
-            placeholder="sk-•••"
-            className="mt-3 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs text-white outline-none focus:border-cyan-400/40"
+            placeholder={set[k.key] ? "•••••••• (set — enter a new value to replace)" : "sk-•••"}
+            value={inputs[k.key] || ""}
+            onChange={(e) => setInputs((prev) => ({ ...prev, [k.key]: e.target.value }))}
+            disabled={!encryptionConfigured}
+            className="mt-3 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs text-white outline-none focus:border-cyan-400/40 disabled:opacity-50"
           />
-          <button className="mt-2 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300">Save + validate</button>
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => saveKey(k.key)}
+              disabled={!encryptionConfigured || savingKey === k.key || !(inputs[k.key] || "").trim()}
+              className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300 disabled:opacity-50"
+            >
+              {savingKey === k.key ? "Saving…" : "Save"}
+            </button>
+            {set[k.key] && (
+              <button
+                onClick={() => removeKey(k.key)}
+                disabled={savingKey === k.key}
+                className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:border-rose-400/40 hover:text-rose-300 disabled:opacity-50"
+              >
+                Remove
+              </button>
+            )}
+          </div>
         </div>
       ))}
       </div>
@@ -324,25 +412,60 @@ function ApiPanel() {
   );
 }
 
+const INTEGRATION_ITEMS = [
+  { key: "smtp", name: "Outbound email (SMTP)", desc: "Postmark / SendGrid / Amazon SES" },
+  { key: "slack", name: "Slack", desc: "Real-time alerts to any channel" },
+  { key: "telegram", name: "Telegram bot", desc: "Direct DMs for owners" },
+  { key: "restApi", name: "REST API", desc: "HMAC-signed endpoints for the WP plugin" },
+  { key: "wordpress", name: "WordPress plugin", desc: "Direct install to each connected site" },
+  { key: "stripe", name: "Stripe", desc: "Client invoicing & subscriptions" },
+  { key: "zapier", name: "Zapier", desc: "20K+ downstream automations" },
+] as const;
+
 function IntegrationsPanel() {
-  const items = [
-    { name: "Google (GSC + GA4)", desc: "OAuth for per-site rank + traffic sync", on: true },
-    { name: "Outbound email (SMTP)", desc: "Postmark / SendGrid / Amazon SES", on: false },
-    { name: "Slack", desc: "Real-time alerts to any channel", on: true },
-    { name: "Telegram bot", desc: "Direct DMs for owners", on: false },
-    { name: "REST API", desc: "HMAC-signed endpoints for GYL plugin", on: true },
-    { name: "WordPress plugin", desc: "Direct install to each connected site", on: true },
-    { name: "Stripe", desc: "Client invoicing & subscriptions", on: false },
-    { name: "Zapier", desc: "20K+ downstream automations", on: false },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    fetch("/api/settings/integrations")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok) setEnabled(json.enabled || {});
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const toggle = async (key: string) => {
+    const next = !enabled[key];
+    setEnabled((prev) => ({ ...prev, [key]: next }));
+    const res = await fetch("/api/settings/integrations", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, enabled: next }),
+    });
+    const json = await res.json();
+    if (!json?.ok) {
+      toast.error(json?.error || "Failed to save");
+      setEnabled((prev) => ({ ...prev, [key]: !next }));
+    }
+  };
+
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 text-[11px] text-amber-200">
-        Not yet connected — Google (GSC + GA4) is genuinely live via Connected Sites; the toggles below don't persist.
-      </div>
       <div className="grid gap-3 md:grid-cols-2">
-      {items.map((i) => (
-        <div key={i.name} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-600/20 ring-1 ring-emerald-400/20">
+              <Plug className="h-4 w-4 text-emerald-300" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-white">Google (GSC + GA4)</div>
+              <div className="text-[11px] text-emerald-300">Live — managed per-site via Connected Sites</div>
+            </div>
+          </div>
+        </div>
+      {INTEGRATION_ITEMS.map((i) => (
+        <div key={i.key} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-4">
           <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-600/20 ring-1 ring-cyan-400/20">
               <Plug className="h-4 w-4 text-cyan-300" />
@@ -352,9 +475,13 @@ function IntegrationsPanel() {
               <div className="text-[11px] text-slate-400">{i.desc}</div>
             </div>
           </div>
-          <div className={`h-5 w-9 rounded-full transition ${i.on ? "bg-cyan-400" : "bg-slate-700"} relative`}>
-            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${i.on ? "left-4" : "left-0.5"}`} />
-          </div>
+          <button
+            onClick={() => toggle(i.key)}
+            disabled={loading}
+            className={`h-5 w-9 rounded-full transition relative disabled:opacity-50 ${enabled[i.key] ? "bg-cyan-400" : "bg-slate-700"}`}
+          >
+            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${enabled[i.key] ? "left-4" : "left-0.5"}`} />
+          </button>
         </div>
       ))}
       </div>
@@ -362,15 +489,91 @@ function IntegrationsPanel() {
   );
 }
 
+type MemberRow = { id: string; email: string; name: string | null; role: string; createdAt: string };
+
+const ROLE_TONE: Record<string, string> = {
+  owner: "text-cyan-200 border-cyan-400/30 bg-cyan-400/10",
+  admin: "text-violet-200 border-violet-400/30 bg-violet-400/10",
+  editor: "text-emerald-200 border-emerald-400/30 bg-emerald-400/10",
+  viewer: "text-slate-300 border-slate-700 bg-slate-900",
+};
+
 function RolesPanel() {
-  const members = [
-    { name: "Ahmed K.", email: "ahmed@aks.co", role: "Owner", tone: "text-cyan-200 border-cyan-400/30 bg-cyan-400/10" },
-    { name: "Sara M.", email: "sara@aks.co", role: "Admin", tone: "text-violet-200 border-violet-400/30 bg-violet-400/10" },
-    { name: "Yusuf T.", email: "yusuf@aks.co", role: "Editor", tone: "text-emerald-200 border-emerald-400/30 bg-emerald-400/10" },
-    { name: "Client · Bright Smile", email: "client@brightsmile.ae", role: "Viewer", tone: "text-slate-300 border-slate-700 bg-slate-900" },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRole, setInviteRole] = useState("viewer");
+  const [inviting, setInviting] = useState(false);
+
+  const load = () => {
+    setLoading(true);
+    fetch("/api/settings/roles")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok) setMembers(json.users || []);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const invite = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      const res = await fetch("/api/settings/roles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail.trim(), name: inviteName.trim() || undefined, role: inviteRole }),
+      });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success(`Invited ${inviteEmail}`);
+        setInviteEmail("");
+        setInviteName("");
+        setInviteOpen(false);
+        load();
+      } else {
+        toast.error(json?.error || "Failed to invite member");
+      }
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const changeRole = async (id: string, role: string) => {
+    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role } : m)));
+    const res = await fetch(`/api/settings/roles/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    const json = await res.json();
+    if (!json?.ok) {
+      toast.error(json?.error || "Failed to update role");
+      load();
+    }
+  };
+
+  const removeMember = async (id: string, email: string) => {
+    if (!confirm(`Remove ${email} from the team?`)) return;
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+    const res = await fetch(`/api/settings/roles/${id}`, { method: "DELETE" });
+    const json = await res.json();
+    if (json?.ok) {
+      toast.success(`Removed ${email}`);
+    } else {
+      toast.error(json?.error || "Failed to remove member");
+      load();
+    }
+  };
+
   return (
-    <Card title="Team & role-based access" desc="Not yet connected to the real users table — sample data shown below.">
+    <Card title="Team & role-based access" desc="Invites create a real account row — no email is sent yet (no SMTP wired), and there's no login flow to activate it. Roles are stored for real.">
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <div className="grid grid-cols-12 gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2 text-[10px] uppercase tracking-wider text-slate-500">
           <div className="col-span-4">Member</div>
@@ -378,73 +581,255 @@ function RolesPanel() {
           <div className="col-span-2">Role</div>
           <div className="col-span-2 text-right">Actions</div>
         </div>
-        {members.map((m) => (
-          <div key={m.email} className="grid grid-cols-12 items-center gap-3 border-b border-slate-900 px-4 py-3 last:border-b-0">
-            <div className="col-span-4 flex items-center gap-2.5">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-[10px] font-bold text-slate-950">
-                {m.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+        {loading ? (
+          <div className="px-4 py-6 text-center text-xs text-slate-500">Loading…</div>
+        ) : members.length === 0 ? (
+          <div className="px-4 py-6 text-center text-xs text-slate-500">No team members yet.</div>
+        ) : (
+          members.map((m) => {
+            const displayName = m.name || m.email.split("@")[0];
+            return (
+              <div key={m.id} className="grid grid-cols-12 items-center gap-3 border-b border-slate-900 px-4 py-3 last:border-b-0">
+                <div className="col-span-4 flex items-center gap-2.5">
+                  <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-[10px] font-bold text-slate-950">
+                    {displayName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                  </div>
+                  <span className="text-sm text-white">{displayName}</span>
+                </div>
+                <div className="col-span-4 text-xs text-slate-400">{m.email}</div>
+                <div className="col-span-2">
+                  <select
+                    value={m.role}
+                    onChange={(e) => changeRole(m.id, e.target.value)}
+                    className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider bg-transparent ${ROLE_TONE[m.role] || ROLE_TONE.viewer}`}
+                  >
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                </div>
+                <div className="col-span-2 text-right">
+                  <button onClick={() => removeMember(m.id, m.email)} className="text-[11px] text-rose-300 hover:text-rose-200">Remove</button>
+                </div>
               </div>
-              <span className="text-sm text-white">{m.name}</span>
-            </div>
-            <div className="col-span-4 text-xs text-slate-400">{m.email}</div>
-            <div className="col-span-2">
-              <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${m.tone}`}>{m.role}</span>
-            </div>
-            <div className="col-span-2 text-right">
-              <button className="text-[11px] text-cyan-300 hover:text-cyan-200">Edit</button>
-            </div>
-          </div>
-        ))}
+            );
+          })
+        )}
       </div>
-      <button className="mt-4 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300">+ Invite member</button>
+
+      {inviteOpen ? (
+        <div className="mt-4 space-y-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <input placeholder="email@company.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none" />
+            <input placeholder="Name (optional)" value={inviteName} onChange={(e) => setInviteName(e.target.value)} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none" />
+            <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none">
+              <option value="viewer">Viewer</option>
+              <option value="editor">Editor</option>
+              <option value="admin">Admin</option>
+              <option value="owner">Owner</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={invite} disabled={inviting || !inviteEmail.trim()} className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300 disabled:opacity-50">
+              {inviting ? "Inviting…" : "Send invite"}
+            </button>
+            <button onClick={() => setInviteOpen(false)} className="rounded-lg border border-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-900">Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setInviteOpen(true)} className="mt-4 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300">+ Invite member</button>
+      )}
     </Card>
   );
 }
 
+type SettingsRule = { id: string; name: string; action: string; enabled: boolean };
+
 function AutomationPanel() {
-  const rules = [
-    { name: "Rank drop > 5 positions", action: "Notify #seo-alerts + assign to Auditor", on: true },
-    { name: "Backlink lost from DR60+", action: "Create outreach task in Off-Page Expert", on: true },
-    { name: "New keyword opportunity", action: "Draft brief in Content Scout", on: false },
-    { name: "CWV LCP > 2.5s", action: "Assign to Technical Expert", on: true },
-    { name: "Weekly digest", action: "Email owners every Monday 09:00 GST", on: true },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [rules, setRules] = useState<SettingsRule[]>([]);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newAction, setNewAction] = useState("");
+
+  const load = () => {
+    setLoading(true);
+    fetch("/api/settings/automation-rules")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok) setRules(json.rules || []);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const toggle = async (id: string) => {
+    const rule = rules.find((r) => r.id === id);
+    if (!rule) return;
+    const next = !rule.enabled;
+    setRules((prev) => prev.map((r) => (r.id === id ? { ...r, enabled: next } : r)));
+    const res = await fetch(`/api/settings/automation-rules/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: next }),
+    });
+    const json = await res.json();
+    if (!json?.ok) {
+      toast.error(json?.error || "Failed to save");
+      load();
+    }
+  };
+
+  const addRule = async () => {
+    if (!newName.trim() || !newAction.trim()) return;
+    const res = await fetch("/api/settings/automation-rules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName.trim(), action: newAction.trim() }),
+    });
+    const json = await res.json();
+    if (json?.ok) {
+      toast.success("Rule added");
+      setNewName("");
+      setNewAction("");
+      setAddOpen(false);
+      load();
+    } else {
+      toast.error(json?.error || "Failed to add rule");
+    }
+  };
+
+  const removeRule = async (id: string) => {
+    setRules((prev) => prev.filter((r) => r.id !== id));
+    await fetch(`/api/settings/automation-rules/${id}`, { method: "DELETE" });
+  };
+
   return (
-    <Card title="Automation rules" desc="Not yet connected — no daemon currently evaluates these triggers. See the Automation screen for real, DB-backed flows.">
+    <Card title="Automation rules" desc="Rule toggles are saved for real. No daemon currently evaluates rank drops, backlinks, or CWV against live signals to fire these — persistence only, not live triggering yet. See the Automation screen for real, DB-backed flows.">
       <div className="space-y-2">
-        {rules.map((r) => (
-          <div key={r.name} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-500/10 ring-1 ring-cyan-400/20">
-                <Workflow className="h-4 w-4 text-cyan-300" />
+        {loading ? (
+          <div className="py-6 text-center text-xs text-slate-500">Loading…</div>
+        ) : (
+          rules.map((r) => (
+            <div key={r.id} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-500/10 ring-1 ring-cyan-400/20">
+                  <Workflow className="h-4 w-4 text-cyan-300" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">{r.name}</div>
+                  <div className="text-[11px] text-slate-400">→ {r.action}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-sm font-medium text-white">{r.name}</div>
-                <div className="text-[11px] text-slate-400">→ {r.action}</div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => toggle(r.id)} className={`h-5 w-9 rounded-full transition relative ${r.enabled ? "bg-cyan-400" : "bg-slate-700"}`}>
+                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${r.enabled ? "left-4" : "left-0.5"}`} />
+                </button>
+                <button onClick={() => removeRule(r.id)} className="text-[11px] text-rose-300 hover:text-rose-200">Remove</button>
               </div>
             </div>
-            <div className={`h-5 w-9 rounded-full transition ${r.on ? "bg-cyan-400" : "bg-slate-700"} relative`}>
-              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${r.on ? "left-4" : "left-0.5"}`} />
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
-      <button className="mt-4 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300">+ New rule</button>
+
+      {addOpen ? (
+        <div className="mt-4 space-y-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+          <input placeholder="Rule name" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none" />
+          <input placeholder="Action (e.g. Notify #seo-alerts)" value={newAction} onChange={(e) => setNewAction(e.target.value)} className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none" />
+          <div className="flex gap-2">
+            <button onClick={addRule} disabled={!newName.trim() || !newAction.trim()} className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300 disabled:opacity-50">Add rule</button>
+            <button onClick={() => setAddOpen(false)} className="rounded-lg border border-slate-800 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-900">Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setAddOpen(true)} className="mt-4 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300">+ New rule</button>
+      )}
     </Card>
   );
 }
+
+type WebhookRow = { id: string; label: string; url: string; active: boolean; createdAt: string; lastDeliveredAt: string | null; lastStatus: string | null };
 
 function WebhooksPanel() {
   const [copied, setCopied] = useState(false);
-  const url = "https://api.aks-seo.com/webhooks/inbound/8f92a1";
+  const [loading, setLoading] = useState(true);
+  const [webhooks, setWebhooks] = useState<WebhookRow[]>([]);
+  const [newLabel, setNewLabel] = useState("");
+  const [newUrl, setNewUrl] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const inboundUrl = typeof window !== "undefined" ? `${window.location.origin}/api/events/ingest` : "/api/events/ingest";
+
+  const load = () => {
+    setLoading(true);
+    fetch("/api/settings/webhooks")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok) setWebhooks(json.webhooks || []);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const addSubscriber = async () => {
+    if (!newLabel.trim() || !newUrl.trim()) return;
+    setAdding(true);
+    try {
+      const res = await fetch("/api/settings/webhooks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: newLabel.trim(), url: newUrl.trim() }),
+      });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success("Subscriber added");
+        setNewLabel("");
+        setNewUrl("");
+        load();
+      } else {
+        toast.error(json?.error || "Failed to add subscriber");
+      }
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const testWebhook = async (id: string) => {
+    setTestingId(id);
+    try {
+      const res = await fetch(`/api/settings/webhooks/${id}/test`, { method: "POST" });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success(`Delivery: ${json.status}`);
+        load();
+      } else {
+        toast.error(json?.error || "Test failed");
+      }
+    } finally {
+      setTestingId(null);
+    }
+  };
+
+  const removeSubscriber = async (id: string) => {
+    setWebhooks((prev) => prev.filter((w) => w.id !== id));
+    await fetch(`/api/settings/webhooks/${id}`, { method: "DELETE" });
+  };
+
   return (
-    <Card title="Outbound webhooks" desc="Not yet connected — this endpoint and subscriber list are placeholders.">
+    <Card title="Outbound webhooks" desc="Subscribers are real. 'Test' fires a genuine HMAC-signed HTTP POST to the URL and records the real response.">
       <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
-        <div className="text-[10px] uppercase tracking-wider text-slate-500">Inbound endpoint (for the WP plugin)</div>
+        <div className="text-[10px] uppercase tracking-wider text-slate-500">Inbound endpoint (HMAC-signed events, live)</div>
         <div className="mt-1.5 flex items-center gap-2">
-          <code className="flex-1 truncate rounded bg-slate-900 px-2 py-1.5 font-mono text-xs text-cyan-200">{url}</code>
+          <code className="flex-1 truncate rounded bg-slate-900 px-2 py-1.5 font-mono text-xs text-cyan-200">{inboundUrl}</code>
           <button
-            onClick={() => { navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            onClick={() => { navigator.clipboard.writeText(inboundUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 hover:border-cyan-400/40"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
@@ -452,49 +837,152 @@ function WebhooksPanel() {
           </button>
         </div>
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <input placeholder="Label · e.g. Slack #ops" className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white" />
-        <input placeholder="https://hooks.slack.com/…" className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white" />
+
+      <div className="mt-4 space-y-2">
+        {loading ? (
+          <div className="py-4 text-center text-xs text-slate-500">Loading…</div>
+        ) : webhooks.length === 0 ? (
+          <div className="py-4 text-center text-xs text-slate-500">No outbound subscribers yet.</div>
+        ) : (
+          webhooks.map((w) => (
+            <div key={w.id} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-white">{w.label}</div>
+                  <div className="text-[11px] text-slate-400 font-mono">{w.url}</div>
+                  {w.lastStatus && (
+                    <div className="mt-1 text-[10px] text-slate-500">Last delivery: {w.lastStatus}</div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => testWebhook(w.id)} disabled={testingId === w.id} className="rounded-md border border-slate-700 px-2.5 py-1 text-[11px] text-slate-200 hover:border-cyan-400/40 disabled:opacity-50">
+                    {testingId === w.id ? "Testing…" : "Test"}
+                  </button>
+                  <button onClick={() => removeSubscriber(w.id)} className="text-[11px] text-rose-300 hover:text-rose-200">Remove</button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
-      <button className="mt-3 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300">+ Add subscriber</button>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <input placeholder="Label · e.g. Slack #ops" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white" />
+        <input placeholder="https://hooks.slack.com/…" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white" />
+      </div>
+      <button onClick={addSubscriber} disabled={adding || !newLabel.trim() || !newUrl.trim()} className="mt-3 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300 disabled:opacity-50">
+        {adding ? "Adding…" : "+ Add subscriber"}
+      </button>
     </Card>
   );
+}
+
+type AuditEntry = { id: string; actorEmail: string; action: string; detail: Record<string, unknown>; createdAt: string };
+
+function describeAuditAction(e: AuditEntry): string {
+  const d = e.detail || {};
+  switch (e.action) {
+    case "api_key.updated": return `Updated ${d.provider} API key`;
+    case "api_key.removed": return `Removed ${d.provider} API key`;
+    case "role.invited": return `Invited ${d.email} as ${d.role}`;
+    case "role.changed": return `Changed role for user ${d.userId} to ${d.role}`;
+    case "role.removed": return `Removed team member ${d.userId}`;
+    case "integration.toggled": return `${d.enabled ? "Enabled" : "Disabled"} ${d.key} integration`;
+    case "webhook.added": return `Added webhook subscriber "${d.label}"`;
+    case "webhook.updated": return `Updated webhook subscriber ${d.id}`;
+    case "webhook.removed": return `Removed webhook subscriber ${d.id}`;
+    case "webhook.tested": return `Tested webhook ${d.id} → ${d.status}`;
+    case "automation_rule.created": return `Created automation rule "${d.name}"`;
+    case "automation_rule.updated": return `Updated automation rule ${d.id}`;
+    case "automation_rule.removed": return `Removed automation rule ${d.id}`;
+    case "notification_pref.toggled": return `${d.enabled ? "Enabled" : "Disabled"} ${d.channel} for "${d.eventKey}"`;
+    case "general_settings.updated": return "Updated general settings";
+    case "site.updated": return `Updated site ${d.siteId} (${(d.fields as string[] | undefined)?.join(", ")})`;
+    case "site.deleted": return `Deleted site ${d.siteId}`;
+    default: return e.action;
+  }
+}
+
+function timeAgo(iso: string) {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
 }
 
 function AuditPanel() {
-  const entries = [
-    { ts: "07:12", who: "Ahmed K.", what: "Updated Anthropic API key" },
-    { ts: "06:58", who: "Sara M.", what: "Invited yusuf@aks.co as Editor" },
-    { ts: "06:44", who: "system", what: "Rotated LOVABLE_API_KEY" },
-    { ts: "yesterday", who: "Ahmed K.", what: "Enabled automation rule 'Rank drop > 5'" },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+
+  useEffect(() => {
+    fetch("/api/settings/audit?limit=100")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok) setEntries(json.entries || []);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
-    <Card title="Audit log" desc="Not yet connected — no privileged actions are recorded yet. Sample rows shown below.">
-      <div className="divide-y divide-slate-800">
-        {entries.map((e, i) => (
-          <div key={i} className="flex items-center justify-between py-3 text-sm">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="h-4 w-4 text-cyan-300" />
-              <span className="text-white">{e.what}</span>
+    <Card title="Audit log" desc="Records privileged actions taken in Settings and per-site admin actions — real entries, written server-side as they happen.">
+      {loading ? (
+        <div className="py-6 text-center text-xs text-slate-500">Loading…</div>
+      ) : entries.length === 0 ? (
+        <div className="py-6 text-center text-xs text-slate-500">No privileged actions recorded yet.</div>
+      ) : (
+        <div className="divide-y divide-slate-800">
+          {entries.map((e) => (
+            <div key={e.id} className="flex items-center justify-between py-3 text-sm">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-4 w-4 text-cyan-300" />
+                <span className="text-white">{describeAuditAction(e)}</span>
+              </div>
+              <div className="text-xs text-slate-400">{e.actorEmail} · {timeAgo(e.createdAt)}</div>
             </div>
-            <div className="text-xs text-slate-400">{e.who} · {e.ts}</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }
 
+type NotifPref = { id: string; eventKey: string; label: string; email: boolean; slack: boolean; push: boolean };
+
 function NotificationsPanel() {
-  const rows = [
-    "Site health drops below 80",
-    "New backlink from DR60+ referrer",
-    "Weekly rank report",
-    "Failed cron / job runner error",
-    "Client invoice paid",
-  ];
+  const [loading, setLoading] = useState(true);
+  const [prefs, setPrefs] = useState<NotifPref[]>([]);
+
+  useEffect(() => {
+    fetch("/api/settings/notifications")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok) setPrefs(json.prefs || []);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const toggle = async (eventKey: string, channel: "email" | "slack" | "push") => {
+    const pref = prefs.find((p) => p.eventKey === eventKey);
+    if (!pref) return;
+    const next = !pref[channel];
+    setPrefs((prev) => prev.map((p) => (p.eventKey === eventKey ? { ...p, [channel]: next } : p)));
+    const res = await fetch("/api/settings/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventKey, channel, enabled: next }),
+    });
+    const json = await res.json();
+    if (!json?.ok) {
+      toast.error(json?.error || "Failed to save");
+      setPrefs((prev) => prev.map((p) => (p.eventKey === eventKey ? { ...p, [channel]: !next } : p)));
+    }
+  };
+
   return (
-    <Card title="Notifications" desc="Not yet connected — no delivery channel is wired up; checkboxes below don't persist.">
+    <Card title="Notifications" desc="Preferences are saved for real. No delivery channel (SMTP/Slack/Telegram) is wired to actually send yet — see the APIs and Integrations tabs.">
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <div className="grid grid-cols-12 gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2 text-[10px] uppercase tracking-wider text-slate-500">
           <div className="col-span-6">Event</div>
@@ -502,61 +990,73 @@ function NotificationsPanel() {
           <div className="col-span-2 text-center">Slack</div>
           <div className="col-span-2 text-center">Push</div>
         </div>
-        {rows.map((r, i) => (
-          <div key={r} className="grid grid-cols-12 items-center gap-3 border-b border-slate-900 px-4 py-3 last:border-b-0 text-sm text-slate-200">
-            <div className="col-span-6 flex items-center gap-2"><Bot className="h-4 w-4 text-cyan-300" /> {r}</div>
-            {[0, 1, 2].map((c) => (
-              <div key={c} className="col-span-2 text-center">
-                <input type="checkbox" defaultChecked={i % (c + 2) === 0} className="h-4 w-4 rounded border-slate-700 bg-slate-900 accent-cyan-400" />
-              </div>
-            ))}
-          </div>
-        ))}
+        {loading ? (
+          <div className="px-4 py-6 text-center text-xs text-slate-500">Loading…</div>
+        ) : (
+          prefs.map((p) => (
+            <div key={p.eventKey} className="grid grid-cols-12 items-center gap-3 border-b border-slate-900 px-4 py-3 last:border-b-0 text-sm text-slate-200">
+              <div className="col-span-6 flex items-center gap-2"><Bot className="h-4 w-4 text-cyan-300" /> {p.label}</div>
+              {(["email", "slack", "push"] as const).map((channel) => (
+                <div key={channel} className="col-span-2 text-center">
+                  <input
+                    type="checkbox"
+                    checked={p[channel]}
+                    onChange={() => toggle(p.eventKey, channel)}
+                    className="h-4 w-4 rounded border-slate-700 bg-slate-900 accent-cyan-400"
+                  />
+                </div>
+              ))}
+            </div>
+          ))
+        )}
       </div>
     </Card>
   );
 }
 
-type LogLevel = "info" | "warn" | "error" | "debug";
-type LogRow = { ts: string; level: LogLevel; source: string; msg: string };
+// Logs reuses the real audit_log table (there is no separate application
+// log store anywhere in this codebase — inventing a second fake data source
+// would be worse than being explicit that this is the audit trail filtered
+// by source). "Level" is inferred from the action name since audit_log has
+// no severity column of its own.
+function levelForAction(action: string): "info" | "warn" | "error" {
+  if (/removed|deleted|failed/i.test(action)) return "warn";
+  return "info";
+}
 
-const logSeed: LogRow[] = [
-  { ts: "07:12:44", level: "info", source: "build-agent", msg: "Job spotlesscleaningservices → phase=global_research queued" },
-  { ts: "07:12:38", level: "info", source: "keyword-scout", msg: "Fetched 214 keywords from Semrush (dubai-cleaning)" },
-  { ts: "07:11:20", level: "warn", source: "cwv", msg: "LCP 2.8s > 2.0s budget on /services/deep-clean" },
-  { ts: "07:10:02", level: "error", source: "outreach", msg: "SMTP 550: recipient rejected (batch #42)" },
-  { ts: "07:08:55", level: "info", source: "auditor", msg: "Rubric audit passed for 4 pages" },
-  { ts: "07:07:12", level: "debug", source: "router", msg: "Prefetch /agents/onpage" },
-  { ts: "07:06:44", level: "info", source: "gateway", msg: "Anthropic call · 1.2s · $0.014" },
-];
-
-const logTone: Record<LogLevel, string> = {
+const logTone: Record<string, string> = {
   info: "text-cyan-300 bg-cyan-400/10 border-cyan-400/20",
   warn: "text-amber-300 bg-amber-400/10 border-amber-400/20",
   error: "text-rose-300 bg-rose-400/10 border-rose-400/20",
-  debug: "text-slate-400 bg-slate-500/10 border-slate-500/20",
 };
 
 function LogsPanel() {
-  const [level, setLevel] = useState<LogLevel | "all">("all");
-  const rows = logSeed.filter((r) => level === "all" || r.level === level);
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+
+  useEffect(() => {
+    fetch("/api/settings/audit?limit=200")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok) setEntries(json.entries || []);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `audit-log-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <Card title="System Logs" desc="Not yet connected to a live tail — sample rows shown below.">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="inline-flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 px-2 py-1.5 text-xs">
-          <span className="pr-1 text-[10px] uppercase tracking-wider text-slate-500">Level</span>
-          {(["all", "info", "warn", "error", "debug"] as const).map((l) => (
-            <button
-              key={l}
-              onClick={() => setLevel(l)}
-              className={`rounded px-2 py-0.5 text-[11px] uppercase tracking-wider ${level === l ? "bg-cyan-400 text-slate-950 font-semibold" : "text-slate-400 hover:text-white"}`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-        <button className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-1.5 text-xs text-slate-300 hover:border-cyan-400/40">
+    <Card title="System Logs" desc="This tail shows the same real audit_log entries as the Audit Log tab — there is no separate application log store in this app yet.">
+      <div className="mb-3 flex items-center justify-end">
+        <button onClick={exportJson} disabled={entries.length === 0} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-1.5 text-xs text-slate-300 hover:border-cyan-400/40 disabled:opacity-50">
           Export
         </button>
       </div>
@@ -564,20 +1064,29 @@ function LogsPanel() {
         <div className="grid grid-cols-12 gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2 text-[10px] uppercase tracking-wider text-slate-500">
           <div className="col-span-2">Timestamp</div>
           <div className="col-span-1">Level</div>
-          <div className="col-span-2">Source</div>
+          <div className="col-span-2">Actor</div>
           <div className="col-span-7">Message</div>
         </div>
         <div className="max-h-[60vh] overflow-y-auto font-mono text-[12px]">
-          {rows.map((r, i) => (
-            <div key={i} className="grid grid-cols-12 gap-3 border-b border-slate-900 px-4 py-2 hover:bg-slate-900/40">
-              <div className="col-span-2 text-slate-500">{r.ts}</div>
-              <div className="col-span-1">
-                <span className={`inline-flex rounded border px-1.5 py-px text-[9px] uppercase tracking-wider ${logTone[r.level]}`}>{r.level}</span>
-              </div>
-              <div className="col-span-2 text-cyan-300">{r.source}</div>
-              <div className="col-span-7 text-slate-200">{r.msg}</div>
-            </div>
-          ))}
+          {loading ? (
+            <div className="px-4 py-6 text-center text-slate-500">Loading…</div>
+          ) : entries.length === 0 ? (
+            <div className="px-4 py-6 text-center text-slate-500">No entries recorded yet.</div>
+          ) : (
+            entries.map((e) => {
+              const lvl = levelForAction(e.action);
+              return (
+                <div key={e.id} className="grid grid-cols-12 gap-3 border-b border-slate-900 px-4 py-2 hover:bg-slate-900/40">
+                  <div className="col-span-2 text-slate-500">{new Date(e.createdAt).toLocaleTimeString()}</div>
+                  <div className="col-span-1">
+                    <span className={`inline-flex rounded border px-1.5 py-px text-[9px] uppercase tracking-wider ${logTone[lvl]}`}>{lvl}</span>
+                  </div>
+                  <div className="col-span-2 text-cyan-300 truncate">{e.actorEmail}</div>
+                  <div className="col-span-7 text-slate-200">{describeAuditAction(e)}</div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </Card>

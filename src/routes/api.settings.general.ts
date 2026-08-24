@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { actorEmailFromRequest, logAudit } from "@/lib/audit";
 
 async function readSettings(d: any, orgSettings: any, eq: any) {
   const [row] = await d.select().from(orgSettings).where(eq(orgSettings.id, "singleton")).limit(1);
@@ -53,6 +54,7 @@ export const Route = createFileRoute("/api/settings/general")({
           if (body.digestEnabled !== undefined) updates.digestEnabled = body.digestEnabled;
 
           await d.update(orgSettings).set(updates).where(eq(orgSettings.id, "singleton"));
+          await logAudit(actorEmailFromRequest(request), "general_settings.updated", updates);
 
           const result = await readSettings(d, orgSettings, eq);
           return Response.json(result);
