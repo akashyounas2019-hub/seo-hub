@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Database,
@@ -49,103 +49,56 @@ function KnowledgeBasePage() {
   const [newObsidianCat, setNewObsidianCat] = useState("SEO SOP");
   const [newObsidianContent, setNewObsidianContent] = useState("");
 
-  // Local state for interactive editing
-  const [plainText, setPlainText] = useState(
-    `SERVICE AREA: Dubai + all UAE emirates. Sharjah, Abu Dhabi, Ajman on request.
+  // Local state for interactive editing — hydrated from the real Postgres
+  // `sites` row on mount / site switch, and saved back via PATCH /api/sites/$id.
+  const [plainText, setPlainText] = useState("");
+  const [structured, setStructured] = useState<StructuredKnowledgeBase>({});
+  const [kbLoading, setKbLoading] = useState(true);
+  const [kbSaving, setKbSaving] = useState(false);
 
-SERVICES:
-- Standard cleaning: same-day availability across Dubai
-- Villa deep clean: HD-grade written 60-point checklist
-- Move-in / move-out cleaning: handover-grade
-- Sofa / carpet / curtain / mattress cleaning: on-site steam or wet-clean
+  useEffect(() => {
+    if (!currentSite.id) return;
+    let cancelled = false;
+    setKbLoading(true);
+    fetch(`/api/sites/${currentSite.id}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled || !json?.ok || !json.site) return;
+        setPlainText(json.site.knowledgeBase || "");
+        setStructured(json.site.structuredKb || {});
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Failed to load Knowledge Base from Postgres");
+      })
+      .finally(() => {
+        if (!cancelled) setKbLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentSite.id]);
 
-HOURS: Sun–Thu 8am–8pm, Fri+Sat 9am–8pm. WhatsApp dispatch 8am–10pm daily.
-
-POLICIES:
-- Free cancellation up to 24 hours before appointment
-- Insured team, background-checked staff, uniformed`
-  );
-
-  const [structured, setStructured] = useState<StructuredKnowledgeBase>({
-    businessProfile: {
-      businessName: currentSite.label,
-      niche: "Cleaning Services",
-      phone: "+971 4 399 0000",
-      whatsapp: "+971 50 123 4567",
-      address: "Cluster T, Jumeirah Lakes Towers, Dubai, UAE",
-      workingHours: "Sun-Thu: 8:00 AM - 8:00 PM, Fri-Sat: 9:00 AM - 6:00 PM",
-      tradeLicense: "CN-1094829",
-      establishedYear: "2019",
-    },
-    services: [
-      {
-        id: "s1",
-        name: "Villa Deep Cleaning",
-        category: "Deep Clean",
-        description: "Handover-grade villa refresh using written 60-point checklist",
-        priceAed: "499",
-        turnaround: "4-6 Hours",
-        keywords: ["villa deep cleaning dubai", "villa handover clean"],
-        features: ["Inside appliance clean", "Balcony washing", "AC vent dusting"],
-      },
-      {
-        id: "s2",
-        name: "Move-in / Move-out Cleaning",
-        category: "Tenancy Clean",
-        description: "Tenancy agreement handover clean guaranteed to return deposit",
-        priceAed: "349",
-        turnaround: "3-5 Hours",
-        keywords: ["move out cleaning dubai", "tenancy cleaning dubai"],
-        features: ["Cabinet interior scrubbing", "Grout steam cleaning"],
-      },
-      {
-        id: "s3",
-        name: "Sofa & Upholstery Steam Clean",
-        category: "Specialized",
-        description: "On-site hot water extraction and germ disinfection",
-        priceAed: "199",
-        turnaround: "1-2 Hours",
-        keywords: ["sofa cleaning dubai", "carpet steam clean"],
-        features: ["Stain removal", "Quick-dry extraction"],
-      },
-    ],
-    brandTone: {
-      tone: "Professional, punctual, trustworthy, Dubai-market localized",
-      usps: ["60-point quality audit checklist", "Insured & background-checked staff", "Eco-friendly non-toxic products"],
-      rulesDos: ["Emphasize Dubai Municipality compliance", "Provide clear AED quotes upfront", "Highlight English & Arabic customer service"],
-      rulesDonts: ["Never make unverified medical claims", "Never omit VAT info in quotes"],
-      targetPersonas: ["Expats moving into new villas", "Property managers", "Families requiring seasonal deep cleans"],
-    },
-    faqs: [
-      {
-        id: "f1",
-        category: "Booking",
-        question: "Are cleaning equipment and supplies provided?",
-        answer: "Yes, our team brings all professional tools, eco-friendly detergents, steam machines, and vacuums at no extra charge.",
-      },
-      {
-        id: "f2",
-        category: "Policies",
-        question: "What is your cancellation policy?",
-        answer: "Free cancellation or rescheduling up to 24 hours prior to appointment time.",
-      },
-    ],
-    policies: [
-      {
-        id: "p1",
-        title: "Deposit Return Guarantee",
-        description: "If your landlord or property manager flags any cleaning defect within 48 hours, we re-clean for free.",
-      },
-    ],
-    competitors: [
-      {
-        id: "c1",
-        name: "JustClean / UrbanCompany",
-        domain: "justclean.com",
-        counterStrategy: "Emphasize dedicated in-house staff rather than unvetted gig marketplace freelancers.",
-      },
-    ],
-  });
+  const saveKnowledgeBase = async () => {
+    if (!currentSite.id) return;
+    setKbSaving(true);
+    try {
+      const res = await fetch(`/api/sites/${currentSite.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ knowledgeBase: plainText, structuredKb: structured }),
+      });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success("Knowledge Base saved to PostgreSQL");
+      } else {
+        toast.error(json?.error || "Failed to save Knowledge Base");
+      }
+    } catch {
+      toast.error("Failed to save Knowledge Base");
+    } finally {
+      setKbSaving(false);
+    }
+  };
 
   const [newServiceName, setNewServiceName] = useState("");
   const [newServicePrice, setNewServicePrice] = useState("");
@@ -153,53 +106,71 @@ POLICIES:
   const [newFaqQ, setNewFaqQ] = useState("");
   const [newFaqA, setNewFaqA] = useState("");
 
-  // 1-Click URL Autonomy state
-  const [autocrawlUrl, setAutocrawlUrl] = useState("https://safaeewala.com/");
+  // 1-Click URL Autonomy state: crawl → enqueue a claude_jobs row → poll it →
+  // once the AKS worker completes it, re-fetch the site's real structuredKb.
+  const [autocrawlUrl, setAutocrawlUrl] = useState(currentSite.domain ? `https://${currentSite.domain}/` : "");
   const [isCrawling, setIsCrawling] = useState(false);
+  const [crawlStatus, setCrawlStatus] = useState<string>("");
+
+  const pollJobUntilDone = async (jobId: string): Promise<{ status: string }> => {
+    const POLL_MS = 3000;
+    const MAX_ATTEMPTS = 100; // ~5 minutes
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+      await new Promise((r) => setTimeout(r, POLL_MS));
+      const res = await fetch(`/api/jobs/${jobId}`);
+      const json = await res.json();
+      const status = json?.job?.status;
+      if (status === "done" || status === "failed") return { status };
+      if (status === "running") setCrawlStatus("AKS worker is structuring the crawled pages…");
+      else if (status === "claimed") setCrawlStatus("AKS worker claimed the job…");
+      else setCrawlStatus("Waiting for the AKS worker — run `npm run worker` if none is running.");
+    }
+    return { status: "timeout" };
+  };
 
   const handleLaunchAutonomy = async () => {
-    if (!autocrawlUrl.trim()) return;
+    if (!autocrawlUrl.trim() || !currentSite.id) return;
+    setIsCrawling(true);
+    setCrawlStatus("Crawling pages…");
     try {
-      setIsCrawling(true);
       const res = await fetch("/api/knowledge/autocrawl", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: autocrawlUrl.trim() }),
+        body: JSON.stringify({ url: autocrawlUrl.trim(), siteId: currentSite.id }),
       });
       const json = await res.json();
 
-      if (json.ok && json.extracted) {
-        const ext = json.extracted;
+      if (!json.ok || !json.jobId) {
+        toast.error(json.error || "Failed to crawl site");
+        return;
+      }
 
-        // Auto populate services
-        setStructured((prev) => ({
-          ...prev,
-          businessProfile: {
-            ...prev.businessProfile,
-            businessName: ext.title || prev.businessProfile?.businessName,
-            niche: ext.niche || prev.businessProfile?.niche,
-            phone: ext.phone || prev.businessProfile?.phone,
-            whatsapp: ext.whatsapp || prev.businessProfile?.whatsapp,
-            address: ext.address || prev.businessProfile?.address,
-          },
-          services: [...(ext.services || []), ...(prev.services || [])],
-          faqs: [...(ext.faqs || []), ...(prev.faqs || [])],
-        }));
+      toast.info(`Crawled ${json.pagesCrawled} page(s). Waiting for AKS worker to structure the Knowledge Base…`);
+      setCrawlStatus("Waiting for the AKS worker — run `npm run worker` if none is running.");
 
-        // Add auto Obsidian SOP note
-        if (ext.obsidianSop) {
-          setObsidianVault((prev) => [ext.obsidianSop, ...prev]);
-          setSelectedNoteId(ext.obsidianSop.id);
+      const { status } = await pollJobUntilDone(json.jobId);
+
+      if (status === "done") {
+        // The worker already PATCHed structuredKb directly; re-fetch the real row.
+        const siteRes = await fetch(`/api/sites/${currentSite.id}`);
+        const siteJson = await siteRes.json();
+        if (siteJson?.ok && siteJson.site) {
+          setPlainText(siteJson.site.knowledgeBase || "");
+          setStructured(siteJson.site.structuredKb || {});
+          toast.success(`Knowledge Base updated from ${autocrawlUrl}`);
+        } else {
+          toast.warning("Job completed but the Knowledge Base could not be reloaded — refresh the page.");
         }
-
-        toast.success(`⚡ 1-Click Full Autonomy Completed for ${ext.url}!`, {
-          description: "Scraped services, auto-generated RAG profile, and launched agent swarm.",
-        });
+      } else if (status === "failed") {
+        toast.error("The AKS worker failed to structure this crawl. Check the Jobs Manager for the error.");
+      } else {
+        toast.info("Still waiting on the AKS worker. The job stays queued — check back or open the Jobs Manager.");
       }
     } catch {
-      toast.info(`Configured autonomy for ${autocrawlUrl}`);
+      toast.error(`Failed to launch autonomy for ${autocrawlUrl}`);
     } finally {
       setIsCrawling(false);
+      setCrawlStatus("");
     }
   };
 
@@ -268,10 +239,11 @@ POLICIES:
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => toast.success("Knowledge Base saved to PostgreSQL")}
-              className="rounded-lg bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-300 transition shadow-[0_0_16px_rgba(34,211,238,0.3)]"
+              onClick={saveKnowledgeBase}
+              disabled={kbSaving || kbLoading}
+              className="rounded-lg bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-300 transition shadow-[0_0_16px_rgba(34,211,238,0.3)] disabled:opacity-50"
             >
-              Save Knowledge Base
+              {kbSaving ? "Saving…" : "Save Knowledge Base"}
             </button>
           </div>
         </header>
@@ -285,13 +257,13 @@ POLICIES:
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white">⚡ 1-Click URL Autonomous SEO Machine</h3>
+                  <h3 className="text-sm font-bold text-white">⚡ URL → Knowledge Base</h3>
                   <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-mono font-bold text-emerald-300">
-                    Zero-Touch Setup
+                    Live crawl + AKS worker
                   </span>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Enter any website URL — system automatically audits pages, auto-generates RAG profiles, generates Obsidian SOPs, and deploys all 6 AI agents.
+                  Enter a website URL — crawls the homepage and a few interior pages (about/services/contact/pricing/FAQ), then the AKS worker (local Claude CLI) structures the real content into this Knowledge Base. Requires <code className="text-cyan-300">npm run worker</code> running somewhere.
                 </p>
               </div>
             </div>
@@ -299,7 +271,7 @@ POLICIES:
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <input
                 type="text"
-                placeholder="https://safaeewala.com/"
+                placeholder="https://example.com/"
                 value={autocrawlUrl}
                 onChange={(e) => setAutocrawlUrl(e.target.value)}
                 className="w-full sm:w-64 rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 font-mono text-xs text-cyan-200 focus:border-cyan-400 focus:outline-none"
@@ -309,10 +281,15 @@ POLICIES:
                 disabled={isCrawling}
                 className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2 text-xs font-bold text-slate-950 hover:from-cyan-300 hover:to-blue-400 transition shadow-[0_0_16px_rgba(34,211,238,0.3)] disabled:opacity-50 cursor-pointer"
               >
-                {isCrawling ? "Crawling & Ingesting..." : "Launch 1-Click Autonomy"}
+                {isCrawling ? "Working…" : "Crawl & Structure"}
               </button>
             </div>
           </div>
+          {isCrawling && crawlStatus && (
+            <div className="mt-3 rounded-lg border border-cyan-500/20 bg-slate-950/60 px-3 py-2 text-[11px] text-cyan-200">
+              {crawlStatus}
+            </div>
+          )}
         </div>
 
         {/* Status Band */}
@@ -384,6 +361,7 @@ POLICIES:
             <div>
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
                 Knowledge Studio · <span className="text-cyan-300">{currentSite.label}</span>
+                {kbLoading && <span className="ml-2 text-[10px] font-normal text-slate-500">Loading…</span>}
               </h2>
               <p className="mt-1 text-xs text-slate-400">
                 All background agents (On-Page, Off-Page, Technical, Auditor, GEO, International) ground their prompts using this catalog.

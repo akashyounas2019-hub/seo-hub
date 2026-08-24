@@ -90,6 +90,61 @@ User query: ${input.message}
 History: ${JSON.stringify(input.history || [])}`;
     },
   },
+
+  "knowledge:structure-from-crawl": {
+    kind: "knowledge:structure-from-crawl",
+    label: "Structure Knowledge Base from Crawled Pages",
+    description: "Extracts services, FAQs, contact info, and brand voice from scraped page text into the site's Knowledge Base schema",
+    buildPrompt(input) {
+      const pages = (input.pages || []) as Array<{ url: string; title: string; text: string }>;
+      const pageBlocks = pages
+        .map((p) => `--- PAGE: ${p.url} ---\nTITLE: ${p.title}\n${p.text}`)
+        .join("\n\n");
+
+      return `You are extracting structured business facts from a website's own pages so an SEO agent fleet can be grounded in accurate, real information.
+
+CRAWLED PAGE CONTENT (source of truth — use ONLY facts present here):
+${pageBlocks}
+
+TASK: Return a SINGLE valid JSON object (no markdown fences, no commentary, no explanation — just the raw JSON) matching exactly this shape:
+
+{
+  "businessProfile": {
+    "businessName": string | omit,
+    "niche": string | omit,
+    "phone": string | omit,
+    "whatsapp": string | omit,
+    "address": string | omit,
+    "workingHours": string | omit,
+    "tradeLicense": string | omit,
+    "establishedYear": string | omit
+  },
+  "services": [
+    { "id": string, "name": string, "category": string | omit, "description": string | omit, "priceAed": string | omit, "turnaround": string | omit, "keywords": string[] | omit, "features": string[] | omit }
+  ],
+  "brandTone": {
+    "tone": string | omit,
+    "usps": string[] | omit,
+    "rulesDos": string[] | omit,
+    "rulesDonts": string[] | omit,
+    "targetPersonas": string[] | omit
+  },
+  "faqs": [
+    { "id": string, "category": string | omit, "question": string, "answer": string }
+  ],
+  "policies": [
+    { "id": string, "title": string, "description": string }
+  ]
+}
+
+CRITICAL RULES:
+- Only include facts you can actually find in the crawled page content above. Do NOT invent prices, phone numbers, addresses, or services that are not stated in the text.
+- If a field genuinely isn't present anywhere in the crawled pages, omit that key entirely rather than guessing or leaving a placeholder.
+- Generate short unique "id" values for each services/faqs/policies array item (e.g. "s1", "s2", "f1").
+- Prices: only set "priceAed" if an actual price appears in the text; do not convert currencies or estimate.
+- Output raw JSON only — the response will be parsed directly with JSON.parse().`;
+    },
+  },
 };
 
 import { compileFullKnowledge } from "./ai-knowledge";

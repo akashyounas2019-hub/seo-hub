@@ -1,73 +1,62 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { parseObsidianNote } from "@/lib/obsidian";
+import { scrapeSite } from "@/lib/web-scraper";
 
 export const Route = createFileRoute("/api/knowledge/autocrawl")({
   server: {
     handlers: {
       GET: async () => {
-        return Response.json({ ok: true, message: "Use POST /api/knowledge/autocrawl with { url: 'https://...' }" });
+        return Response.json({
+          ok: true,
+          message: "POST { url, siteId } — crawls the site, then enqueues a knowledge:structure-from-crawl job for the AKS worker to structure into the Knowledge Base.",
+        });
       },
       POST: async ({ request }) => {
         try {
           const body = await request.json();
           const targetUrl = body?.url;
+          const siteId = body?.siteId || null;
           if (!targetUrl) {
             return Response.json({ ok: false, error: "url is required" }, { status: 400 });
           }
 
-          // Fetch live target URL content
-          let rawHtml = "";
-          let fetchOk = false;
-          try {
-            const res = await fetch(targetUrl, {
-              headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) SEOHubAutoCrawler/1.0",
-              },
-              signal: AbortSignal.timeout(6000),
-            });
-            if (res.ok) {
-              rawHtml = await res.text();
-              fetchOk = true;
-            }
-          } catch {
-            /* target unreachable */
-          }
-
-          if (!fetchOk) {
+          const scraped = await scrapeSite(targetUrl);
+          if (!scraped) {
             return Response.json(
-              { ok: false, error: `Could not fetch ${targetUrl}. The autocrawler currently only extracts title/description from a live page — no content is fabricated when the fetch fails.` },
+              { ok: false, error: `Could not fetch ${targetUrl}. No content was crawled — nothing is fabricated on failure.` },
               { status: 502 },
             );
           }
 
-          const titleMatch = rawHtml.match(/<title>(.*?)<\/title>/i);
-          const title = titleMatch ? titleMatch[1] : "";
+          const { db, ensureSchema } = await import("@/db/client");
+          const { claudeJobs } = await import("@/db/schema");
+          await ensureSchema();
+          const d = db();
 
-          const descMatch = rawHtml.match(/<meta[^>]*name=["']description["'][^>]*content=["'](.*?)["']/i);
-          const description = descMatch ? descMatch[1] : "";
-
-          const obsidianSop = parseObsidianNote(
-            `---
-title: ${title || targetUrl} - Operational SOP
-category: Auto Generated SOP
----
-
-# ${title || targetUrl} - Autonomous Execution SOP
-
-Target URL: [[${targetUrl}]]`,
-            `${title || targetUrl} SOP`,
-          );
+          const [job] = await d
+            .insert(claudeJobs)
+            .values({
+              kind: "knowledge:structure-from-crawl",
+              title: `Structure Knowledge Base from crawl of ${targetUrl}`,
+              siteId: siteId || undefined,
+              input: {
+                siteId,
+                url: targetUrl,
+                pages: scraped.pages,
+              },
+              status: "pending",
+              priority: "high",
+              preferWorker: "any",
+              triggerSource: "knowledge_autocrawl",
+            })
+            .returning();
 
           return Response.json({
             ok: true,
+            jobId: job.id,
             url: targetUrl,
-            extracted: {
-              title,
-              description,
-              obsidianSop,
-              crawledAt: new Date().toISOString(),
-              note: "Only title/meta-description are extracted from the live page. Services, FAQs, phone, and address are not auto-detected yet — add them manually in the Knowledge Studio.",
-            },
+            pagesCrawled: scraped.pages.length,
+            linksFound: scraped.linksFound,
+            message: `Crawled ${scraped.pages.length} page(s). Job ${job.id} enqueued — waiting for the AKS worker to structure it into the Knowledge Base.`,
           });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message }, { status: 500 });
