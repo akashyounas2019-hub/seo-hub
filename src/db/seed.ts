@@ -1,7 +1,7 @@
 import { randomBytes, scryptSync } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, ensureSchema } from "./client";
-import { apiKeys, sites, users, agentProfiles, kanbanTaskTemplates, kanbanTasks, automationFlows } from "./schema";
+import { apiKeys, sites, users, kanbanTaskTemplates, kanbanTasks, automationFlows } from "./schema";
 
 const DEFAULT_TEMPLATES = [
   { id: "tpl-audit", name: "Full-site technical audit", title: "Run full-site technical audit", desc: "Crawl the site, flag crawl blockers, canonicals, redirects, and CWV regressions. Export exec-ready report.", defaultAssignee: "Technical SEO Expert", priority: "high", builtIn: true },
@@ -32,17 +32,6 @@ function hashPassword(password: string): string {
 function genSecret(bytes = 32): string {
   return randomBytes(bytes).toString("base64url");
 }
-
-const DEFAULT_AGENTS = [
-  { id: "aks", name: "AKS", title: "SEO Leader", focus: "Routes work, audits sign-off, escalates." },
-  { id: "kaveh-noor", name: "Kaveh Noor", title: "On-page Expert", focus: "Titles, H1s, schema, meta descriptions." },
-  { id: "renner-voss", name: "Renner Voss", title: "Off-page Expert", focus: "Backlinks, outreach, anchor mix." },
-  { id: "malik-rhodes", name: "Malik Rhodes", title: "Technical Expert", focus: "Crawl, CWV, redirects, canonicals." },
-  { id: "silas-iyer", name: "Silas Iyer", title: "Blog Writer", focus: "Briefs, drafts, edits, voice." },
-  { id: "idris-hale", name: "Idris Hale", title: "Technical SEO", focus: "Sitemaps, indexation, hreflang." },
-  { id: "geo", name: "GEO / AI Search Expert", title: "AI Search Expert", focus: "Perplexity citations, Gemini AI Overviews, entity grounding." },
-  { id: "international", name: "International & Local Expert", title: "Geo & Local Expert", focus: "Geo-grid heatmaps, GBP review sentiment, hreflang validation." },
-];
 
 const DEFAULT_SITES = [
   {
@@ -80,21 +69,6 @@ async function main() {
     console.log(`✓ admin user created: ${adminEmail}`);
   } else {
     console.log(`· admin user exists: ${adminEmail}`);
-  }
-
-  for (const agent of DEFAULT_AGENTS) {
-    const found = await d.select().from(agentProfiles).where(eq(agentProfiles.id, agent.id)).limit(1);
-    if (found.length === 0) {
-      await d.insert(agentProfiles).values({
-        id: agent.id,
-        name: agent.name,
-        title: agent.title,
-        focus: agent.focus,
-        isCustom: false,
-        isActive: true,
-      });
-      console.log(`✓ agent seeded: ${agent.name} (${agent.title})`);
-    }
   }
 
   for (const s of DEFAULT_SITES) {

@@ -13,10 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgencyHealthRouteImport } from './routes/agency-health'
 import { Route as AgentDashboardRouteImport } from './routes/agent-dashboard'
 import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as AssignTasksRouteImport } from './routes/assign-tasks'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as AutomationRouteImport } from './routes/automation'
-import { Route as BuildAgentRouteImport } from './routes/build-agent'
 import { Route as ConnectedSitesRouteImport } from './routes/connected-sites'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as KnowledgeBaseRouteImport } from './routes/knowledge-base'
@@ -30,6 +30,7 @@ import { Route as AnalyticsIndexRouteImport } from './routes/analytics.index'
 import { Route as AnalyticsBusinessProfileRouteImport } from './routes/analytics.business-profile'
 import { Route as AnalyticsGoogleAnalyticsRouteImport } from './routes/analytics.google-analytics'
 import { Route as AnalyticsSearchConsoleRouteImport } from './routes/analytics.search-console'
+import { Route as ApiApprovalRulesRouteImport } from './routes/api.approval-rules'
 import { Route as ResourcesPromptsRouteImport } from './routes/resources.prompts'
 import { Route as ResourcesSopsRouteImport } from './routes/resources.sops'
 import { Route as ResourcesTemplatesRouteImport } from './routes/resources.templates'
@@ -41,6 +42,7 @@ import { Route as SitesSiteIdRouteImport } from './routes/sites.$siteId'
 import { Route as ApiAlertsIndexRouteImport } from './routes/api.alerts.index'
 import { Route as ApiAlertsIdRouteImport } from './routes/api.alerts.$id'
 import { Route as ApiAnalyticsSyncRouteImport } from './routes/api.analytics.sync'
+import { Route as ApiApprovalRulesIdRouteImport } from './routes/api.approval-rules.$id'
 import { Route as ApiAutomationFlowsRouteImport } from './routes/api.automation.flows'
 import { Route as ApiCloudflareAiShieldRouteImport } from './routes/api.cloudflare.ai-shield'
 import { Route as ApiEventsIngestRouteImport } from './routes/api.events.ingest'
@@ -52,6 +54,8 @@ import { Route as ApiJobsIdRouteImport } from './routes/api.jobs.$id'
 import { Route as ApiJobsClaimRouteImport } from './routes/api.jobs.claim'
 import { Route as ApiKnowledgeAutocrawlRouteImport } from './routes/api.knowledge.autocrawl'
 import { Route as ApiKnowledgeObsidianRouteImport } from './routes/api.knowledge.obsidian'
+import { Route as ApiOrchestratorRunRouteImport } from './routes/api.orchestrator.run'
+import { Route as ApiSeoSuiteRunRouteImport } from './routes/api.seo-suite.run'
 import { Route as ApiSettingsApikeysRouteImport } from './routes/api.settings.apikeys'
 import { Route as ApiSettingsAuditRouteImport } from './routes/api.settings.audit'
 import { Route as ApiSettingsAutomationRulesRouteImport } from './routes/api.settings.automation-rules'
@@ -64,6 +68,7 @@ import { Route as ApiSitesIndexRouteImport } from './routes/api.sites.index'
 import { Route as ApiSitesIdRouteImport } from './routes/api.sites.$id'
 import { Route as ApiTasksIndexRouteImport } from './routes/api.tasks.index'
 import { Route as ApiTasksIdRouteImport } from './routes/api.tasks.$id'
+import { Route as ApiTasksPendingApprovalRouteImport } from './routes/api.tasks.pending-approval'
 import { Route as ApiAutomationFlowsIdRouteImport } from './routes/api.automation.flows.$id'
 import { Route as ApiJobsIdCompleteRouteImport } from './routes/api.jobs.$id.complete'
 import { Route as ApiJobsIdFailRouteImport } from './routes/api.jobs.$id.fail'
@@ -93,6 +98,11 @@ const AlertsRoute = AlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApprovalsRoute = ApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AssignTasksRoute = AssignTasksRouteImport.update({
   id: '/assign-tasks',
   path: '/assign-tasks',
@@ -106,11 +116,6 @@ const AssistantRoute = AssistantRouteImport.update({
 const AutomationRoute = AutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BuildAgentRoute = BuildAgentRouteImport.update({
-  id: '/build-agent',
-  path: '/build-agent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnectedSitesRoute = ConnectedSitesRouteImport.update({
@@ -180,6 +185,11 @@ const AnalyticsSearchConsoleRoute = AnalyticsSearchConsoleRouteImport.update({
   path: '/analytics/search-console',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiApprovalRulesRoute = ApiApprovalRulesRouteImport.update({
+  id: '/api/approval-rules',
+  path: '/api/approval-rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResourcesPromptsRoute = ResourcesPromptsRouteImport.update({
   id: '/resources/prompts',
   path: '/resources/prompts',
@@ -235,6 +245,11 @@ const ApiAnalyticsSyncRoute = ApiAnalyticsSyncRouteImport.update({
   path: '/api/analytics/sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiApprovalRulesIdRoute = ApiApprovalRulesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiApprovalRulesRoute,
+} as any)
 const ApiAutomationFlowsRoute = ApiAutomationFlowsRouteImport.update({
   id: '/api/automation/flows',
   path: '/api/automation/flows',
@@ -288,6 +303,16 @@ const ApiKnowledgeAutocrawlRoute = ApiKnowledgeAutocrawlRouteImport.update({
 const ApiKnowledgeObsidianRoute = ApiKnowledgeObsidianRouteImport.update({
   id: '/api/knowledge/obsidian',
   path: '/api/knowledge/obsidian',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOrchestratorRunRoute = ApiOrchestratorRunRouteImport.update({
+  id: '/api/orchestrator/run',
+  path: '/api/orchestrator/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSeoSuiteRunRoute = ApiSeoSuiteRunRouteImport.update({
+  id: '/api/seo-suite/run',
+  path: '/api/seo-suite/run',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSettingsApikeysRoute = ApiSettingsApikeysRouteImport.update({
@@ -352,6 +377,11 @@ const ApiTasksIdRoute = ApiTasksIdRouteImport.update({
   path: '/api/tasks/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksPendingApprovalRoute = ApiTasksPendingApprovalRouteImport.update({
+  id: '/api/tasks/pending-approval',
+  path: '/api/tasks/pending-approval',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAutomationFlowsIdRoute = ApiAutomationFlowsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -400,10 +430,10 @@ export interface FileRoutesByFullPath {
   '/agency-health': typeof AgencyHealthRoute
   '/agent-dashboard': typeof AgentDashboardRoute
   '/alerts': typeof AlertsRoute
+  '/approvals': typeof ApprovalsRoute
   '/assign-tasks': typeof AssignTasksRoute
   '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
-  '/build-agent': typeof BuildAgentRoute
   '/connected-sites': typeof ConnectedSitesRoute
   '/dashboard': typeof DashboardRoute
   '/knowledge-base': typeof KnowledgeBaseRoute
@@ -415,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
   '/resources/prompts': typeof ResourcesPromptsRoute
   '/resources/sops': typeof ResourcesSopsRoute
   '/resources/templates': typeof ResourcesTemplatesRoute
@@ -427,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/seo-suite/': typeof SeoSuiteIndexRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
+  '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
@@ -437,6 +469,8 @@ export interface FileRoutesByFullPath {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
+  '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
   '/api/settings/audit': typeof ApiSettingsAuditRoute
   '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
@@ -447,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
   '/api/sites/': typeof ApiSitesIndexRoute
@@ -465,10 +500,10 @@ export interface FileRoutesByTo {
   '/agency-health': typeof AgencyHealthRoute
   '/agent-dashboard': typeof AgentDashboardRoute
   '/alerts': typeof AlertsRoute
+  '/approvals': typeof ApprovalsRoute
   '/assign-tasks': typeof AssignTasksRoute
   '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
-  '/build-agent': typeof BuildAgentRoute
   '/connected-sites': typeof ConnectedSitesRoute
   '/dashboard': typeof DashboardRoute
   '/knowledge-base': typeof KnowledgeBaseRoute
@@ -480,6 +515,7 @@ export interface FileRoutesByTo {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
   '/resources/prompts': typeof ResourcesPromptsRoute
   '/resources/sops': typeof ResourcesSopsRoute
   '/resources/templates': typeof ResourcesTemplatesRoute
@@ -492,6 +528,7 @@ export interface FileRoutesByTo {
   '/seo-suite': typeof SeoSuiteIndexRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
+  '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
@@ -502,6 +539,8 @@ export interface FileRoutesByTo {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
+  '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
   '/api/settings/audit': typeof ApiSettingsAuditRoute
   '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
@@ -512,6 +551,7 @@ export interface FileRoutesByTo {
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts': typeof ApiAlertsIndexRoute
   '/api/jobs': typeof ApiJobsIndexRoute
   '/api/sites': typeof ApiSitesIndexRoute
@@ -531,10 +571,10 @@ export interface FileRoutesById {
   '/agency-health': typeof AgencyHealthRoute
   '/agent-dashboard': typeof AgentDashboardRoute
   '/alerts': typeof AlertsRoute
+  '/approvals': typeof ApprovalsRoute
   '/assign-tasks': typeof AssignTasksRoute
   '/assistant': typeof AssistantRoute
   '/automation': typeof AutomationRoute
-  '/build-agent': typeof BuildAgentRoute
   '/connected-sites': typeof ConnectedSitesRoute
   '/dashboard': typeof DashboardRoute
   '/knowledge-base': typeof KnowledgeBaseRoute
@@ -546,6 +586,7 @@ export interface FileRoutesById {
   '/analytics/business-profile': typeof AnalyticsBusinessProfileRoute
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
+  '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
   '/resources/prompts': typeof ResourcesPromptsRoute
   '/resources/sops': typeof ResourcesSopsRoute
   '/resources/templates': typeof ResourcesTemplatesRoute
@@ -558,6 +599,7 @@ export interface FileRoutesById {
   '/seo-suite/': typeof SeoSuiteIndexRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
+  '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
@@ -568,6 +610,8 @@ export interface FileRoutesById {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
+  '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
   '/api/settings/audit': typeof ApiSettingsAuditRoute
   '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
@@ -578,6 +622,7 @@ export interface FileRoutesById {
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
   '/api/sites/': typeof ApiSitesIndexRoute
@@ -598,10 +643,10 @@ export interface FileRouteTypes {
     | '/agency-health'
     | '/agent-dashboard'
     | '/alerts'
+    | '/approvals'
     | '/assign-tasks'
     | '/assistant'
     | '/automation'
-    | '/build-agent'
     | '/connected-sites'
     | '/dashboard'
     | '/knowledge-base'
@@ -613,6 +658,7 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/api/approval-rules'
     | '/resources/prompts'
     | '/resources/sops'
     | '/resources/templates'
@@ -625,6 +671,7 @@ export interface FileRouteTypes {
     | '/seo-suite/'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
+    | '/api/approval-rules/$id'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
@@ -635,6 +682,8 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/orchestrator/run'
+    | '/api/seo-suite/run'
     | '/api/settings/apikeys'
     | '/api/settings/audit'
     | '/api/settings/automation-rules'
@@ -645,6 +694,7 @@ export interface FileRouteTypes {
     | '/api/settings/webhooks'
     | '/api/sites/$id'
     | '/api/tasks/$id'
+    | '/api/tasks/pending-approval'
     | '/api/alerts/'
     | '/api/jobs/'
     | '/api/sites/'
@@ -663,10 +713,10 @@ export interface FileRouteTypes {
     | '/agency-health'
     | '/agent-dashboard'
     | '/alerts'
+    | '/approvals'
     | '/assign-tasks'
     | '/assistant'
     | '/automation'
-    | '/build-agent'
     | '/connected-sites'
     | '/dashboard'
     | '/knowledge-base'
@@ -678,6 +728,7 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/api/approval-rules'
     | '/resources/prompts'
     | '/resources/sops'
     | '/resources/templates'
@@ -690,6 +741,7 @@ export interface FileRouteTypes {
     | '/seo-suite'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
+    | '/api/approval-rules/$id'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
@@ -700,6 +752,8 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/orchestrator/run'
+    | '/api/seo-suite/run'
     | '/api/settings/apikeys'
     | '/api/settings/audit'
     | '/api/settings/automation-rules'
@@ -710,6 +764,7 @@ export interface FileRouteTypes {
     | '/api/settings/webhooks'
     | '/api/sites/$id'
     | '/api/tasks/$id'
+    | '/api/tasks/pending-approval'
     | '/api/alerts'
     | '/api/jobs'
     | '/api/sites'
@@ -728,10 +783,10 @@ export interface FileRouteTypes {
     | '/agency-health'
     | '/agent-dashboard'
     | '/alerts'
+    | '/approvals'
     | '/assign-tasks'
     | '/assistant'
     | '/automation'
-    | '/build-agent'
     | '/connected-sites'
     | '/dashboard'
     | '/knowledge-base'
@@ -743,6 +798,7 @@ export interface FileRouteTypes {
     | '/analytics/business-profile'
     | '/analytics/google-analytics'
     | '/analytics/search-console'
+    | '/api/approval-rules'
     | '/resources/prompts'
     | '/resources/sops'
     | '/resources/templates'
@@ -755,6 +811,7 @@ export interface FileRouteTypes {
     | '/seo-suite/'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
+    | '/api/approval-rules/$id'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
@@ -765,6 +822,8 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/orchestrator/run'
+    | '/api/seo-suite/run'
     | '/api/settings/apikeys'
     | '/api/settings/audit'
     | '/api/settings/automation-rules'
@@ -775,6 +834,7 @@ export interface FileRouteTypes {
     | '/api/settings/webhooks'
     | '/api/sites/$id'
     | '/api/tasks/$id'
+    | '/api/tasks/pending-approval'
     | '/api/alerts/'
     | '/api/jobs/'
     | '/api/sites/'
@@ -794,10 +854,10 @@ export interface RootRouteChildren {
   AgencyHealthRoute: typeof AgencyHealthRoute
   AgentDashboardRoute: typeof AgentDashboardRoute
   AlertsRoute: typeof AlertsRoute
+  ApprovalsRoute: typeof ApprovalsRoute
   AssignTasksRoute: typeof AssignTasksRoute
   AssistantRoute: typeof AssistantRoute
   AutomationRoute: typeof AutomationRoute
-  BuildAgentRoute: typeof BuildAgentRoute
   ConnectedSitesRoute: typeof ConnectedSitesRoute
   DashboardRoute: typeof DashboardRoute
   KnowledgeBaseRoute: typeof KnowledgeBaseRoute
@@ -809,6 +869,7 @@ export interface RootRouteChildren {
   AnalyticsBusinessProfileRoute: typeof AnalyticsBusinessProfileRoute
   AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
   AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
+  ApiApprovalRulesRoute: typeof ApiApprovalRulesRouteWithChildren
   ResourcesPromptsRoute: typeof ResourcesPromptsRoute
   ResourcesSopsRoute: typeof ResourcesSopsRoute
   ResourcesTemplatesRoute: typeof ResourcesTemplatesRoute
@@ -831,6 +892,8 @@ export interface RootRouteChildren {
   ApiJobsClaimRoute: typeof ApiJobsClaimRoute
   ApiKnowledgeAutocrawlRoute: typeof ApiKnowledgeAutocrawlRoute
   ApiKnowledgeObsidianRoute: typeof ApiKnowledgeObsidianRoute
+  ApiOrchestratorRunRoute: typeof ApiOrchestratorRunRoute
+  ApiSeoSuiteRunRoute: typeof ApiSeoSuiteRunRoute
   ApiSettingsApikeysRoute: typeof ApiSettingsApikeysRoute
   ApiSettingsAuditRoute: typeof ApiSettingsAuditRoute
   ApiSettingsAutomationRulesRoute: typeof ApiSettingsAutomationRulesRouteWithChildren
@@ -841,6 +904,7 @@ export interface RootRouteChildren {
   ApiSettingsWebhooksRoute: typeof ApiSettingsWebhooksRouteWithChildren
   ApiSitesIdRoute: typeof ApiSitesIdRoute
   ApiTasksIdRoute: typeof ApiTasksIdRoute
+  ApiTasksPendingApprovalRoute: typeof ApiTasksPendingApprovalRoute
   ApiAlertsIndexRoute: typeof ApiAlertsIndexRoute
   ApiJobsIndexRoute: typeof ApiJobsIndexRoute
   ApiSitesIndexRoute: typeof ApiSitesIndexRoute
@@ -877,6 +941,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/approvals': {
+      id: '/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof ApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/assign-tasks': {
       id: '/assign-tasks'
       path: '/assign-tasks'
@@ -896,13 +967,6 @@ declare module '@tanstack/react-router' {
       path: '/automation'
       fullPath: '/automation'
       preLoaderRoute: typeof AutomationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/build-agent': {
-      id: '/build-agent'
-      path: '/build-agent'
-      fullPath: '/build-agent'
-      preLoaderRoute: typeof BuildAgentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connected-sites': {
@@ -996,6 +1060,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsSearchConsoleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/approval-rules': {
+      id: '/api/approval-rules'
+      path: '/api/approval-rules'
+      fullPath: '/api/approval-rules'
+      preLoaderRoute: typeof ApiApprovalRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resources/prompts': {
       id: '/resources/prompts'
       path: '/resources/prompts'
@@ -1073,6 +1144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAnalyticsSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/approval-rules/$id': {
+      id: '/api/approval-rules/$id'
+      path: '/$id'
+      fullPath: '/api/approval-rules/$id'
+      preLoaderRoute: typeof ApiApprovalRulesIdRouteImport
+      parentRoute: typeof ApiApprovalRulesRoute
+    }
     '/api/automation/flows': {
       id: '/api/automation/flows'
       path: '/api/automation/flows'
@@ -1148,6 +1226,20 @@ declare module '@tanstack/react-router' {
       path: '/api/knowledge/obsidian'
       fullPath: '/api/knowledge/obsidian'
       preLoaderRoute: typeof ApiKnowledgeObsidianRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/orchestrator/run': {
+      id: '/api/orchestrator/run'
+      path: '/api/orchestrator/run'
+      fullPath: '/api/orchestrator/run'
+      preLoaderRoute: typeof ApiOrchestratorRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/seo-suite/run': {
+      id: '/api/seo-suite/run'
+      path: '/api/seo-suite/run'
+      fullPath: '/api/seo-suite/run'
+      preLoaderRoute: typeof ApiSeoSuiteRunRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/settings/apikeys': {
@@ -1234,6 +1326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tasks/pending-approval': {
+      id: '/api/tasks/pending-approval'
+      path: '/api/tasks/pending-approval'
+      fullPath: '/api/tasks/pending-approval'
+      preLoaderRoute: typeof ApiTasksPendingApprovalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/automation/flows/$id': {
       id: '/api/automation/flows/$id'
       path: '/$id'
@@ -1292,6 +1391,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ApiApprovalRulesRouteChildren {
+  ApiApprovalRulesIdRoute: typeof ApiApprovalRulesIdRoute
+}
+
+const ApiApprovalRulesRouteChildren: ApiApprovalRulesRouteChildren = {
+  ApiApprovalRulesIdRoute: ApiApprovalRulesIdRoute,
+}
+
+const ApiApprovalRulesRouteWithChildren =
+  ApiApprovalRulesRoute._addFileChildren(ApiApprovalRulesRouteChildren)
 
 interface ApiAutomationFlowsRouteChildren {
   ApiAutomationFlowsIdRoute: typeof ApiAutomationFlowsIdRoute
@@ -1374,10 +1484,10 @@ const rootRouteChildren: RootRouteChildren = {
   AgencyHealthRoute: AgencyHealthRoute,
   AgentDashboardRoute: AgentDashboardRoute,
   AlertsRoute: AlertsRoute,
+  ApprovalsRoute: ApprovalsRoute,
   AssignTasksRoute: AssignTasksRoute,
   AssistantRoute: AssistantRoute,
   AutomationRoute: AutomationRoute,
-  BuildAgentRoute: BuildAgentRoute,
   ConnectedSitesRoute: ConnectedSitesRoute,
   DashboardRoute: DashboardRoute,
   KnowledgeBaseRoute: KnowledgeBaseRoute,
@@ -1389,6 +1499,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsBusinessProfileRoute: AnalyticsBusinessProfileRoute,
   AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
   AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
+  ApiApprovalRulesRoute: ApiApprovalRulesRouteWithChildren,
   ResourcesPromptsRoute: ResourcesPromptsRoute,
   ResourcesSopsRoute: ResourcesSopsRoute,
   ResourcesTemplatesRoute: ResourcesTemplatesRoute,
@@ -1411,6 +1522,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiJobsClaimRoute: ApiJobsClaimRoute,
   ApiKnowledgeAutocrawlRoute: ApiKnowledgeAutocrawlRoute,
   ApiKnowledgeObsidianRoute: ApiKnowledgeObsidianRoute,
+  ApiOrchestratorRunRoute: ApiOrchestratorRunRoute,
+  ApiSeoSuiteRunRoute: ApiSeoSuiteRunRoute,
   ApiSettingsApikeysRoute: ApiSettingsApikeysRoute,
   ApiSettingsAuditRoute: ApiSettingsAuditRoute,
   ApiSettingsAutomationRulesRoute: ApiSettingsAutomationRulesRouteWithChildren,
@@ -1421,6 +1534,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSettingsWebhooksRoute: ApiSettingsWebhooksRouteWithChildren,
   ApiSitesIdRoute: ApiSitesIdRoute,
   ApiTasksIdRoute: ApiTasksIdRoute,
+  ApiTasksPendingApprovalRoute: ApiTasksPendingApprovalRoute,
   ApiAlertsIndexRoute: ApiAlertsIndexRoute,
   ApiJobsIndexRoute: ApiJobsIndexRoute,
   ApiSitesIndexRoute: ApiSitesIndexRoute,

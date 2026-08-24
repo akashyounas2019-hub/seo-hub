@@ -151,6 +151,7 @@ export async function ensureSchema(): Promise<void> {
       ALTER TABLE sites ADD COLUMN IF NOT EXISTS gbp_location_name text;
       ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_connected boolean NOT NULL DEFAULT false;
       ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_detail text;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS business_category text;
       CREATE UNIQUE INDEX IF NOT EXISTS sites_slug_uq ON sites(slug);
       CREATE UNIQUE INDEX IF NOT EXISTS sites_domain_uq ON sites(domain);
 
@@ -294,17 +295,9 @@ export async function ensureSchema(): Promise<void> {
         created_at timestamptz NOT NULL DEFAULT now()
       );
 
-      CREATE TABLE IF NOT EXISTS agent_profiles (
-        id text PRIMARY KEY,
-        name text NOT NULL,
-        title text NOT NULL,
-        focus text,
-        skill_instructions text,
-        is_custom boolean NOT NULL DEFAULT false,
-        is_active boolean NOT NULL DEFAULT true,
-        created_by uuid REFERENCES users(id) ON DELETE SET NULL,
-        updated_at timestamptz NOT NULL DEFAULT now()
-      );
+      -- agent_profiles was defined, seeded, and never read/written by any
+      -- route -- orphaned. Dropped for real on every deploy (idempotent).
+      DROP TABLE IF EXISTS agent_profiles;
 
       CREATE TABLE IF NOT EXISTS kanban_tasks (
         id text PRIMARY KEY,
@@ -417,6 +410,23 @@ export async function ensureSchema(): Promise<void> {
         ('Weekly digest', 'Email owners every Monday 09:00 GST', true)
       ) AS v(name, action, enabled)
       WHERE NOT EXISTS (SELECT 1 FROM settings_automation_rules);
+
+      CREATE TABLE IF NOT EXISTS approval_rules (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        min_priority text,
+        category text,
+        site_id uuid REFERENCES sites(id) ON DELETE CASCADE,
+        requires_approval boolean NOT NULL DEFAULT true,
+        enabled boolean NOT NULL DEFAULT true,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+      INSERT INTO approval_rules (name, min_priority, category, site_id, requires_approval, enabled)
+      SELECT * FROM (VALUES
+        ('Critical priority always needs owner approval', 'critical', NULL::text, NULL::uuid, true, true),
+        ('Low/medium priority auto-approved by Head of Department', 'low', NULL::text, NULL::uuid, false, true)
+      ) AS v(name, min_priority, category, site_id, requires_approval, enabled)
+      WHERE NOT EXISTS (SELECT 1 FROM approval_rules);
     `);
     _migrated = true;
   } finally {

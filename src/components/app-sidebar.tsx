@@ -23,9 +23,8 @@ import {
   Wrench,
   Command,
   Rocket,
-  
   Bot,
-  Hammer,
+  CheckSquare,
   TestTube2,
   ScrollText,
   SlidersHorizontal,
@@ -83,8 +82,8 @@ const agentItems: NavItem[] = [
   { title: "Agent Dashboard", url: "/agent-dashboard", icon: LayoutDashboard },
   { title: "Knowledge Base", url: "/knowledge-base", icon: Database, badge: "RAG" },
   { title: "Agents", url: "/", icon: Zap, badge: "12" },
-  { title: "Build Agent", url: "/build-agent", icon: Hammer },
   { title: "Assistant", url: "/assistant", icon: Bot },
+  { title: "Approvals", url: "/approvals", icon: CheckSquare },
   { title: "Assign Tasks", url: "/assign-tasks", icon: ClipboardList },
   { title: "Automation", url: "/automation", icon: Workflow },
 ];
@@ -277,6 +276,7 @@ export function AppSidebar() {
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
   const { allSites } = useSite();
   const [activeAlertsCount, setActiveAlertsCount] = useState(0);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -292,6 +292,25 @@ export function AppSidebar() {
     };
     checkAlerts();
     const interval = setInterval(checkAlerts, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkApprovals = () => {
+      fetch("/api/tasks/pending-approval")
+        .then((res) => res.json())
+        .then((json) => {
+          if (!isMounted || !json?.ok) return;
+          setPendingApprovalsCount(json.count || 0);
+        })
+        .catch(() => {});
+    };
+    checkApprovals();
+    const interval = setInterval(checkApprovals, 30000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -438,6 +457,9 @@ export function AppSidebar() {
               <SidebarMenu>
                 {agentItems.map((item) => {
                   const active = isActive(item.url);
+                  const badge = item.url === "/approvals"
+                    ? (pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined)
+                    : item.badge;
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
@@ -454,8 +476,8 @@ export function AppSidebar() {
                           {!collapsed && (
                             <>
                               <span className={`flex-1 truncate text-[13px] ${active ? "text-slate-950 font-semibold" : ""}`}>{item.title}</span>
-                              {item.badge && (
-                                <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${active ? "bg-slate-950 text-cyan-200" : "bg-slate-800 text-slate-200 ring-1 ring-slate-700"}`}>{item.badge}</span>
+                              {badge && (
+                                <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${active ? "bg-slate-950 text-cyan-200" : "bg-slate-800 text-slate-200 ring-1 ring-slate-700"}`}>{badge}</span>
                               )}
                             </>
                           )}

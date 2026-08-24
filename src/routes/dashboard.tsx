@@ -37,6 +37,7 @@ import {
   Share2,
 } from "lucide-react";
 import { useSite } from "@/lib/site-context";
+import { toast } from "sonner";
 
 import { GoogleAnalyticsDrilldown } from "@/components/analytics-google-analytics";
 import { SearchConsoleDrilldown } from "@/components/analytics-search-console";
@@ -95,6 +96,61 @@ function DashboardPage() {
   const [gaOverview, setGaOverview] = useState<any>(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string>("");
+
+  // Head of SEO Orchestrator -- manual trigger only, no scheduler. Enqueues a
+  // claude_jobs row that reads live GSC/GA4/KB server-side and, once the AKS
+  // worker completes it, inserts prioritized tasks straight into the kanban
+  // board as "pending_approval" (or auto-approved per the Approvals rules).
+  const [orchestratorRunning, setOrchestratorRunning] = useState(false);
+  const [orchestratorStatus, setOrchestratorStatus] = useState("");
+
+  const pollOrchestratorJob = async (jobId: string): Promise<string> => {
+    const POLL_MS = 3000;
+    const MAX_ATTEMPTS = 100; // ~5 minutes
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+      await new Promise((r) => setTimeout(r, POLL_MS));
+      const res = await fetch(`/api/jobs/${jobId}`);
+      const json = await res.json();
+      const status = json?.job?.status;
+      if (status === "done" || status === "failed") return status;
+      if (status === "running") setOrchestratorStatus("AKS worker is reviewing live performance data…");
+      else if (status === "claimed") setOrchestratorStatus("AKS worker claimed the review…");
+      else setOrchestratorStatus("Waiting for the AKS worker — run `npm run worker` if none is running.");
+    }
+    return "timeout";
+  };
+
+  const runOrchestratorReview = async () => {
+    if (!site?.id) return;
+    setOrchestratorRunning(true);
+    setOrchestratorStatus("Pulling live GSC + GA4 data…");
+    try {
+      const res = await fetch("/api/orchestrator/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: site.id }),
+      });
+      const json = await res.json();
+      if (!json?.ok || !json.jobId) {
+        toast.error(json?.error || "Failed to start SEO review");
+        return;
+      }
+      setOrchestratorStatus("Waiting for the AKS worker — run `npm run worker` if none is running.");
+      const status = await pollOrchestratorJob(json.jobId);
+      if (status === "done") {
+        toast.success("SEO review complete — new tasks are in Approvals / the Kanban board.");
+      } else if (status === "failed") {
+        toast.error("SEO review failed. Check the worker logs.");
+      } else {
+        toast.info("Still running in the background — check Approvals shortly.");
+      }
+    } catch {
+      toast.error("Failed to start SEO review");
+    } finally {
+      setOrchestratorRunning(false);
+      setOrchestratorStatus("");
+    }
+  };
 
   const fetchOverview = async () => {
     if (!site?.id) return;
@@ -235,6 +291,17 @@ function DashboardPage() {
               >
                 <RefreshCw className={`h-3.5 w-3.5 text-cyan-300 ${overviewLoading ? "animate-spin" : ""}`} />
                 <span>{overviewLoading ? "Refreshing Live Data..." : "Refresh Live Data"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => runOrchestratorReview()}
+                disabled={orchestratorRunning}
+                title="Head of SEO: reviews live GSC/GA4 + Knowledge Base and proposes prioritized tasks for approval"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-violet-400/30 bg-violet-400/10 px-3 py-1.5 text-xs font-semibold text-violet-200 transition hover:bg-violet-400/20 disabled:opacity-50 cursor-pointer shadow-[0_0_15px_rgba(167,139,250,0.2)]"
+              >
+                <Sparkles className={`h-3.5 w-3.5 text-violet-300 ${orchestratorRunning ? "animate-pulse" : ""}`} />
+                <span>{orchestratorRunning ? (orchestratorStatus || "Running SEO Review…") : "Run SEO Review"}</span>
               </button>
 
               <div className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold ${

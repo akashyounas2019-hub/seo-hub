@@ -21,6 +21,7 @@ const ALLOWED_FIELDS = [
   "gbpLocationName",
   "wpConnected",
   "wpDetail",
+  "businessCategory",
 ];
 
 export const Route = createFileRoute("/api/sites/$id")({

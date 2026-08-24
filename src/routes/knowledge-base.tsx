@@ -22,6 +22,7 @@ import { useSite } from "@/lib/site-context";
 import { compileFullKnowledge } from "@/lib/ai-knowledge";
 import type { StructuredKnowledgeBase, KbServiceItem, KbFaqItem } from "@/db/schema";
 import { DEFAULT_OBSIDIAN_VAULT, parseObsidianNote, type ObsidianNote } from "@/lib/obsidian";
+import { BUSINESS_CATEGORIES } from "@/lib/business-categories";
 
 export const Route = createFileRoute("/knowledge-base")({
   head: () => ({
@@ -53,6 +54,7 @@ function KnowledgeBasePage() {
   // `sites` row on mount / site switch, and saved back via PATCH /api/sites/$id.
   const [plainText, setPlainText] = useState("");
   const [structured, setStructured] = useState<StructuredKnowledgeBase>({});
+  const [businessCategory, setBusinessCategory] = useState<string>("");
   const [kbLoading, setKbLoading] = useState(true);
   const [kbSaving, setKbSaving] = useState(false);
 
@@ -66,6 +68,7 @@ function KnowledgeBasePage() {
         if (cancelled || !json?.ok || !json.site) return;
         setPlainText(json.site.knowledgeBase || "");
         setStructured(json.site.structuredKb || {});
+        setBusinessCategory(json.site.businessCategory || "");
       })
       .catch(() => {
         if (!cancelled) toast.error("Failed to load Knowledge Base from Postgres");
@@ -77,6 +80,26 @@ function KnowledgeBasePage() {
       cancelled = true;
     };
   }, [currentSite.id]);
+
+  const saveBusinessCategory = async (categoryId: string) => {
+    setBusinessCategory(categoryId);
+    if (!currentSite.id) return;
+    try {
+      const res = await fetch(`/api/sites/${currentSite.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessCategory: categoryId }),
+      });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success("Business category saved — SEO Suite tools will use this to steer recommendations");
+      } else {
+        toast.error(json?.error || "Failed to save business category");
+      }
+    } catch {
+      toast.error("Failed to save business category");
+    }
+  };
 
   const saveKnowledgeBase = async () => {
     if (!currentSite.id) return;
@@ -353,6 +376,27 @@ function KnowledgeBasePage() {
               );
             })}
           </div>
+        </div>
+
+        {/* Business Category (steers SEO Suite tool prompts for this site) */}
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+          <div className="mb-2 text-[10px] uppercase tracking-wider text-slate-500">Business Category</div>
+          <p className="mb-3 text-xs text-slate-500">
+            Set the business vertical for {currentSite.label}. SEO Suite tools use this to steer recommendations
+            (e.g. licensing/insurance for trades, E-E-A-T for medical/legal) instead of generic advice.
+          </p>
+          <select
+            value={businessCategory}
+            onChange={(e) => saveBusinessCategory(e.target.value)}
+            className="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
+          >
+            <option value="">Not set</option>
+            {BUSINESS_CATEGORIES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Knowledge Studio Component Card */}

@@ -126,6 +126,14 @@ export const sites = pgTable(
     gbpLocationName: text("gbp_location_name"),
     wpConnected: boolean("wp_connected").notNull().default(false),
     wpDetail: text("wp_detail"),
+    // Per-site business vertical, set during onboarding. Free text (not a
+    // Postgres enum) matching how automation_flows.category and
+    // alerts.severity are modeled -- new verticals can be added in
+    // src/lib/business-categories.ts without a schema migration. Steers
+    // SEO Suite tool prompts (job-templates.ts) toward vertical-relevant
+    // guidance (licensing/insurance for trades, E-E-A-T/YMYL for medical,
+    // etc.) instead of hardcoding a separate agent per niche.
+    businessCategory: text("business_category"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -401,24 +409,12 @@ export const claudeJobs = pgTable(
   }),
 );
 
-export const agentProfiles = pgTable(
-  "agent_profiles",
-  {
-    id: text("id").primaryKey(),
-    name: text("name").notNull(),
-    title: text("title").notNull(),
-    focus: text("focus"),
-    skillInstructions: text("skill_instructions"),
-    isCustom: boolean("is_custom").notNull().default(false),
-    isActive: boolean("is_active").notNull().default(true),
-    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => ({
-    customIdx: index("agent_profiles_custom_idx").on(t.isCustom, t.createdAt),
-  }),
-);
+// NOTE: agent_profiles table removed (see migration DROP in client.ts) --
+// it was defined, seeded with 8 rows, and never read or written by any
+// route in the app. src/lib/agents.ts's EXPERTS is the real, UI-rendered
+// agent roster; per-agent execution history now comes from claude_jobs
+// (every job's `kind` maps to an agent/category) instead of a separate,
+// disconnected identity table.
 
 export const trafficSnapshots = pgTable(
   "traffic_snapshots",
@@ -571,13 +567,32 @@ export const settingsAutomationRules = pgTable(
   },
 );
 
+// Approval rules decide whether an orchestrator/agent-generated task needs
+// the account owner's own sign-off (kanban_tasks.status = "pending_approval")
+// or can be auto-approved on the owner's behalf (Head of Department tier).
+// Evaluated by src/lib/approval-rules.ts using most-specific-match-wins
+// across three optional dimensions -- a rule only applies to a task when
+// every dimension it sets (non-null) matches; null/empty means "any".
+export const approvalRules = pgTable(
+  "approval_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    minPriority: text("min_priority"), // "low" | "medium" | "high" | "critical" | null (any)
+    category: text("category"), // seo-suite tool category / agent id, or null (any)
+    siteId: uuid("site_id").references(() => sites.id, { onDelete: "cascade" }), // null = all sites
+    requiresApproval: boolean("requires_approval").notNull().default(true),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+);
+
 export type Site = typeof sites.$inferSelect;
 export type NewSite = typeof sites.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type ClaudeJob = typeof claudeJobs.$inferSelect;
-export type AgentProfile = typeof agentProfiles.$inferSelect;
 export type KanbanTask = typeof kanbanTasks.$inferSelect;
 export type KanbanTaskTemplate = typeof kanbanTaskTemplates.$inferSelect;
 export type AutomationFlow = typeof automationFlows.$inferSelect;
@@ -587,5 +602,6 @@ export type WebhookSubscriber = typeof webhookSubscribers.$inferSelect;
 export type AuditLogEntry = typeof auditLog.$inferSelect;
 export type NotificationPref = typeof notificationPrefs.$inferSelect;
 export type SettingsAutomationRule = typeof settingsAutomationRules.$inferSelect;
+export type ApprovalRule = typeof approvalRules.$inferSelect;
 
 

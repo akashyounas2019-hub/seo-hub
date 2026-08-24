@@ -25,12 +25,15 @@ export function useTasks() {
     setTasks(s.tasks);
     setTemplates(s.templates);
 
-    // Sync from database API
+    // Sync from database API. Tasks awaiting owner sign-off or rejected by
+    // the approval-rules engine live on the Approvals screen, not this
+    // assignment board -- filter them out here so this board only shows
+    // work that's actually been approved to move.
     fetch("/api/tasks")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && Array.isArray(data.tasks) && data.tasks.length > 0) {
-          setTasks(data.tasks);
+          setTasks(data.tasks.filter((t: Task) => (t.status as string) !== "pending_approval" && (t.status as string) !== "rejected"));
         }
         if (data && Array.isArray(data.templates) && data.templates.length > 0) {
           setTemplates(data.templates);
