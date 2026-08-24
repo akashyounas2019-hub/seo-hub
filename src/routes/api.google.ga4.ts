@@ -48,7 +48,6 @@ export const Route = createFileRoute("/api/google/ga4")({
       const rawEnd = url.searchParams.get("endDate") || "today";
       const { startDate, endDate } = resolveDateRange(rawStart, rawEnd);
 
-      const debugErrors: Record<string, string> = {};
       const [overviewReport, trendReport, pagesReport, channelsReport, deviceReport, countryReport] =
         await Promise.all([
           fetchGA4Report({
@@ -63,42 +62,42 @@ export const Route = createFileRoute("/api/google/ga4")({
               "averageSessionDuration",
               "conversions",
             ],
-          }).catch((e) => { debugErrors.overview = String(e?.message || e); return null; }),
+          }).catch(() => null),
           fetchGA4Report({
             propertyId,
             startDate,
             endDate,
             metrics: ["sessions", "activeUsers"],
             dimensions: ["date"],
-          }).catch((e) => { debugErrors.trend = String(e?.message || e); return null; }),
+          }).catch(() => null),
           fetchGA4Report({
             propertyId,
             startDate,
             endDate,
             metrics: ["screenPageViews", "averageSessionDuration", "conversions"],
             dimensions: ["landingPagePlusQueryString"],
-          }).catch((e) => { debugErrors.pages = String(e?.message || e); return null; }),
+          }).catch(() => null),
           fetchGA4Report({
             propertyId,
             startDate,
             endDate,
             metrics: ["sessions"],
             dimensions: ["sessionDefaultChannelGroup"],
-          }).catch((e) => { debugErrors.channels = String(e?.message || e); return null; }),
+          }).catch(() => null),
           fetchGA4Report({
             propertyId,
             startDate,
             endDate,
             metrics: ["sessions"],
             dimensions: ["deviceCategory"],
-          }).catch((e) => { debugErrors.devices = String(e?.message || e); return null; }),
+          }).catch(() => null),
           fetchGA4Report({
             propertyId,
             startDate,
             endDate,
             metrics: ["sessions"],
             dimensions: ["country"],
-          }).catch((e) => { debugErrors.countries = String(e?.message || e); return null; }),
+          }).catch(() => null),
         ]);
 
       return Response.json({
@@ -114,7 +113,6 @@ export const Route = createFileRoute("/api/google/ga4")({
         channels: channelsReport,
         devices: deviceReport,
         countries: countryReport,
-        _debugErrors: debugErrors,
       });
     } catch (err: any) {
       return Response.json({ ok: false, error: err.message }, { status: 500 });
