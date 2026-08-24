@@ -4,16 +4,22 @@ export interface GoogleCredentials {
   project_id: string;
 }
 
-let cachedToken: { token: string; expiresAt: number } | null = null;
+// Cache tokens per distinct scope set — a token minted for GSC's
+// webmasters.readonly scope is not valid for BigQuery's scopes, so caching a
+// single global token regardless of requested scopes silently served the
+// wrong (too-narrow) token to whichever API asked second.
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
 export async function getGoogleAccessToken(scopes: string[]): Promise<string> {
   if (typeof window !== "undefined") {
     return "client_mock_token";
   }
 
+  const cacheKey = [...scopes].sort().join(" ");
   const now = Math.floor(Date.now() / 1000);
-  if (cachedToken && cachedToken.expiresAt > now + 60) {
-    return cachedToken.token;
+  const cached = tokenCache.get(cacheKey);
+  if (cached && cached.expiresAt > now + 60) {
+    return cached.token;
   }
 
   let creds: GoogleCredentials;
@@ -85,10 +91,10 @@ export async function getGoogleAccessToken(scopes: string[]): Promise<string> {
   }
 
   const data = await res.json();
-  cachedToken = {
+  tokenCache.set(cacheKey, {
     token: data.access_token,
     expiresAt: now + (data.expires_in || 3600),
-  };
+  });
 
   return data.access_token;
 }
