@@ -73,6 +73,11 @@ export async function ensureSchema(): Promise<void> {
     await execDDL(`SELECT pg_advisory_lock(0x47594c5f3031::bigint);`);
   }
   try {
+    // ALTER TYPE ... ADD VALUE cannot run in the same transaction as a
+    // later statement that *uses* the new value (e.g. a column default) --
+    // Postgres raises "unsafe use of new value" if you try. Run the enum
+    // additions as their own round-trip (own implicit transaction) before
+    // the main DDL block that references 'owner'/'editor'/'viewer'.
     await execDDL(`
       DO $$ BEGIN
         CREATE TYPE user_role AS ENUM ('owner','admin','editor','viewer');
@@ -84,7 +89,9 @@ export async function ensureSchema(): Promise<void> {
       DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'owner'; EXCEPTION WHEN others THEN null; END $$;
       DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'editor'; EXCEPTION WHEN others THEN null; END $$;
       DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'viewer'; EXCEPTION WHEN others THEN null; END $$;
+    `);
 
+    await execDDL(`
       DO $$ BEGIN
         CREATE TYPE site_user_role AS ENUM ('manager','worker');
       EXCEPTION WHEN duplicate_object THEN null; END $$;
