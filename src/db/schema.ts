@@ -16,7 +16,7 @@ import {
   doublePrecision,
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "manager", "student"]);
+export const userRoleEnum = pgEnum("user_role", ["owner", "admin", "editor", "viewer"]);
 export const siteUserRoleEnum = pgEnum("site_user_role", ["manager", "worker"]);
 export const leadStatusEnum = pgEnum("lead_status", [
   "new",
@@ -209,7 +209,7 @@ export const users = pgTable(
     email: text("email").notNull(),
     passwordHash: text("password_hash").notNull(),
     name: text("name"),
-    role: userRoleEnum("role").notNull().default("student"),
+    role: userRoleEnum("role").notNull().default("viewer"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
   },
@@ -351,6 +351,18 @@ export const orgSettings = pgTable("org_settings", {
   pagespeedApiKeyCiphertext: text("pagespeed_api_key_ciphertext"),
   googleCruxApiKeyCiphertext: text("google_crux_api_key_ciphertext"),
   indexnowDailyQuota: integer("indexnow_daily_quota").notNull().default(200),
+  openaiKeyCiphertext: text("openai_key_ciphertext"),
+  semrushKeyCiphertext: text("semrush_key_ciphertext"),
+  // Integration toggles (Settings > Integrations tab). "Google (GSC + GA4)"
+  // is intentionally not here — it's genuinely live via Connected Sites,
+  // not a settings toggle.
+  integrationSmtpEnabled: boolean("integration_smtp_enabled").notNull().default(false),
+  integrationSlackEnabled: boolean("integration_slack_enabled").notNull().default(false),
+  integrationTelegramEnabled: boolean("integration_telegram_enabled").notNull().default(false),
+  integrationRestApiEnabled: boolean("integration_rest_api_enabled").notNull().default(false),
+  integrationWordpressEnabled: boolean("integration_wordpress_enabled").notNull().default(false),
+  integrationStripeEnabled: boolean("integration_stripe_enabled").notNull().default(false),
+  integrationZapierEnabled: boolean("integration_zapier_enabled").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
 });
@@ -504,6 +516,61 @@ export const alerts = pgTable(
   }),
 );
 
+export const webhookSubscribers = pgTable(
+  "webhook_subscribers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    label: text("label").notNull(),
+    url: text("url").notNull(),
+    secret: text("secret").notNull(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastDeliveredAt: timestamp("last_delivered_at", { withTimezone: true }),
+    lastStatus: text("last_status"),
+  },
+);
+
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorEmail: text("actor_email").notNull().default("unknown"),
+    action: text("action").notNull(),
+    detail: jsonb("detail").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    createdIdx: index("audit_log_created_idx").on(t.createdAt),
+  }),
+);
+
+export const notificationPrefs = pgTable(
+  "notification_prefs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventKey: text("event_key").notNull(),
+    label: text("label").notNull(),
+    email: boolean("email").notNull().default(false),
+    slack: boolean("slack").notNull().default(false),
+    push: boolean("push").notNull().default(false),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    eventKeyUq: uniqueIndex("notification_prefs_event_key_uq").on(t.eventKey),
+  }),
+);
+
+export const settingsAutomationRules = pgTable(
+  "settings_automation_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    action: text("action").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+);
+
 export type Site = typeof sites.$inferSelect;
 export type NewSite = typeof sites.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
@@ -516,5 +583,9 @@ export type KanbanTaskTemplate = typeof kanbanTaskTemplates.$inferSelect;
 export type AutomationFlow = typeof automationFlows.$inferSelect;
 export type Alert = typeof alerts.$inferSelect;
 export type NewAlert = typeof alerts.$inferInsert;
+export type WebhookSubscriber = typeof webhookSubscribers.$inferSelect;
+export type AuditLogEntry = typeof auditLog.$inferSelect;
+export type NotificationPref = typeof notificationPrefs.$inferSelect;
+export type SettingsAutomationRule = typeof settingsAutomationRules.$inferSelect;
 
 
