@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -701,6 +701,49 @@ function KnowledgeStudio({ site }: { site: SiteDetail }) {
   const [newServiceCat, setNewServiceCat] = useState("");
   const [newFaqQ, setNewFaqQ] = useState("");
   const [newFaqA, setNewFaqA] = useState("");
+  const [kbSaving, setKbSaving] = useState(false);
+
+  // Hydrate from the real Postgres row if this site.id is a real UUID
+  // (the surrounding page's fixture SITES lookup is separate/unfixed).
+  useEffect(() => {
+    if (!site.id) return;
+    let cancelled = false;
+    fetch(`/api/sites/${site.id}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled || !json?.ok || !json.site) return;
+        if (json.site.knowledgeBase) setPlainText(json.site.knowledgeBase);
+        if (json.site.structuredKb && Object.keys(json.site.structuredKb).length > 0) {
+          setStructured(json.site.structuredKb);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [site.id]);
+
+  const saveKnowledgeStudio = async () => {
+    if (!site.id) return;
+    setKbSaving(true);
+    try {
+      const res = await fetch(`/api/sites/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ knowledgeBase: plainText, structuredKb: structured }),
+      });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success("Knowledge Studio updated & saved to PostgreSQL");
+      } else {
+        toast.error(json?.error || "Failed to save Knowledge Studio");
+      }
+    } catch {
+      toast.error("Failed to save Knowledge Studio");
+    } finally {
+      setKbSaving(false);
+    }
+  };
 
   const addService = () => {
     if (!newServiceName.trim()) return;
@@ -749,10 +792,11 @@ function KnowledgeStudio({ site }: { site: SiteDetail }) {
       subtitle="Comprehensive knowledge hub containing website project facts, service catalogs, pricing rules, brand voice, FAQs, and competitor positioning. All background AI agents read this data to ground their outputs."
       right={
         <button
-          onClick={() => toast.success("Knowledge Studio updated & saved to PostgreSQL")}
-          className="rounded-md bg-emerald-500/20 px-3 py-1.5 text-[12px] font-semibold text-emerald-200 ring-1 ring-emerald-400/30 hover:bg-emerald-500/30"
+          onClick={saveKnowledgeStudio}
+          disabled={kbSaving}
+          className="rounded-md bg-emerald-500/20 px-3 py-1.5 text-[12px] font-semibold text-emerald-200 ring-1 ring-emerald-400/30 hover:bg-emerald-500/30 disabled:opacity-50"
         >
-          Save Knowledge Studio
+          {kbSaving ? "Saving…" : "Save Knowledge Studio"}
         </button>
       }
     >
