@@ -94,6 +94,8 @@ export interface StructuredKnowledgeBase {
   competitors?: KbCompetitorItem[];
 }
 
+export const siteHealthEnum = pgEnum("site_health", ["healthy", "attention", "onboarding"]);
+
 export const sites = pgTable(
   "sites",
   {
@@ -108,6 +110,22 @@ export const sites = pgTable(
       .$type<StructuredKnowledgeBase>()
       .notNull()
       .default(sql`'{}'::jsonb`),
+    // Operational/connection fields consumed by the dashboard, connected-sites,
+    // and agency-health screens. Metrics themselves (KPIs, trends, top queries,
+    // etc.) are always fetched live from Google APIs, never stored here.
+    health: siteHealthEnum("health").notNull().default("onboarding"),
+    pagesTotal: integer("pages_total").notNull().default(0),
+    pagesIndexed: integer("pages_indexed").notNull().default(0),
+    openFixes: integer("open_fixes").notNull().default(0),
+    gaConnected: boolean("ga_connected").notNull().default(false),
+    gaPropertyId: text("ga_property_id"),
+    gaPropertyLabel: text("ga_property_label"),
+    gscConnected: boolean("gsc_connected").notNull().default(false),
+    gscPropertyUrl: text("gsc_property_url"),
+    gbpConnected: boolean("gbp_connected").notNull().default(false),
+    gbpLocationName: text("gbp_location_name"),
+    wpConnected: boolean("wp_connected").notNull().default(false),
+    wpDetail: text("wp_detail"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -467,6 +485,25 @@ export const automationFlows = pgTable(
   }),
 );
 
+export const alerts = pgTable(
+  "alerts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id").references(() => sites.id, { onDelete: "cascade" }),
+    severity: text("severity").notNull().default("info"), // info | warning | critical
+    title: text("title").notNull(),
+    message: text("message"),
+    source: text("source").notNull().default("system"), // gsc | ga4 | gbp | system | manual
+    status: text("status").notNull().default("open"), // open | acknowledged | resolved
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => ({
+    statusIdx: index("alerts_status_idx").on(t.status, t.createdAt),
+    siteIdx: index("alerts_site_idx").on(t.siteId),
+  }),
+);
+
 export type Site = typeof sites.$inferSelect;
 export type NewSite = typeof sites.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
@@ -477,5 +514,7 @@ export type AgentProfile = typeof agentProfiles.$inferSelect;
 export type KanbanTask = typeof kanbanTasks.$inferSelect;
 export type KanbanTaskTemplate = typeof kanbanTaskTemplates.$inferSelect;
 export type AutomationFlow = typeof automationFlows.$inferSelect;
+export type Alert = typeof alerts.$inferSelect;
+export type NewAlert = typeof alerts.$inferInsert;
 
 

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 import {
   SlidersHorizontal,
@@ -185,29 +186,97 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+const PROVIDER_OPTIONS = [
+  { value: "gemini", label: "Gemini → Groq → Anthropic" },
+  { value: "anthropic", label: "Anthropic → OpenAI → Gemini" },
+  { value: "openai", label: "OpenAI only" },
+];
+
 function GeneralPanel() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [provider, setProvider] = useState("gemini");
+  const [auditEnabled, setAuditEnabled] = useState(true);
+  const [digestEnabled, setDigestEnabled] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/settings/general")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.ok && json.settings) {
+          setProvider(json.settings.llmProviderPreference || "gemini");
+          setAuditEnabled(!!json.settings.auditEnabled);
+          setDigestEnabled(!!json.settings.digestEnabled);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const save = async (patch: Record<string, any>) => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings/general", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const json = await res.json();
+      if (!json?.ok) toast.error(json?.error || "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="Workspace" desc="Identity used across dashboards & exports.">
+      <Card title="Workspace" desc="Identity used across dashboards & exports. Not yet editable — placeholder values.">
         <Row label="Workspace name" value="AKS SEO" />
         <Row label="Timezone" value="Asia/Dubai (GST)" />
-        <Row label="Default LLM" value="gpt-4o" />
         <Row label="Currency" value="AED" />
       </Card>
-      <Card title="Provider preference" desc="Which model to try first for routine tasks.">
-        <select className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white">
-          <option>Gemini → Groq → Anthropic</option>
-          <option>Anthropic → OpenAI → Gemini</option>
-          <option>OpenAI only</option>
+      <Card title="Provider preference" desc="Which model to try first for routine tasks. Saved to Postgres org_settings.">
+        <select
+          value={provider}
+          disabled={loading}
+          onChange={(e) => {
+            setProvider(e.target.value);
+            save({ llmProviderPreference: e.target.value });
+          }}
+          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white disabled:opacity-50"
+        >
+          {PROVIDER_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
         </select>
         <div className="mt-4 space-y-2">
-          {["Audit agent — flags tasks not done within window", "Daily digest — who's absent, what's delayed"].map((l) => (
-            <label key={l} className="flex items-center gap-2 text-sm text-slate-300">
-              <input type="checkbox" defaultChecked className="h-4 w-4 rounded border-slate-700 bg-slate-900 accent-cyan-400" />
-              {l}
-            </label>
-          ))}
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={auditEnabled}
+              disabled={loading}
+              onChange={(e) => {
+                setAuditEnabled(e.target.checked);
+                save({ auditEnabled: e.target.checked });
+              }}
+              className="h-4 w-4 rounded border-slate-700 bg-slate-900 accent-cyan-400"
+            />
+            Audit agent — flags tasks not done within window
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={digestEnabled}
+              disabled={loading}
+              onChange={(e) => {
+                setDigestEnabled(e.target.checked);
+                save({ digestEnabled: e.target.checked });
+              }}
+              className="h-4 w-4 rounded border-slate-700 bg-slate-900 accent-cyan-400"
+            />
+            Daily digest — who's absent, what's delayed
+          </label>
         </div>
+        {saving && <p className="mt-2 text-[11px] text-cyan-300">Saving…</p>}
       </Card>
     </div>
   );
@@ -223,7 +292,11 @@ function ApiPanel() {
     { name: "SEMRUSH", desc: "Keyword + backlink data", badge: "PRO", set: true },
   ];
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="space-y-3">
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 text-[11px] text-amber-200">
+        Not yet connected to real secret storage — entries below do not persist.
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
       {keys.map((k) => (
         <div key={k.name} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
           <div className="flex items-start justify-between">
@@ -246,6 +319,7 @@ function ApiPanel() {
           <button className="mt-2 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300">Save + validate</button>
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -262,7 +336,11 @@ function IntegrationsPanel() {
     { name: "Zapier", desc: "20K+ downstream automations", on: false },
   ];
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="space-y-3">
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 text-[11px] text-amber-200">
+        Not yet connected — Google (GSC + GA4) is genuinely live via Connected Sites; the toggles below don't persist.
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
       {items.map((i) => (
         <div key={i.name} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-4">
           <div className="flex items-center gap-3">
@@ -279,6 +357,7 @@ function IntegrationsPanel() {
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -291,7 +370,7 @@ function RolesPanel() {
     { name: "Client · Bright Smile", email: "client@brightsmile.ae", role: "Viewer", tone: "text-slate-300 border-slate-700 bg-slate-900" },
   ];
   return (
-    <Card title="Team & role-based access" desc="Roles map to server-side policies (never trusted from the client).">
+    <Card title="Team & role-based access" desc="Not yet connected to the real users table — sample data shown below.">
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <div className="grid grid-cols-12 gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2 text-[10px] uppercase tracking-wider text-slate-500">
           <div className="col-span-4">Member</div>
@@ -331,7 +410,7 @@ function AutomationPanel() {
     { name: "Weekly digest", action: "Email owners every Monday 09:00 GST", on: true },
   ];
   return (
-    <Card title="Automation rules" desc="Trigger → action pipelines evaluated every 60s by the daemon.">
+    <Card title="Automation rules" desc="Not yet connected — no daemon currently evaluates these triggers. See the Automation screen for real, DB-backed flows.">
       <div className="space-y-2">
         {rules.map((r) => (
           <div key={r.name} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
@@ -359,7 +438,7 @@ function WebhooksPanel() {
   const [copied, setCopied] = useState(false);
   const url = "https://api.aks-seo.com/webhooks/inbound/8f92a1";
   return (
-    <Card title="Outbound webhooks" desc="Push events to Slack, Zapier, n8n, or any HTTPS endpoint (HMAC-signed).">
+    <Card title="Outbound webhooks" desc="Not yet connected — this endpoint and subscriber list are placeholders.">
       <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
         <div className="text-[10px] uppercase tracking-wider text-slate-500">Inbound endpoint (for the WP plugin)</div>
         <div className="mt-1.5 flex items-center gap-2">
@@ -390,7 +469,7 @@ function AuditPanel() {
     { ts: "yesterday", who: "Ahmed K.", what: "Enabled automation rule 'Rank drop > 5'" },
   ];
   return (
-    <Card title="Audit log" desc="Every privileged action, immutable · 90-day retention.">
+    <Card title="Audit log" desc="Not yet connected — no privileged actions are recorded yet. Sample rows shown below.">
       <div className="divide-y divide-slate-800">
         {entries.map((e, i) => (
           <div key={i} className="flex items-center justify-between py-3 text-sm">
@@ -415,7 +494,7 @@ function NotificationsPanel() {
     "Client invoice paid",
   ];
   return (
-    <Card title="Notifications" desc="Per-channel routing for each event class.">
+    <Card title="Notifications" desc="Not yet connected — no delivery channel is wired up; checkboxes below don't persist.">
       <div className="overflow-hidden rounded-xl border border-slate-800">
         <div className="grid grid-cols-12 gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2 text-[10px] uppercase tracking-wider text-slate-500">
           <div className="col-span-6">Event</div>
@@ -463,7 +542,7 @@ function LogsPanel() {
   const rows = logSeed.filter((r) => level === "all" || r.level === level);
 
   return (
-    <Card title="System Logs" desc="Live tail across every agent, gateway, and job runner.">
+    <Card title="System Logs" desc="Not yet connected to a live tail — sample rows shown below.">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="inline-flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 px-2 py-1.5 text-xs">
           <span className="pr-1 text-[10px] uppercase tracking-wider text-slate-500">Level</span>

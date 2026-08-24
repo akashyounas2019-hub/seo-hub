@@ -24,15 +24,14 @@ export function JobsManagerModal({ onClose }: { onClose: () => void }) {
   const [selectedJob, setSelectedJob] = useState<AIJob | null>(null);
   const [showNewModal, setShowNewModal] = useState(false);
 
-  const reload = () => {
-    const list = jobsStore.getAll();
+  const reload = async () => {
+    const list = await jobsStore.getAll();
     setJobs(list);
-    if (!selectedJob && list.length > 0) {
-      setSelectedJob(list[0]);
-    } else if (selectedJob) {
-      const refreshed = list.find((j) => j.id === selectedJob.id);
-      if (refreshed) setSelectedJob(refreshed);
-    }
+    setSelectedJob((prev) => {
+      if (!prev && list.length > 0) return list[0];
+      if (prev) return list.find((j) => j.id === prev.id) || prev;
+      return prev;
+    });
   };
 
   useEffect(() => {
@@ -211,8 +210,8 @@ export function JobsManagerModal({ onClose }: { onClose: () => void }) {
               {/* Action row */}
               <div className="flex justify-end gap-2 pt-2">
                 <button
-                  onClick={() => {
-                    jobsStore.delete(selectedJob.id);
+                  onClick={async () => {
+                    await jobsStore.delete(selectedJob.id);
                     reload();
                   }}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-500/20"
@@ -275,10 +274,10 @@ function CreateJobModal({ onClose, onCreated }: { onClose: () => void; onCreated
   const [url, setUrl] = useState("https://akscleaning.ae");
   const [topic, setTopic] = useState("Villa Deep Cleaning in Dubai");
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalTitle = title.trim() || `${TEMPLATES[kind]?.label || kind} task`;
-    jobsStore.create({
+    await jobsStore.create({
       kind,
       title: finalTitle,
       input: { url, topic, keyword: "deep cleaning dubai", city: "Dubai" },

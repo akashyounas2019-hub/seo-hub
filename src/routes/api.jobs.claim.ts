@@ -1,41 +1,55 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { buildPromptForKind } from "@/lib/job-templates";
-import { jobsStore } from "@/lib/jobs-store";
 
 export const Route = createFileRoute("/api/jobs/claim")({
-  loader: async (ctx: any) => {
-    const request = ctx?.request;
-    try {
-      let workerId = "mac-worker";
-      if (request && request.method === "POST") {
-        const body = await request.json().catch(() => ({}));
-        workerId = body.workerId || "mac-worker";
-      }
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        try {
+          const { db, ensureSchema } = await import("@/db/client");
+          const { claudeJobs } = await import("@/db/schema");
+          const { eq, asc } = await import("drizzle-orm");
 
-      const claimed = jobsStore.claim(workerId);
-      if (!claimed) {
-        return { ok: true, job: null };
-      }
+          await ensureSchema();
+          const d = db();
 
-      const prompt = buildPromptForKind(claimed.kind, claimed.input);
+          let workerId = "mac-worker";
+          const body = await request.json().catch(() => ({}));
+          workerId = body.workerId || "mac-worker";
 
-      return {
-        ok: true,
-        job: {
-          id: claimed.id,
-          kind: claimed.kind,
-          title: claimed.title,
-          prompt,
-          input: claimed.input,
-        },
-      };
-    } catch (err: any) {
-      return { ok: false, error: err.message };
-    }
+          const pending = await d
+            .select()
+            .from(claudeJobs)
+            .where(eq(claudeJobs.status, "pending"))
+            .orderBy(asc(claudeJobs.createdAt))
+            .limit(1);
+
+          if (pending.length === 0) {
+            return Response.json({ ok: true, job: null });
+          }
+
+          const claimed = pending[0];
+          await d
+            .update(claudeJobs)
+            .set({ status: "claimed", claimedAt: new Date(), workerId })
+            .where(eq(claudeJobs.id, claimed.id));
+
+          const prompt = buildPromptForKind(claimed.kind, claimed.input as Record<string, any>);
+
+          return Response.json({
+            ok: true,
+            job: {
+              id: claimed.id,
+              kind: claimed.kind,
+              title: claimed.title,
+              prompt,
+              input: claimed.input,
+            },
+          });
+        } catch (err: any) {
+          return Response.json({ ok: false, error: err.message }, { status: 500 });
+        }
+      },
+    },
   },
-  component: ApiJobsClaimComponent,
 });
-
-function ApiJobsClaimComponent() {
-  return null;
-}

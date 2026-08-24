@@ -5,15 +5,11 @@ import {
   Search,
   Globe,
   Gauge,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle2,
-  Star,
   ArrowUpRight,
   Filter,
   Sparkles,
-  Clock,
   Link2,
   Activity,
   Trash2,
@@ -59,10 +55,9 @@ function AgencyHealthPage() {
     const healthy = allSites.filter((s) => s.health === "healthy").length;
     const warning = allSites.filter((s) => s.health === "attention").length;
     const critical = allSites.filter((s) => s.health === "onboarding").length;
-    const avg = allSites.length > 0 ? Math.round(allSites.reduce((a, s) => a + s.score, 0) / allSites.length) : 0;
-    const avgRating = allSites.length > 0 ? (allSites.reduce((a, s) => a + (s.gbpRating || 4.8), 0) / allSites.length).toFixed(2) : "0.0";
+    const connected = allSites.filter((s) => s.gaConnected || s.gscConnected || s.gbpConnected).length;
     const issues = allSites.reduce((a, s) => a + s.openFixes, 0);
-    return { healthy, warning, critical, avg, rating: avgRating, issues };
+    return { healthy, warning, critical, connected, issues };
   }, [allSites]);
 
   const handleDelete = (site: ConnectedSite) => {
@@ -115,8 +110,7 @@ function AgencyHealthPage() {
         {/* Summary strip */}
         <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           {[
-            { l: "Avg SEO Score", v: `${summary.avg}`, sub: "/ 100", a: "from-cyan-400 to-blue-500", i: Gauge },
-            { l: "Avg Rating", v: summary.rating, sub: "★", a: "from-amber-400 to-orange-500", i: Star },
+            { l: "Connected", v: `${summary.connected}`, sub: "sites", a: "from-cyan-400 to-blue-500", i: Gauge },
             { l: "Healthy", v: `${summary.healthy}`, sub: "sites", a: "from-emerald-400 to-teal-500", i: CheckCircle2 },
             { l: "Warning", v: `${summary.warning}`, sub: "sites", a: "from-amber-400 to-yellow-500", i: AlertTriangle },
             { l: "Critical", v: `${summary.critical}`, sub: "sites", a: "from-rose-400 to-red-500", i: AlertTriangle },
@@ -191,19 +185,8 @@ function SiteCard({ site, onDelete, onSelect }: { site: ConnectedSite; onDelete:
     critical: { ring: "ring-rose-400/30", dot: "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.9)]", chip: "bg-rose-400/10 text-rose-300 border-rose-400/25", label: "Attention" },
   }[statusKey];
 
-  const gradeColor = site.score >= 85 ? "from-emerald-400 to-teal-500" : site.score >= 75 ? "from-cyan-400 to-blue-500" : site.score >= 65 ? "from-amber-400 to-orange-500" : "from-rose-400 to-red-500";
-  const grade = site.score >= 85 ? "A+" : site.score >= 75 ? "A" : site.score >= 65 ? "B" : "C";
-  const trafficVal = site.overviewKpis?.[0]?.v || "48.2k";
-  const trafficDelta = site.overviewKpis?.[0]?.d || 12.4;
-  const up = trafficDelta >= 0;
-  const rating = site.gbpRating || 4.8;
-
-  const cwv = { lcp: 1.8, cls: 0.04, inp: 128 };
-  const cwvRating = (v: number, good: number, poor: number) => v <= good ? "good" : v <= poor ? "needs" : "poor";
-  const lcpR = cwvRating(cwv.lcp, 2.5, 4);
-  const clsR = cwvRating(cwv.cls, 0.1, 0.25);
-  const inpR = cwvRating(cwv.inp, 200, 500);
-  const cwvColor = (r: string) => r === "good" ? "text-emerald-300" : r === "needs" ? "text-amber-300" : "text-rose-300";
+  const connectedCount = [site.gaConnected, site.gscConnected, site.gbpConnected, site.wpConnected].filter(Boolean).length;
+  const gradeColor = connectedCount >= 3 ? "from-emerald-400 to-teal-500" : connectedCount >= 2 ? "from-cyan-400 to-blue-500" : connectedCount >= 1 ? "from-amber-400 to-orange-500" : "from-rose-400 to-red-500";
 
   return (
     <div className={`group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:-translate-y-0.5 hover:border-cyan-500/40 hover:bg-slate-900/70 hover:shadow-[0_0_28px_rgba(34,211,238,0.08)]`}>
@@ -225,7 +208,7 @@ function SiteCard({ site, onDelete, onSelect }: { site: ConnectedSite; onDelete:
               <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-1.5 py-px text-[9px] uppercase tracking-wider text-slate-400">
                 {site.location}
               </span>
-              {site.id === "safaeewala" && (
+              {site.gaConnected && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-px text-[9px] font-semibold text-emerald-300">
                   Live GA4 Data
                 </span>
@@ -250,65 +233,40 @@ function SiteCard({ site, onDelete, onSelect }: { site: ConnectedSite; onDelete:
         </div>
       </div>
 
-      {/* Score row */}
+      {/* Integrations row */}
       <div className="mt-4 grid grid-cols-[auto_1fr] items-center gap-4">
-        <ScoreRing score={site.score} grade={grade} gradient={gradeColor} />
+        <ConnectionRing connectedCount={connectedCount} gradient={gradeColor} />
         <div className="min-w-0">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-slate-500">Reputation</span>
-            <span className="inline-flex items-center gap-0.5 text-[12px] font-semibold text-amber-300">
-              <Star className="h-3 w-3 fill-current" />
-              {rating}
-            </span>
+            <span className="text-[10px] uppercase tracking-wider text-slate-500">Integrations</span>
           </div>
-          <div className="mt-1 flex items-center gap-1">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={`h-3 w-3 ${i < Math.round(rating) ? "fill-amber-300 text-amber-300" : "text-slate-700"}`}
-              />
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {[
+              { key: "gsc", label: "GSC", on: site.gscConnected },
+              { key: "ga4", label: "GA4", on: site.gaConnected },
+              { key: "gbp", label: "GBP", on: site.gbpConnected },
+              { key: "wp", label: "WP", on: site.wpConnected },
+            ].map((i) => (
+              <span
+                key={i.key}
+                className={`rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${
+                  i.on ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-slate-700 bg-slate-900/60 text-slate-500"
+                }`}
+              >
+                {i.label}
+              </span>
             ))}
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <MiniMetric label="Sessions" value={trafficVal} delta={trafficDelta} up={up} />
-            <MiniMetric label="Indexed" value={`${site.indexed} / ${site.pages}`} delta={6.2} up={true} />
+            <MiniMetric label="Indexed" value={`${site.indexed} / ${site.pages}`} />
+            <MiniMetric label="Open fixes" value={String(site.openFixes)} />
           </div>
         </div>
-      </div>
-
-      {/* CWV bar */}
-      <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-wider text-slate-500">Core Web Vitals</span>
-          <span className="text-[10px] text-slate-500">Uptime <span className="font-mono text-emerald-300">99.98%</span></span>
-        </div>
-        <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
-          <div className="flex flex-col">
-            <span className="text-slate-500">LCP</span>
-            <span className={`font-mono font-semibold ${cwvColor(lcpR)}`}>{cwv.lcp}s</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-slate-500">CLS</span>
-            <span className={`font-mono font-semibold ${cwvColor(clsR)}`}>{cwv.cls}</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-slate-500">INP</span>
-            <span className={`font-mono font-semibold ${cwvColor(inpR)}`}>{cwv.inp}ms</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Sparkline */}
-      <div className="mt-3">
-        <Sparkline data={site.trafficTrend} gradient={gradeColor} />
       </div>
 
       {/* Footer */}
-      <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3">
+      <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3">
         <div className="flex items-center gap-3 text-[10px] text-slate-500">
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-2.5 w-2.5" /> {site.lastSync}
-          </span>
           <span className="inline-flex items-center gap-1">
             <AlertTriangle className="h-2.5 w-2.5 text-amber-300/80" />
             <span className="text-slate-300">{site.openFixes}</span> fixes
@@ -330,20 +288,18 @@ function SiteCard({ site, onDelete, onSelect }: { site: ConnectedSite; onDelete:
   );
 }
 
-function MiniMetric({ label, value, delta, up }: { label: string; value: string; delta: number; up: boolean }) {
+function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-2">
       <div className="text-[9px] uppercase tracking-wider text-slate-500">{label}</div>
       <div className="mt-0.5 text-sm font-semibold tabular-nums text-white">{value}</div>
-      <div className={`mt-0.5 inline-flex items-center gap-0.5 text-[10px] font-medium ${up ? "text-emerald-300" : "text-rose-300"}`}>
-        {up ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
-        {Math.abs(delta)}%
-      </div>
     </div>
   );
 }
 
-function ScoreRing({ score, grade, gradient }: { score: number; grade: string; gradient: string }) {
+function ConnectionRing({ connectedCount, gradient }: { connectedCount: number; gradient: string }) {
+  const total = 4;
+  const score = Math.round((connectedCount / total) * 100);
   const r = 28;
   const c = 2 * Math.PI * r;
   const off = c - (score / 100) * c;
@@ -373,47 +329,10 @@ function ScoreRing({ score, grade, gradient }: { score: number; grade: string; g
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-base font-bold tabular-nums text-white">{score}</span>
-        <span className="text-[9px] uppercase tracking-wider text-slate-500">{grade}</span>
+        <span className="text-base font-bold tabular-nums text-white">{connectedCount}/{total}</span>
+        <span className="text-[9px] uppercase tracking-wider text-slate-500">Live</span>
       </div>
     </div>
-  );
-}
-
-function Sparkline({ data, gradient }: { data: number[]; gradient: string }) {
-  const w = 300;
-  const h = 40;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const step = w / (data.length - 1);
-  const pts = data.map((v, i) => [i * step, h - ((v - min) / range) * (h - 6) - 3] as const);
-  const line = pts.map((p, i) => (i === 0 ? `M ${p[0]},${p[1]}` : `L ${p[0]},${p[1]}`)).join(" ");
-  const area = `${line} L ${w},${h} L 0,${h} Z`;
-  const id = `sp-${gradient.replace(/[^a-z0-9]/gi, "")}`;
-  const [from, to] = gradient.replace("from-", "").replace(" to-", "|").split("|");
-  const colorMap: Record<string, string> = {
-    "emerald-400": "#34d399", "teal-500": "#14b8a6", "cyan-400": "#22d3ee",
-    "blue-500": "#3b82f6", "amber-400": "#fbbf24", "orange-500": "#f97316",
-    "rose-400": "#fb7185", "red-500": "#ef4444",
-  };
-  const c1 = colorMap[from] ?? "#22d3ee";
-  const c2 = colorMap[to] ?? "#3b82f6";
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-10 w-full">
-      <defs>
-        <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor={c1} />
-          <stop offset="100%" stopColor={c2} />
-        </linearGradient>
-        <linearGradient id={`${id}-f`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={c1} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={c1} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill={`url(#${id}-f)`} />
-      <path d={line} fill="none" stroke={`url(#${id})`} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
   );
 }
 

@@ -38,18 +38,23 @@ import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scout
 import { Route as SeoSuiteIndexRouteImport } from './routes/seo-suite.index'
 import { Route as SeoSuiteToolIdRouteImport } from './routes/seo-suite.$toolId'
 import { Route as SitesSiteIdRouteImport } from './routes/sites.$siteId'
+import { Route as ApiAlertsIndexRouteImport } from './routes/api.alerts.index'
+import { Route as ApiAlertsIdRouteImport } from './routes/api.alerts.$id'
 import { Route as ApiAnalyticsSyncRouteImport } from './routes/api.analytics.sync'
 import { Route as ApiAutomationFlowsRouteImport } from './routes/api.automation.flows'
 import { Route as ApiCloudflareAiShieldRouteImport } from './routes/api.cloudflare.ai-shield'
 import { Route as ApiEventsIngestRouteImport } from './routes/api.events.ingest'
-import { Route as ApiGoogleAnalyticsRouteImport } from './routes/api.google.analytics'
 import { Route as ApiGoogleGa4RouteImport } from './routes/api.google.ga4'
 import { Route as ApiGoogleGbpRouteImport } from './routes/api.google.gbp'
 import { Route as ApiGoogleSearchConsoleRouteImport } from './routes/api.google.search-console'
 import { Route as ApiJobsIndexRouteImport } from './routes/api.jobs.index'
+import { Route as ApiJobsIdRouteImport } from './routes/api.jobs.$id'
 import { Route as ApiJobsClaimRouteImport } from './routes/api.jobs.claim'
 import { Route as ApiKnowledgeAutocrawlRouteImport } from './routes/api.knowledge.autocrawl'
 import { Route as ApiKnowledgeObsidianRouteImport } from './routes/api.knowledge.obsidian'
+import { Route as ApiSettingsGeneralRouteImport } from './routes/api.settings.general'
+import { Route as ApiSitesIndexRouteImport } from './routes/api.sites.index'
+import { Route as ApiSitesIdRouteImport } from './routes/api.sites.$id'
 import { Route as ApiTasksIndexRouteImport } from './routes/api.tasks.index'
 import { Route as ApiTasksIdRouteImport } from './routes/api.tasks.$id'
 import { Route as ApiAutomationFlowsIdRouteImport } from './routes/api.automation.flows.$id'
@@ -204,6 +209,16 @@ const SitesSiteIdRoute = SitesSiteIdRouteImport.update({
   path: '/sites/$siteId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAlertsIndexRoute = ApiAlertsIndexRouteImport.update({
+  id: '/api/alerts/',
+  path: '/api/alerts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAlertsIdRoute = ApiAlertsIdRouteImport.update({
+  id: '/api/alerts/$id',
+  path: '/api/alerts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAnalyticsSyncRoute = ApiAnalyticsSyncRouteImport.update({
   id: '/api/analytics/sync',
   path: '/api/analytics/sync',
@@ -222,11 +237,6 @@ const ApiCloudflareAiShieldRoute = ApiCloudflareAiShieldRouteImport.update({
 const ApiEventsIngestRoute = ApiEventsIngestRouteImport.update({
   id: '/api/events/ingest',
   path: '/api/events/ingest',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGoogleAnalyticsRoute = ApiGoogleAnalyticsRouteImport.update({
-  id: '/api/google/analytics',
-  path: '/api/google/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGoogleGa4Route = ApiGoogleGa4RouteImport.update({
@@ -249,6 +259,11 @@ const ApiJobsIndexRoute = ApiJobsIndexRouteImport.update({
   path: '/api/jobs/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiJobsIdRoute = ApiJobsIdRouteImport.update({
+  id: '/api/jobs/$id',
+  path: '/api/jobs/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiJobsClaimRoute = ApiJobsClaimRouteImport.update({
   id: '/api/jobs/claim',
   path: '/api/jobs/claim',
@@ -262,6 +277,21 @@ const ApiKnowledgeAutocrawlRoute = ApiKnowledgeAutocrawlRouteImport.update({
 const ApiKnowledgeObsidianRoute = ApiKnowledgeObsidianRouteImport.update({
   id: '/api/knowledge/obsidian',
   path: '/api/knowledge/obsidian',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSettingsGeneralRoute = ApiSettingsGeneralRouteImport.update({
+  id: '/api/settings/general',
+  path: '/api/settings/general',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSitesIndexRoute = ApiSitesIndexRouteImport.update({
+  id: '/api/sites/',
+  path: '/api/sites/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSitesIdRoute = ApiSitesIdRouteImport.update({
+  id: '/api/sites/$id',
+  path: '/api/sites/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTasksIndexRoute = ApiTasksIndexRouteImport.update({
@@ -280,19 +310,19 @@ const ApiAutomationFlowsIdRoute = ApiAutomationFlowsIdRouteImport.update({
   getParentRoute: () => ApiAutomationFlowsRoute,
 } as any)
 const ApiJobsIdCompleteRoute = ApiJobsIdCompleteRouteImport.update({
-  id: '/api/jobs/$id/complete',
-  path: '/api/jobs/$id/complete',
-  getParentRoute: () => rootRouteImport,
+  id: '/complete',
+  path: '/complete',
+  getParentRoute: () => ApiJobsIdRoute,
 } as any)
 const ApiJobsIdFailRoute = ApiJobsIdFailRouteImport.update({
-  id: '/api/jobs/$id/fail',
-  path: '/api/jobs/$id/fail',
-  getParentRoute: () => rootRouteImport,
+  id: '/fail',
+  path: '/fail',
+  getParentRoute: () => ApiJobsIdRoute,
 } as any)
 const ApiJobsIdHeartbeatRoute = ApiJobsIdHeartbeatRouteImport.update({
-  id: '/api/jobs/$id/heartbeat',
-  path: '/api/jobs/$id/heartbeat',
-  getParentRoute: () => rootRouteImport,
+  id: '/heartbeat',
+  path: '/heartbeat',
+  getParentRoute: () => ApiJobsIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -325,19 +355,24 @@ export interface FileRoutesByFullPath {
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
   '/seo-suite/': typeof SeoSuiteIndexRoute
+  '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
-  '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
+  '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/settings/general': typeof ApiSettingsGeneralRoute
+  '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
+  '/api/sites/': typeof ApiSitesIndexRoute
   '/api/tasks/': typeof ApiTasksIndexRoute
   '/api/automation/flows/$id': typeof ApiAutomationFlowsIdRoute
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
@@ -374,19 +409,24 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsIndexRoute
   '/scout-team': typeof ScoutTeamIndexRoute
   '/seo-suite': typeof SeoSuiteIndexRoute
+  '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
-  '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
+  '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/settings/general': typeof ApiSettingsGeneralRoute
+  '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/alerts': typeof ApiAlertsIndexRoute
   '/api/jobs': typeof ApiJobsIndexRoute
+  '/api/sites': typeof ApiSitesIndexRoute
   '/api/tasks': typeof ApiTasksIndexRoute
   '/api/automation/flows/$id': typeof ApiAutomationFlowsIdRoute
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
@@ -424,19 +464,24 @@ export interface FileRoutesById {
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
   '/seo-suite/': typeof SeoSuiteIndexRoute
+  '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
-  '/api/google/analytics': typeof ApiGoogleAnalyticsRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
+  '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
+  '/api/settings/general': typeof ApiSettingsGeneralRoute
+  '/api/sites/$id': typeof ApiSitesIdRoute
   '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
+  '/api/sites/': typeof ApiSitesIndexRoute
   '/api/tasks/': typeof ApiTasksIndexRoute
   '/api/automation/flows/$id': typeof ApiAutomationFlowsIdRoute
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
@@ -475,19 +520,24 @@ export interface FileRouteTypes {
     | '/analytics/'
     | '/scout-team/'
     | '/seo-suite/'
+    | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
-    | '/api/google/analytics'
     | '/api/google/ga4'
     | '/api/google/gbp'
     | '/api/google/search-console'
+    | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/settings/general'
+    | '/api/sites/$id'
     | '/api/tasks/$id'
+    | '/api/alerts/'
     | '/api/jobs/'
+    | '/api/sites/'
     | '/api/tasks/'
     | '/api/automation/flows/$id'
     | '/api/jobs/$id/complete'
@@ -524,19 +574,24 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/scout-team'
     | '/seo-suite'
+    | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
-    | '/api/google/analytics'
     | '/api/google/ga4'
     | '/api/google/gbp'
     | '/api/google/search-console'
+    | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/settings/general'
+    | '/api/sites/$id'
     | '/api/tasks/$id'
+    | '/api/alerts'
     | '/api/jobs'
+    | '/api/sites'
     | '/api/tasks'
     | '/api/automation/flows/$id'
     | '/api/jobs/$id/complete'
@@ -573,19 +628,24 @@ export interface FileRouteTypes {
     | '/analytics/'
     | '/scout-team/'
     | '/seo-suite/'
+    | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
-    | '/api/google/analytics'
     | '/api/google/ga4'
     | '/api/google/gbp'
     | '/api/google/search-console'
+    | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/knowledge/obsidian'
+    | '/api/settings/general'
+    | '/api/sites/$id'
     | '/api/tasks/$id'
+    | '/api/alerts/'
     | '/api/jobs/'
+    | '/api/sites/'
     | '/api/tasks/'
     | '/api/automation/flows/$id'
     | '/api/jobs/$id/complete'
@@ -623,23 +683,25 @@ export interface RootRouteChildren {
   AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   ScoutTeamIndexRoute: typeof ScoutTeamIndexRoute
   SeoSuiteIndexRoute: typeof SeoSuiteIndexRoute
+  ApiAlertsIdRoute: typeof ApiAlertsIdRoute
   ApiAnalyticsSyncRoute: typeof ApiAnalyticsSyncRoute
   ApiAutomationFlowsRoute: typeof ApiAutomationFlowsRouteWithChildren
   ApiCloudflareAiShieldRoute: typeof ApiCloudflareAiShieldRoute
   ApiEventsIngestRoute: typeof ApiEventsIngestRoute
-  ApiGoogleAnalyticsRoute: typeof ApiGoogleAnalyticsRoute
   ApiGoogleGa4Route: typeof ApiGoogleGa4Route
   ApiGoogleGbpRoute: typeof ApiGoogleGbpRoute
   ApiGoogleSearchConsoleRoute: typeof ApiGoogleSearchConsoleRoute
+  ApiJobsIdRoute: typeof ApiJobsIdRouteWithChildren
   ApiJobsClaimRoute: typeof ApiJobsClaimRoute
   ApiKnowledgeAutocrawlRoute: typeof ApiKnowledgeAutocrawlRoute
   ApiKnowledgeObsidianRoute: typeof ApiKnowledgeObsidianRoute
+  ApiSettingsGeneralRoute: typeof ApiSettingsGeneralRoute
+  ApiSitesIdRoute: typeof ApiSitesIdRoute
   ApiTasksIdRoute: typeof ApiTasksIdRoute
+  ApiAlertsIndexRoute: typeof ApiAlertsIndexRoute
   ApiJobsIndexRoute: typeof ApiJobsIndexRoute
+  ApiSitesIndexRoute: typeof ApiSitesIndexRoute
   ApiTasksIndexRoute: typeof ApiTasksIndexRoute
-  ApiJobsIdCompleteRoute: typeof ApiJobsIdCompleteRoute
-  ApiJobsIdFailRoute: typeof ApiJobsIdFailRoute
-  ApiJobsIdHeartbeatRoute: typeof ApiJobsIdHeartbeatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -847,6 +909,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitesSiteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/alerts/': {
+      id: '/api/alerts/'
+      path: '/api/alerts'
+      fullPath: '/api/alerts/'
+      preLoaderRoute: typeof ApiAlertsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/alerts/$id': {
+      id: '/api/alerts/$id'
+      path: '/api/alerts/$id'
+      fullPath: '/api/alerts/$id'
+      preLoaderRoute: typeof ApiAlertsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/analytics/sync': {
       id: '/api/analytics/sync'
       path: '/api/analytics/sync'
@@ -873,13 +949,6 @@ declare module '@tanstack/react-router' {
       path: '/api/events/ingest'
       fullPath: '/api/events/ingest'
       preLoaderRoute: typeof ApiEventsIngestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/google/analytics': {
-      id: '/api/google/analytics'
-      path: '/api/google/analytics'
-      fullPath: '/api/google/analytics'
-      preLoaderRoute: typeof ApiGoogleAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/google/ga4': {
@@ -910,6 +979,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiJobsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/jobs/$id': {
+      id: '/api/jobs/$id'
+      path: '/api/jobs/$id'
+      fullPath: '/api/jobs/$id'
+      preLoaderRoute: typeof ApiJobsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/jobs/claim': {
       id: '/api/jobs/claim'
       path: '/api/jobs/claim'
@@ -929,6 +1005,27 @@ declare module '@tanstack/react-router' {
       path: '/api/knowledge/obsidian'
       fullPath: '/api/knowledge/obsidian'
       preLoaderRoute: typeof ApiKnowledgeObsidianRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/settings/general': {
+      id: '/api/settings/general'
+      path: '/api/settings/general'
+      fullPath: '/api/settings/general'
+      preLoaderRoute: typeof ApiSettingsGeneralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sites/': {
+      id: '/api/sites/'
+      path: '/api/sites'
+      fullPath: '/api/sites/'
+      preLoaderRoute: typeof ApiSitesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sites/$id': {
+      id: '/api/sites/$id'
+      path: '/api/sites/$id'
+      fullPath: '/api/sites/$id'
+      preLoaderRoute: typeof ApiSitesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tasks/': {
@@ -954,24 +1051,24 @@ declare module '@tanstack/react-router' {
     }
     '/api/jobs/$id/complete': {
       id: '/api/jobs/$id/complete'
-      path: '/api/jobs/$id/complete'
+      path: '/complete'
       fullPath: '/api/jobs/$id/complete'
       preLoaderRoute: typeof ApiJobsIdCompleteRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiJobsIdRoute
     }
     '/api/jobs/$id/fail': {
       id: '/api/jobs/$id/fail'
-      path: '/api/jobs/$id/fail'
+      path: '/fail'
       fullPath: '/api/jobs/$id/fail'
       preLoaderRoute: typeof ApiJobsIdFailRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiJobsIdRoute
     }
     '/api/jobs/$id/heartbeat': {
       id: '/api/jobs/$id/heartbeat'
-      path: '/api/jobs/$id/heartbeat'
+      path: '/heartbeat'
       fullPath: '/api/jobs/$id/heartbeat'
       preLoaderRoute: typeof ApiJobsIdHeartbeatRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiJobsIdRoute
     }
   }
 }
@@ -986,6 +1083,22 @@ const ApiAutomationFlowsRouteChildren: ApiAutomationFlowsRouteChildren = {
 
 const ApiAutomationFlowsRouteWithChildren =
   ApiAutomationFlowsRoute._addFileChildren(ApiAutomationFlowsRouteChildren)
+
+interface ApiJobsIdRouteChildren {
+  ApiJobsIdCompleteRoute: typeof ApiJobsIdCompleteRoute
+  ApiJobsIdFailRoute: typeof ApiJobsIdFailRoute
+  ApiJobsIdHeartbeatRoute: typeof ApiJobsIdHeartbeatRoute
+}
+
+const ApiJobsIdRouteChildren: ApiJobsIdRouteChildren = {
+  ApiJobsIdCompleteRoute: ApiJobsIdCompleteRoute,
+  ApiJobsIdFailRoute: ApiJobsIdFailRoute,
+  ApiJobsIdHeartbeatRoute: ApiJobsIdHeartbeatRoute,
+}
+
+const ApiJobsIdRouteWithChildren = ApiJobsIdRoute._addFileChildren(
+  ApiJobsIdRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1017,23 +1130,25 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsIndexRoute: AnalyticsIndexRoute,
   ScoutTeamIndexRoute: ScoutTeamIndexRoute,
   SeoSuiteIndexRoute: SeoSuiteIndexRoute,
+  ApiAlertsIdRoute: ApiAlertsIdRoute,
   ApiAnalyticsSyncRoute: ApiAnalyticsSyncRoute,
   ApiAutomationFlowsRoute: ApiAutomationFlowsRouteWithChildren,
   ApiCloudflareAiShieldRoute: ApiCloudflareAiShieldRoute,
   ApiEventsIngestRoute: ApiEventsIngestRoute,
-  ApiGoogleAnalyticsRoute: ApiGoogleAnalyticsRoute,
   ApiGoogleGa4Route: ApiGoogleGa4Route,
   ApiGoogleGbpRoute: ApiGoogleGbpRoute,
   ApiGoogleSearchConsoleRoute: ApiGoogleSearchConsoleRoute,
+  ApiJobsIdRoute: ApiJobsIdRouteWithChildren,
   ApiJobsClaimRoute: ApiJobsClaimRoute,
   ApiKnowledgeAutocrawlRoute: ApiKnowledgeAutocrawlRoute,
   ApiKnowledgeObsidianRoute: ApiKnowledgeObsidianRoute,
+  ApiSettingsGeneralRoute: ApiSettingsGeneralRoute,
+  ApiSitesIdRoute: ApiSitesIdRoute,
   ApiTasksIdRoute: ApiTasksIdRoute,
+  ApiAlertsIndexRoute: ApiAlertsIndexRoute,
   ApiJobsIndexRoute: ApiJobsIndexRoute,
+  ApiSitesIndexRoute: ApiSitesIndexRoute,
   ApiTasksIndexRoute: ApiTasksIndexRoute,
-  ApiJobsIdCompleteRoute: ApiJobsIdCompleteRoute,
-  ApiJobsIdFailRoute: ApiJobsIdFailRoute,
-  ApiJobsIdHeartbeatRoute: ApiJobsIdHeartbeatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

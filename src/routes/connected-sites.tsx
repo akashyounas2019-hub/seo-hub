@@ -13,7 +13,6 @@ import {
   ExternalLink,
   Plus,
   Settings2,
-  ShieldCheck,
   MapPin,
   Activity,
   Filter,
@@ -45,66 +44,6 @@ export const Route = createFileRoute("/connected-sites")({
 });
 
 type IntegrationStatus = "connected" | "action" | "disconnected";
-type Integration = {
-  id: string;
-  name: string;
-  icon: LucideIcon;
-  status: IntegrationStatus;
-  detail: string;
-  accent: string;
-};
-type Site = {
-  id: string;
-  domain: string;
-  label: string;
-  location: string;
-  health: "healthy" | "attention" | "onboarding";
-  score: number;
-  pages: number;
-  indexed: number;
-  openFixes: number;
-  lastSync: string;
-  integrations: Integration[];
-};
-
-const SITES: Site[] = [
-  {
-    id: "safaeewala",
-    domain: "safaeewala.com",
-    label: "Safaeewala Cleaning Services",
-    location: "Dubai, UAE",
-    health: "onboarding",
-    score: 62,
-    pages: 34,
-    indexed: 28,
-    openFixes: 4,
-    lastSync: "3 min ago",
-    integrations: [
-      { id: "gsc", name: "Search Console", icon: Search, status: "connected", detail: "Syncing daily · 34 URLs", accent: "from-emerald-400 to-teal-500" },
-      { id: "ga4", name: "Analytics 4", icon: BarChart3, status: "connected", detail: "Property 342118", accent: "from-amber-400 to-orange-500" },
-      { id: "gmb", name: "Business Profile", icon: MapPin, status: "action", detail: "Verify ownership", accent: "from-rose-400 to-pink-500" },
-      { id: "wp", name: "WP Connector", icon: Zap, status: "connected", detail: "REST · v6.4.2", accent: "from-sky-400 to-blue-500" },
-    ],
-  },
-  {
-    id: "northwind",
-    domain: "northwindlogistics.io",
-    label: "Northwind Logistics",
-    location: "London, UK",
-    health: "healthy",
-    score: 84,
-    pages: 128,
-    indexed: 121,
-    openFixes: 2,
-    lastSync: "1 min ago",
-    integrations: [
-      { id: "gsc", name: "Search Console", icon: Search, status: "connected", detail: "Syncing hourly", accent: "from-emerald-400 to-teal-500" },
-      { id: "ga4", name: "Analytics 4", icon: BarChart3, status: "connected", detail: "Property 998110", accent: "from-amber-400 to-orange-500" },
-      { id: "gmb", name: "Business Profile", icon: MapPin, status: "connected", detail: "4 locations", accent: "from-rose-400 to-pink-500" },
-      { id: "wp", name: "WP Connector", icon: Zap, status: "disconnected", detail: "Not installed", accent: "from-sky-400 to-blue-500" },
-    ],
-  },
-];
 
 function statusMeta(s: IntegrationStatus) {
   switch (s) {
@@ -136,7 +75,6 @@ function ConnectedSitesPage() {
       live: all.filter((i) => i.status === "connected").length,
       action: all.filter((i) => i.status === "action").length,
       off: all.filter((i) => i.status === "disconnected").length,
-      avgScore: allSites.length ? Math.round(allSites.reduce((a, s) => a + s.score, 0) / allSites.length) : 0,
     };
   }, [allSites]);
 
@@ -190,7 +128,6 @@ function ConnectedSitesPage() {
         {/* Stats */}
         <div className="relative mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
           <Stat label="Sites" value={totals.sites} tone="cyan" icon={Globe} />
-          <Stat label="Avg SEO score" value={totals.avgScore} tone="emerald" icon={ShieldCheck} />
           <Stat label="Live integrations" value={totals.live} tone="emerald" icon={CheckCircle2} />
           <Stat label="Needs action" value={totals.action} tone="amber" icon={AlertCircle} />
           <Stat label="Disconnected" value={totals.off} tone="slate" icon={Link2} />
@@ -319,7 +256,7 @@ function SiteCard({
           >
             {site.domain} <ExternalLink className="h-3 w-3" />
           </a>
-          <div className="mt-0.5 text-[11px] text-slate-500">{site.location} · Synced {site.lastSync}</div>
+          <div className="mt-0.5 text-[11px] text-slate-500">{site.location}</div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${healthMeta.pill}`}>
@@ -349,8 +286,7 @@ function SiteCard({
       </header>
 
       {/* Metrics */}
-      <div className="relative mt-3 grid grid-cols-3 gap-2 rounded-lg border border-slate-800/70 bg-slate-900/40 p-2">
-        <Metric label="SEO Score" value={site.score} suffix="/100" tone="cyan" />
+      <div className="relative mt-3 grid grid-cols-2 gap-2 rounded-lg border border-slate-800/70 bg-slate-900/40 p-2">
         <Metric label="Indexed" value={`${indexPct}%`} sub={`${site.indexed}/${site.pages}`} tone="emerald" />
         <Metric
           label="Open fixes"

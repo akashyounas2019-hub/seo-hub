@@ -1,14 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { jobsStore } from "@/lib/jobs-store";
 
 export const Route = createFileRoute("/api/jobs/$id/heartbeat")({
-  loader: async ({ params }) => {
-    const success = jobsStore.heartbeat(params.id);
-    return { ok: success };
-  },
-  component: ApiJobsHeartbeatComponent,
-});
+  server: {
+    handlers: {
+      POST: async ({ params }) => {
+        try {
+          const { db, ensureSchema } = await import("@/db/client");
+          const { claudeJobs } = await import("@/db/schema");
+          const { eq } = await import("drizzle-orm");
 
-function ApiJobsHeartbeatComponent() {
-  return null;
-}
+          await ensureSchema();
+          const d = db();
+
+          await d
+            .update(claudeJobs)
+            .set({ status: "running", startedAt: new Date() })
+            .where(eq(claudeJobs.id, params.id));
+
+          return Response.json({ ok: true });
+        } catch (err: any) {
+          return Response.json({ ok: false, error: err.message }, { status: 500 });
+        }
+      },
+    },
+  },
+});

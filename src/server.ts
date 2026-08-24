@@ -47,12 +47,10 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      const url = new URL(request.url);
-      if (url.pathname === "/api/analytics/sync" || url.pathname.startsWith("/api/analytics/sync")) {
-        const { handleAnalyticsSyncRequest } = await import("./routes/api.analytics.sync");
-        return await handleAnalyticsSyncRequest(request);
-      }
-
+      // All /api/* routes are now real TanStack Start server routes
+      // (src/routes/api.*.ts, using `server.handlers`), so they no longer
+      // need a special-cased intercept here — the router serves them
+      // directly with real JSON responses.
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
