@@ -46,25 +46,24 @@ export const Route = createFileRoute("/api/google/search-console")({
           }
 
           // Fetch sites and BigQuery status in parallel with GSC analytics
-          const debugErrors: Record<string, string> = {};
           const [sites, dateRows, queryRows, pageRows, deviceRows, countryRows, bqStatus] =
             await Promise.all([
-              fetchGSCSites().catch((e) => { debugErrors.sites = String(e?.message || e); return [{ siteUrl: "https://safaeewala.com/", permissionLevel: "siteFullUser" }]; }),
+              fetchGSCSites().catch(() => [{ siteUrl: "https://safaeewala.com/", permissionLevel: "siteFullUser" }]),
               fetchGSCSearchAnalytics(siteUrlParam, {
                 startDate, endDate, dimensions: ["date"], country, city, rowLimit: 500,
-              }).catch((e) => { debugErrors.dateRows = String(e?.message || e); return []; }),
+              }).catch(() => []),
               fetchGSCSearchAnalytics(siteUrlParam, {
                 startDate, endDate, dimensions: ["query"], country, city, rowLimit: 100,
-              }).catch((e) => { debugErrors.queryRows = String(e?.message || e); return []; }),
+              }).catch(() => []),
               fetchGSCSearchAnalytics(siteUrlParam, {
                 startDate, endDate, dimensions: ["page"], country, city, rowLimit: 100,
-              }).catch((e) => { debugErrors.pageRows = String(e?.message || e); return []; }),
+              }).catch(() => []),
               fetchGSCSearchAnalytics(siteUrlParam, {
                 startDate, endDate, dimensions: ["device"], country, city, rowLimit: 10,
-              }).catch((e) => { debugErrors.deviceRows = String(e?.message || e); return []; }),
+              }).catch(() => []),
               fetchGSCSearchAnalytics(siteUrlParam, {
                 startDate, endDate, dimensions: ["country"], rowLimit: 30,
-              }).catch((e) => { debugErrors.countryRows = String(e?.message || e); return []; }),
+              }).catch(() => []),
               getBigQueryStatus("gmb-safaeewala").catch((e) => ({
                 connected: false,
                 projectId: "gmb-safaeewala",
@@ -111,7 +110,6 @@ export const Route = createFileRoute("/api/google/search-console")({
             deviceRows,
             countryRows,
             bigQuery: bqStatus,
-            _debugErrors: debugErrors,
           });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message }, { status: 500 });
