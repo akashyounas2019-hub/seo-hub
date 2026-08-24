@@ -147,6 +147,20 @@ to end in a running browser." Key findings and fixes:
 remains 100% mock. The backend (`api.google.gbp.ts`, `lib/google/business-profile.ts`)
 is real and ready — wiring the UI to it is the next task.
 
+**Known gap found during this deploy — Google credentials never reached the
+VPS.** `gmb-service-account.json` is (correctly) gitignored, and no
+`GOOGLE_SERVICE_ACCOUNT_JSON` env var is set in `docker-compose.yml` either.
+Verified live on the VPS: `/api/sites`, `/api/alerts`, `/api/jobs` all return
+real Postgres data; `/api/google/search-console` returns real JSON but with
+zero results and a BigQuery auth error, because the container has no
+credentials to call Google with. **This means GSC/GA4/GBP/BigQuery have never
+actually been live in production** — only in local dev, where the file exists
+on disk. To fix: securely copy `gmb-service-account.json` to
+`/var/www/seo-hub/` on the VPS (it's already `COPY . .`'d into the Docker
+build context if present at build time), or set `GOOGLE_SERVICE_ACCOUNT_JSON`
+in `docker-compose.yml`'s `environment:` block for the `seo-hub` service, then
+`docker compose up -d --build` again.
+
 ---
 
 ## 6. Live Integrations & Credentials
