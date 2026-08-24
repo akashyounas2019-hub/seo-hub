@@ -1,24 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { jobsStore } from "@/lib/jobs-store";
 
 export const Route = createFileRoute("/api/jobs/$id/fail")({
-  loader: async (ctx: any) => {
-    const params = ctx?.params || {};
-    const request = ctx?.request;
-    try {
-      let body: any = {};
-      if (request && request.method === "POST") {
-        body = await request.json().catch(() => ({}));
-      }
-      const success = jobsStore.fail(params.id, body.error || "Unknown error");
-      return { ok: success };
-    } catch (err: any) {
-      return { ok: false, error: err.message };
-    }
-  },
-  component: ApiJobsFailComponent,
-});
+  server: {
+    handlers: {
+      POST: async ({ params, request }) => {
+        try {
+          const body = await request.json().catch(() => ({}));
 
-function ApiJobsFailComponent() {
-  return null;
-}
+          const { db, ensureSchema } = await import("@/db/client");
+          const { claudeJobs } = await import("@/db/schema");
+          const { eq } = await import("drizzle-orm");
+
+          await ensureSchema();
+          const d = db();
+
+          await d
+            .update(claudeJobs)
+            .set({ status: "failed", error: body.error || "Unknown error", finishedAt: new Date() })
+            .where(eq(claudeJobs.id, params.id));
+
+          return Response.json({ ok: true });
+        } catch (err: any) {
+          return Response.json({ ok: false, error: err.message }, { status: 500 });
+        }
+      },
+    },
+  },
+});

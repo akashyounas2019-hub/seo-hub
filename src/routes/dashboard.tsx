@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Activity,
@@ -56,8 +56,19 @@ export const Route = createFileRoute("/dashboard")({
 
 type TabType = "overview" | "ga" | "gsc" | "gbp" | "ai-overview" | "visuals";
 
+type OverviewKpi = {
+  k: string;
+  v: string;
+  d: number;
+  icon: any;
+  accent: string;
+  src: string;
+  tab: TabType;
+  invertColors?: boolean;
+};
+
 function DashboardPage() {
-  const { currentSite, allSites, setCurrentSiteId, isSyncing, lastSyncTime, triggerSync } = useSite();
+  const { currentSite, isLoading: sitesLoading } = useSite();
 
   const [activeTab, setActiveTabState] = useState<TabType>(() => {
     if (typeof window === "undefined") return "overview";
@@ -74,26 +85,122 @@ function DashboardPage() {
     }
   };
 
-  const site = currentSite || (allSites && allSites[0]) || {
-    id: "safaeewala",
-    domain: "safaeewala.com",
-    label: "Safaeewala Cleaning Services",
-    location: "Dubai, UAE",
-    gaConnected: true,
-    gscConnected: true,
-    gbpConnected: true,
+  const site = currentSite;
+
+  // Live overview data — fetched directly from the GSC route (already fully
+  // live) for search metrics, and the GA4 route for session/traffic metrics.
+  // No fabricated fallback numbers: an unconnected or errored source renders
+  // "—" and a zeroed trend, never a made-up figure.
+  const [gscSummary, setGscSummary] = useState<any>(null);
+  const [gaOverview, setGaOverview] = useState<any>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<string>("");
+
+  const fetchOverview = async () => {
+    if (!site?.id) return;
+    setOverviewLoading(true);
+    try {
+      const requests: Promise<any>[] = [];
+
+      requests.push(
+        site.gscConnected
+          ? fetch(`/api/google/search-console?siteUrl=${encodeURIComponent(site.gscDomain)}&startDate=28daysAgo&endDate=today`)
+              .then((r) => r.json())
+              .catch(() => null)
+          : Promise.resolve(null),
+      );
+
+      requests.push(
+        site.gaConnected
+          ? fetch(`/api/google/ga4?propertyId=${encodeURIComponent(site.gaProperty.match(/\((\d+)\)/)?.[1] || "")}&startDate=28daysAgo&endDate=today`)
+              .then((r) => r.json())
+              .catch(() => null)
+          : Promise.resolve(null),
+      );
+
+      const [gsc, ga] = await Promise.all(requests);
+      setGscSummary(gsc?.ok ? gsc : null);
+      setGaOverview(ga?.ok ? ga : null);
+      setLastRefreshedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    } finally {
+      setOverviewLoading(false);
+    }
   };
 
-  const overviewKpis = site?.overviewKpis || [
-    { k: "Organic Sessions", v: "551", d: 12.4, icon: Users, accent: "from-cyan-400 to-sky-500", src: "Google Analytics (Live)", tab: "ga" },
-    { k: "Search Impressions", v: "3.2k", d: 18.2, icon: Eye, accent: "from-violet-400 to-fuchsia-500", src: "Search Console", tab: "gsc" },
-    { k: "GMB Actions", v: "1,686", d: 22.1, icon: MapPin, accent: "from-amber-400 to-orange-500", src: "Business Profile", tab: "gbp" },
-    { k: "Avg Position", v: "11.4", d: -1.6, icon: Target, accent: "from-emerald-400 to-teal-500", src: "Search Console", tab: "gsc", invertColors: true },
+  useEffect(() => {
+    fetchOverview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [site?.id]);
+
+  const gaSessions = useMemo(() => {
+    const rows = gaOverview?.overview?.rows as Array<{ metricValues?: { value: string }[] }> | undefined;
+    if (!rows?.length) return null;
+    return rows.reduce((sum, r) => sum + Number(r.metricValues?.[1]?.value || 0), 0);
+  }, [gaOverview]);
+
+  const overviewKpis: OverviewKpi[] = [
+    {
+      k: "Organic Sessions",
+      v: gaSessions !== null ? gaSessions.toLocaleString() : site.gaConnected ? "—" : "Not Connected",
+      d: 0,
+      icon: Users,
+      accent: "from-cyan-400 to-sky-500",
+      src: site.gaConnected ? "Google Analytics (Live)" : "Google Analytics (Not Connected)",
+      tab: "ga",
+    },
+    {
+      k: "Search Impressions",
+      v: gscSummary?.summary?.impressions != null
+        ? `${(gscSummary.summary.impressions / 1000).toFixed(1)}k`
+        : site.gscConnected ? "—" : "Not Connected",
+      d: 0,
+      icon: Eye,
+      accent: "from-violet-400 to-fuchsia-500",
+      src: site.gscConnected ? "Search Console (Live)" : "Search Console (Not Connected)",
+      tab: "gsc",
+    },
+    {
+      k: "GMB Actions",
+      v: site.gbpConnected ? "—" : "Not Connected",
+      d: 0,
+      icon: MapPin,
+      accent: "from-amber-400 to-orange-500",
+      src: site.gbpConnected ? "Business Profile (Live)" : "Business Profile (Not Connected)",
+      tab: "gbp",
+    },
+    {
+      k: "Avg Position",
+      v: gscSummary?.summary?.position != null ? String(gscSummary.summary.position) : site.gscConnected ? "—" : "Not Connected",
+      d: 0,
+      icon: Target,
+      accent: "from-emerald-400 to-teal-500",
+      src: site.gscConnected ? "Search Console (Live)" : "Search Console (Not Connected)",
+      tab: "gsc",
+      invertColors: true,
+    },
   ];
-  const trafficTrend = site?.trafficTrend || [22, 17, 12, 16, 17, 17, 18, 16, 16, 14, 22, 28, 19, 19, 11];
-  const impressionsTrend = site?.impressionsTrend || [12, 14, 18, 17, 22, 26, 24, 30, 34, 32, 38, 42, 45, 48];
-  const topQueries = site?.topQueries || [];
-  const topPages = site?.topPages || [];
+
+  const trafficTrend = useMemo(() => {
+    const rows = gscSummary?.dateRows as Array<{ clicks: number }> | undefined;
+    return rows?.length ? rows.map((r) => r.clicks || 0) : [];
+  }, [gscSummary]);
+  const impressionsTrend = useMemo(() => {
+    const rows = gscSummary?.dateRows as Array<{ impressions: number }> | undefined;
+    return rows?.length ? rows.map((r) => r.impressions || 0) : [];
+  }, [gscSummary]);
+  const topQueries = useMemo(() => {
+    const rows = gscSummary?.queryRows as Array<{ keys: string[]; clicks: number; impressions: number; ctr: number; position: number }> | undefined;
+    if (!rows?.length) return [];
+    return rows.slice(0, 7).map((r) => ({
+      q: r.keys?.[0] || "",
+      clicks: r.clicks,
+      imp: r.impressions,
+      ctr: parseFloat((r.ctr * 100).toFixed(2)),
+      pos: parseFloat(r.position.toFixed(1)),
+      delta: 0,
+    }));
+  }, [gscSummary]);
+  const lastSyncTime = sitesLoading || overviewLoading ? "Refreshing…" : lastRefreshedAt || "—";
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
@@ -122,12 +229,12 @@ function DashboardPage() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => triggerSync()}
-                disabled={isSyncing}
+                onClick={() => fetchOverview()}
+                disabled={overviewLoading}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-400/20 disabled:opacity-50 cursor-pointer shadow-[0_0_15px_rgba(34,211,238,0.2)]"
               >
-                <RefreshCw className={`h-3.5 w-3.5 text-cyan-300 ${isSyncing ? "animate-spin" : ""}`} />
-                <span>{isSyncing ? "Refreshing Live Data..." : "Refresh Live Data"}</span>
+                <RefreshCw className={`h-3.5 w-3.5 text-cyan-300 ${overviewLoading ? "animate-spin" : ""}`} />
+                <span>{overviewLoading ? "Refreshing Live Data..." : "Refresh Live Data"}</span>
               </button>
 
               <div className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold ${
@@ -208,8 +315,6 @@ function DashboardPage() {
           <div className="animate-in fade-in duration-200">
             <section className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
               {overviewKpis.map((s) => {
-                const up = s.d >= 0;
-                const good = s.invertColors ? !up : up;
                 const Icon = s.icon || (s.tab === "ga" ? Users : s.tab === "gsc" ? Eye : s.tab === "gbp" ? MapPin : Target);
                 return (
                   <button
@@ -223,10 +328,6 @@ function DashboardPage() {
                       <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br ${s.accent} text-slate-950`}>
                         <Icon className="h-4 w-4" />
                       </div>
-                      <span className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${good ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"}`}>
-                        {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                        {Math.abs(s.d)}%
-                      </span>
                     </div>
                     <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-500">{s.k}</div>
                     <div className="mt-0.5 text-2xl font-bold tabular-nums text-white">{s.v}</div>
@@ -250,9 +351,15 @@ function DashboardPage() {
                     GA4 details <ArrowUpRight className="h-3 w-3" />
                   </button>
                 </div>
-                <DualSparkline a={trafficTrend} b={impressionsTrend} />
+                {trafficTrend.length > 1 && impressionsTrend.length > 1 ? (
+                  <DualSparkline a={trafficTrend} b={impressionsTrend} />
+                ) : (
+                  <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-slate-800 text-[12px] text-slate-500">
+                    {overviewLoading ? "Loading…" : "No trend data yet for this range."}
+                  </div>
+                )}
                 <div className="mt-3 flex items-center gap-4 text-[11px]">
-                  <LegendDot color="#22d3ee" label="GA4 Sessions" />
+                  <LegendDot color="#22d3ee" label="GSC Clicks" />
                   <LegendDot color="#a78bfa" label="GSC Impressions" />
                 </div>
               </div>
@@ -264,21 +371,17 @@ function DashboardPage() {
                 </div>
                 <div className="mt-4 space-y-3">
                   {[
-                    { l: "Quality & Compliance Audit", v: 92, a: "from-rose-400 to-pink-500" },
-                    { l: "On-Page", v: 71, a: "from-cyan-400 to-sky-500" },
-                    { l: "Off-Page", v: 58, a: "from-violet-400 to-fuchsia-500" },
-                    { l: "Technical", v: 94, a: "from-amber-400 to-orange-500" },
+                    { l: "Open fixes", v: site.openFixes, tab: "gsc" as TabType },
+                    { l: "Pages indexed", v: `${site.indexed}/${site.pages || 0}`, tab: "gsc" as TabType },
                   ].map((r) => (
-                    <div key={r.l}>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">{r.l}</span>
-                        <span className="font-mono text-cyan-300">{r.v}%</span>
-                      </div>
-                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                        <div className={`h-full rounded-full bg-gradient-to-r ${r.a}`} style={{ width: `${r.v}%` }} />
-                      </div>
+                    <div key={r.l} className="flex items-center justify-between rounded-lg border border-slate-800/70 bg-slate-950/50 px-3 py-2 text-xs">
+                      <span className="text-slate-400">{r.l}</span>
+                      <span className="font-mono text-cyan-300">{r.v}</span>
                     </div>
                   ))}
+                  <p className="pt-1 text-[11px] text-slate-500">
+                    Automated on-page / off-page / technical audit scoring is not wired to a live source yet.
+                  </p>
                 </div>
               </div>
             </section>
@@ -303,7 +406,6 @@ function DashboardPage() {
                         <th className="pb-2 text-right font-medium">Impr.</th>
                         <th className="pb-2 text-right font-medium">CTR</th>
                         <th className="pb-2 text-right font-medium">Pos</th>
-                        <th className="pb-2 text-right font-medium">Δ</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -314,11 +416,15 @@ function DashboardPage() {
                           <td className="px-3 py-2 text-right font-mono tabular-nums text-slate-300">{q.imp.toLocaleString()}</td>
                           <td className="px-3 py-2 text-right font-mono tabular-nums text-slate-300">{q.ctr}%</td>
                           <td className="px-3 py-2 text-right font-mono tabular-nums text-slate-300">{q.pos}</td>
-                          <td className={`px-3 py-2 text-right font-mono tabular-nums ${q.delta >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                            {q.delta >= 0 ? "+" : ""}{q.delta}
-                          </td>
                         </tr>
                       ))}
+                      {topQueries.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-3 py-6 text-center text-slate-500">
+                            {site.gscConnected ? (overviewLoading ? "Loading…" : "No query data for this range.") : "Search Console is not connected."}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

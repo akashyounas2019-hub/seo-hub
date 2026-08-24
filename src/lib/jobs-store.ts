@@ -1,3 +1,10 @@
+// Postgres-backed AI job queue (backs the Scout Team / AI Jobs screens).
+// Client callers hit the /api/jobs/* routes, which read and write the
+// `claude_jobs` table via Drizzle (src/db/schema.ts, src/routes/api.jobs.*.ts).
+// This used to be a pure localStorage class with a fabricated SEED_JOBS seed;
+// it now proxies to the real API so job records persist across restarts and
+// are visible from any client, not just the browser that created them.
+
 export type JobStatus = "pending" | "claimed" | "running" | "done" | "failed" | "cancelled";
 export type JobPriority = "low" | "normal" | "high" | "critical";
 
@@ -19,145 +26,112 @@ export type AIJob = {
   workerId?: string;
 };
 
-const STORAGE_KEY = "aks_ai_jobs_queue_v1";
-
-const SEED_JOBS: AIJob[] = [
-  {
-    id: "seed-job-1",
-    kind: "seo:technical-audit",
-    title: "Full technical audit for akscleaning.ae",
-    status: "done",
-    input: { url: "https://akscleaning.ae", scope: "deep" },
-    outputMarkdown: `### Technical SEO Audit Report — akscleaning.ae
-- **Crawlability**: 98% indexable URLs. 2 canonical tag mismatches flagged.
-- **Core Web Vitals**: LCP 2.1s (Good), INP 180ms (Good), CLS 0.04 (Good).
-- **Schema**: LocalBusiness JSON-LD correctly injected on homepage.`,
-    priority: "high",
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    completedAt: new Date(Date.now() - 3600000 * 1.8).toISOString(),
-    durationMs: 24500,
-  },
-  {
-    id: "seed-job-2",
-    kind: "content:blog-post",
-    title: "Draft post: Top Villa Deep Cleaning Tips for Dubai Summer 2026",
-    status: "pending",
-    input: {
-      topic: "Villa Deep Cleaning Tips in Dubai",
-      keyword: "deep cleaning villa dubai",
-      niche: "Cleaning Services",
-      city: "Dubai",
-      wordCount: 1500,
-    },
-    priority: "normal",
-    createdAt: new Date().toISOString(),
-  },
-];
+function fromRow(row: any): AIJob {
+  return {
+    id: row.id,
+    kind: row.kind,
+    title: row.title,
+    status: row.status,
+    input: row.input || {},
+    outputMarkdown: row.outputMarkdown ?? undefined,
+    error: row.error ?? undefined,
+    preferWorker: row.preferWorker,
+    priority: row.priority,
+    createdBy: row.createdBy ?? undefined,
+    createdAt: row.createdAt,
+    claimedAt: row.claimedAt ?? undefined,
+    completedAt: row.finishedAt ?? undefined,
+    durationMs: row.durationMs ?? undefined,
+    workerId: row.workerId ?? undefined,
+  };
+}
 
 class JobsStore {
-  private jobs: AIJob[] = [];
-
-  constructor() {
-    this.jobs = this.load();
-  }
-
-  private load(): AIJob[] {
-    if (typeof window === "undefined") return SEED_JOBS;
+  public async getAll(): Promise<AIJob[]> {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return SEED_JOBS;
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : SEED_JOBS;
+      const res = await fetch("/api/jobs");
+      const json = await res.json();
+      const jobs = json?.jobs || [];
+      return jobs.map(fromRow);
     } catch {
-      return SEED_JOBS;
+      return [];
     }
   }
 
-  private save() {
-    if (typeof window === "undefined") return;
+  public async create(data: Omit<AIJob, "id" | "status" | "createdAt">): Promise<AIJob | null> {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.jobs));
-    } catch {}
+      const res = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      return json?.job ? fromRow(json.job) : null;
+    } catch {
+      return null;
+    }
   }
 
-  public getAll(): AIJob[] {
-    return [...this.jobs].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+  public async claim(workerId: string): Promise<AIJob | null> {
+    try {
+      const res = await fetch("/api/jobs/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workerId }),
+      });
+      const json = await res.json();
+      return json?.job ? fromRow(json.job) : null;
+    } catch {
+      return null;
+    }
   }
 
-  public getById(id: string): AIJob | undefined {
-    return this.jobs.find((j) => j.id === id);
+  public async heartbeat(id: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/jobs/${id}/heartbeat`, { method: "POST" });
+      const json = await res.json();
+      return !!json?.ok;
+    } catch {
+      return false;
+    }
   }
 
-  public create(data: Omit<AIJob, "id" | "status" | "createdAt">): AIJob {
-    const job: AIJob = {
-      ...data,
-      id: `job-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    };
-    this.jobs = [job, ...this.jobs];
-    this.save();
-    return job;
+  public async complete(id: string, outputMarkdown: string, durationMs?: number): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/jobs/${id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ outputMarkdown, durationMs }),
+      });
+      const json = await res.json();
+      return !!json?.ok;
+    } catch {
+      return false;
+    }
   }
 
-  public claim(workerId: string): AIJob | null {
-    const pendingIndex = this.jobs.findIndex((j) => j.status === "pending");
-    if (pendingIndex === -1) return null;
-
-    const job = this.jobs[pendingIndex];
-    const updated: AIJob = {
-      ...job,
-      status: "claimed",
-      claimedAt: new Date().toISOString(),
-      workerId,
-    };
-    this.jobs[pendingIndex] = updated;
-    this.save();
-    return updated;
+  public async fail(id: string, error: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/jobs/${id}/fail`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error }),
+      });
+      const json = await res.json();
+      return !!json?.ok;
+    } catch {
+      return false;
+    }
   }
 
-  public heartbeat(id: string): boolean {
-    const index = this.jobs.findIndex((j) => j.id === id);
-    if (index === -1) return false;
-    this.jobs[index] = { ...this.jobs[index], status: "running" };
-    this.save();
-    return true;
-  }
-
-  public complete(id: string, outputMarkdown: string, durationMs?: number): boolean {
-    const index = this.jobs.findIndex((j) => j.id === id);
-    if (index === -1) return false;
-    this.jobs[index] = {
-      ...this.jobs[index],
-      status: "done",
-      outputMarkdown,
-      durationMs,
-      completedAt: new Date().toISOString(),
-    };
-    this.save();
-    return true;
-  }
-
-  public fail(id: string, error: string): boolean {
-    const index = this.jobs.findIndex((j) => j.id === id);
-    if (index === -1) return false;
-    this.jobs[index] = {
-      ...this.jobs[index],
-      status: "failed",
-      error,
-      completedAt: new Date().toISOString(),
-    };
-    this.save();
-    return true;
-  }
-
-  public delete(id: string): boolean {
-    const initialLen = this.jobs.length;
-    this.jobs = this.jobs.filter((j) => j.id !== id);
-    this.save();
-    return this.jobs.length < initialLen;
+  public async delete(id: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/jobs/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      return !!json?.ok;
+    } catch {
+      return false;
+    }
   }
 }
 

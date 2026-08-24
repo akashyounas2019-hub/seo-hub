@@ -210,13 +210,13 @@ function SuggestionsPage() {
     0,
   );
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (generating) return;
     setGenerating(true);
     toast.info("Enqueuing suggestion mining task in AKS worker queue...");
 
-    // Create a new AKS AI Job in queue
-    const job = jobsStore.create({
+    // Create a new AKS AI Job in queue (persisted to Postgres via /api/jobs)
+    const job = await jobsStore.create({
       kind: "seo:suggestion-gen",
       title: "Mine new SEO opportunities via LLM Scout",
       input: {
@@ -226,18 +226,24 @@ function SuggestionsPage() {
       priority: "normal",
     });
 
-    // Simulate worker process loop
-    setTimeout(() => {
-      jobsStore.claim("aks-worker-scout-bot");
+    if (!job) {
+      setGenerating(false);
+      toast.error("Failed to enqueue job");
+      return;
+    }
 
-      setTimeout(() => {
-        jobsStore.heartbeat(job.id);
+    // Simulate worker process loop against the real job record
+    setTimeout(async () => {
+      await jobsStore.claim("aks-worker-scout-bot");
 
-        setTimeout(() => {
+      setTimeout(async () => {
+        await jobsStore.heartbeat(job.id);
+
+        setTimeout(async () => {
           const pick = GENERATED_POOL[genCursor % GENERATED_POOL.length];
           const newId = `gen-${Date.now()}`;
 
-          jobsStore.complete(job.id, `### Opportunity Identified
+          await jobsStore.complete(job.id, `### Opportunity Identified
 - **Title**: ${pick.item.title}
 - **Description**: ${pick.item.desc}
 - **Pillar**: ${pick.sectionId}

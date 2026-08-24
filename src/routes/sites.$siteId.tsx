@@ -160,7 +160,7 @@ POLICIES:
       created: "50 ago",
     },
     team: [{ email: "admin@example.com", role: "owner" }],
-    gscProperty: "sc-domain:safaeewala.com",
+    gscProperty: "https://safaeewala.com/",
     gmbSync: "Once we can GetToken from Google we will do a smart daily resync on 03:00 / 15:00 UTC.",
     seoTraffic: [
       { date: "2026-07-12", source: "gsc", metric: '{"users":"2","sessions":"2","conversions":"0","engagementRate":"0"}' },

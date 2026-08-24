@@ -129,9 +129,9 @@ function AssistantPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs, loading, currentStatus]);
 
-  function send() {
+  async function send() {
     if (!input.trim() || loading) return;
-    
+
     const userPrompt = input;
     setInput("");
     setLoading(true);
@@ -140,8 +140,8 @@ function AssistantPage() {
     // Add user message immediately
     setMsgs((m) => [...m, { role: "user", text: userPrompt }]);
 
-    // Create a new AKS AI Job in queue
-    const job = jobsStore.create({
+    // Create a new AKS AI Job in queue (persisted to Postgres via /api/jobs)
+    const job = await jobsStore.create({
       kind: "assistant:chat",
       title: `Leader Bot Chat: ${userPrompt.slice(0, 35)}...`,
       input: {
@@ -151,26 +151,33 @@ function AssistantPage() {
       priority: "high",
     });
 
-    // Simulate worker process loop
-    setTimeout(() => {
-      jobsStore.claim("aks-worker-leader-bot");
+    if (!job) {
+      setLoading(false);
+      setCurrentStatus("");
+      toast.error("Failed to enqueue job");
+      return;
+    }
+
+    // Simulate worker process loop against the real job record
+    setTimeout(async () => {
+      await jobsStore.claim("aks-worker-leader-bot");
       setCurrentStatus("Task claimed by aks-worker-leader-bot");
 
-      setTimeout(() => {
-        jobsStore.heartbeat(job.id);
+      setTimeout(async () => {
+        await jobsStore.heartbeat(job.id);
         setCurrentStatus("Processing request in LLM reasoning engine...");
 
-        setTimeout(() => {
+        setTimeout(async () => {
           const responseText = generateSmartResponse(userPrompt);
-          jobsStore.complete(job.id, responseText, 1500);
-          
+          await jobsStore.complete(job.id, responseText, 1500);
+
           setMsgs((m) => [
             ...m,
-            { 
-              role: "assistant", 
-              text: responseText, 
-              jobId: job.id, 
-              workerStatus: "Completed successfully" 
+            {
+              role: "assistant",
+              text: responseText,
+              jobId: job.id,
+              workerStatus: "Completed successfully"
             }
           ]);
           setLoading(false);

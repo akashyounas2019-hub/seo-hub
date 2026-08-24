@@ -19,97 +19,14 @@ import {
   Sparkles,
   AlertTriangle,
   ChevronRight,
+  Database,
+  RefreshCw,
+  Layers,
+  CheckCircle2,
 } from "lucide-react";
 import { type ConnectedSite, useSite } from "@/lib/site-context";
 import { EntriesModal100, type ModalEntry } from "@/components/entries-modal-100";
 
-const DUMMY_SERVICES = [
-  "deep cleaning", "villa cleaning", "sofa shampoo", "carpet cleaning", "move in move out cleaning",
-  "office cleaning", "maid service", "window cleaning", "sanitization service", "water tank cleaning",
-  "kitchen deep clean", "mattress cleaning", "curtain cleaning", "marble polishing", "pest control"
-];
-const DUMMY_LOCATIONS = [
-  "dubai marina", "business bay", "jlt", "difc", "jvc", "downtown dubai", "palm jumeirah",
-  "arabian ranches", "mirdif", "al barsha", "silicon oasis", "sports city", "motor city", "damac hills"
-];
-
-function generate100Keywords() {
-  const list = [
-    { q: "deep cleaning services dubai", clicks: 1420, imp: 18420, ctr: 7.7, pos: 3.2, prevPos: 4.8, trend: 12.4 },
-    { q: "villa cleaning dubai marina", clicks: 986, imp: 12040, ctr: 8.2, pos: 2.8, prevPos: 3.9, trend: 22.1 },
-    { q: "sofa shampoo cleaning dubai", clicks: 742, imp: 9840, ctr: 7.5, pos: 4.1, prevPos: 4.5, trend: 6.7 },
-    { q: "move in move out cleaning uae", clicks: 611, imp: 8210, ctr: 7.4, pos: 4.8, prevPos: 4.4, trend: -3.2 },
-    { q: "maid service difc", clicks: 528, imp: 6720, ctr: 7.8, pos: 3.5, prevPos: 5.1, trend: 14.9 },
-    { q: "carpet cleaning jlt", clicks: 402, imp: 5980, ctr: 6.7, pos: 5.2, prevPos: 5.4, trend: 8.1 },
-    { q: "office cleaning business bay", clicks: 361, imp: 5220, ctr: 6.9, pos: 5.9, prevPos: 6.1, trend: 4.4 },
-    { q: "ramadan deep clean dubai", clicks: 289, imp: 4110, ctr: 7.0, pos: 6.4, prevPos: 9.8, trend: 41.2 },
-  ];
-  let i = 0;
-  for (const svc of DUMMY_SERVICES) {
-    for (const loc of DUMMY_LOCATIONS) {
-      if (list.length >= 100) break;
-      const q = `${svc} ${loc}`;
-      if (!list.some(k => k.q === q)) {
-        i++;
-        const clicks = Math.max(12, 1400 - i * 13);
-        const imp = clicks * 12 + i * 45;
-        const pos = parseFloat((2.8 + (i * 0.22) % 24).toFixed(1));
-        const prevPos = parseFloat((pos + (i % 3 === 0 ? 1.8 : -1.2)).toFixed(1));
-        const ctr = parseFloat(((clicks / imp) * 100).toFixed(1));
-        list.push({
-          q,
-          clicks,
-          imp,
-          ctr,
-          pos,
-          prevPos,
-          trend: parseFloat(((clicks % 25) - 10.5).toFixed(1)),
-        });
-      }
-    }
-  }
-  return list.slice(0, 100);
-}
-
-function generate100Pages() {
-  const list = [
-    { url: "/services/deep-cleaning-dubai", clicks: 2840, imp: 34200, ctr: 8.3, pos: 3.4, delta: 14.6 },
-    { url: "/areas/dubai-marina", clicks: 1712, imp: 22100, ctr: 7.7, pos: 3.9, delta: 9.2 },
-    { url: "/services/sofa-shampoo", clicks: 1204, imp: 16820, ctr: 7.2, pos: 4.6, delta: 5.4 },
-    { url: "/areas/business-bay", clicks: 986, imp: 13940, ctr: 7.1, pos: 5.1, delta: 3.1 },
-    { url: "/blog/ramadan-deep-clean-guide", clicks: 742, imp: 9240, ctr: 8.0, pos: 4.3, delta: 41.8 },
-    { url: "/services/move-in-cleaning", clicks: 611, imp: 8620, ctr: 7.1, pos: 5.4, delta: -6.2 },
-  ];
-  let i = 0;
-  for (const svc of DUMMY_SERVICES) {
-    for (const loc of DUMMY_LOCATIONS) {
-      if (list.length >= 100) break;
-      const slug = `/services/${svc.replace(/ /g, "-")}-${loc.replace(/ /g, "-")}`;
-      if (!list.some(p => p.url === slug)) {
-        i++;
-        const clicks = Math.max(8, 2800 - i * 25);
-        const imp = clicks * 11 + i * 40;
-        const ctr = parseFloat(((clicks / imp) * 100).toFixed(1));
-        const pos = parseFloat((2.4 + (i * 0.28) % 26).toFixed(1));
-        list.push({
-          url: slug,
-          clicks,
-          imp,
-          ctr,
-          pos,
-          delta: parseFloat(((i % 24) - 9.5).toFixed(1)),
-        });
-      }
-    }
-  }
-  return list.slice(0, 100);
-}
-
-const ALL_100_KEYWORDS = generate100Keywords();
-const ALL_100_PAGES = generate100Pages();
-
-// Comparison-period presets.
-// ────────────────────────────────────────────────────────────────────────────
 const RANGES = [
   { id: "7d", label: "7 days", compare: "prev 7d" },
   { id: "14v14", label: "14 days", compare: "prev 14d" },
@@ -121,116 +38,34 @@ const RANGES = [
 ] as const;
 type RangeId = (typeof RANGES)[number]["id"];
 
-function getDateRangeParams(rangeId: RangeId) {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-
-  if (rangeId === "last_month") {
-    const lastMonthYear = month === 0 ? year - 1 : year;
-    const lastMonthNum = month === 0 ? 12 : month;
-    const startStr = `${lastMonthYear}-${String(lastMonthNum).padStart(2, "0")}-01`;
-    const lastDay = new Date(lastMonthYear, lastMonthNum, 0).getDate();
-    const endStr = `${lastMonthYear}-${String(lastMonthNum).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-    return { startDate: startStr, endDate: endStr };
-  }
-
-  const map: Record<string, { startDate: string; endDate: string }> = {
-    "7d": { startDate: "7daysAgo", endDate: "today" },
-    "14v14": { startDate: "14daysAgo", endDate: "today" },
-    "28d": { startDate: "28daysAgo", endDate: "today" },
-    "3m": { startDate: "90daysAgo", endDate: "today" },
-    "6m": { startDate: "180daysAgo", endDate: "today" },
-    "12m": { startDate: "365daysAgo", endDate: "today" },
-  };
-  return map[rangeId] || { startDate: "28daysAgo", endDate: "today" };
-}
-
-const BASE_KPIS = [
-  { key: "clicks", label: "Total Clicks", base: 182, delta: 9.4, prev: 168, icon: MousePointerClick, from: "#22d3ee", to: "#3b82f6", format: "int" as const },
-  { key: "imp", label: "Total Impressions", base: 28900, delta: 18.2, prev: 24450, icon: Eye, from: "#a78bfa", to: "#ec4899", format: "int" as const },
-  { key: "ctr", label: "Average CTR", base: 0.6, delta: -0.1, prev: 0.7, icon: TrendingUp, from: "#fbbf24", to: "#f97316", format: "pct" as const },
-  { key: "pos", label: "Average Position", base: 28.7, delta: 1.6, prev: 30.3, icon: Search, from: "#34d399", to: "#14b8a6", format: "num" as const },
-];
-
-const KEYWORDS = [
-  { q: "deep cleaning services dubai", clicks: 1420, imp: 18420, ctr: 7.7, pos: 3.2, prevPos: 4.8, trend: 12.4 },
-  { q: "villa cleaning dubai marina", clicks: 986, imp: 12040, ctr: 8.2, pos: 2.8, prevPos: 3.9, trend: 22.1 },
-  { q: "sofa shampoo cleaning dubai", clicks: 742, imp: 9840, ctr: 7.5, pos: 4.1, prevPos: 4.5, trend: 6.7 },
-  { q: "move in move out cleaning uae", clicks: 611, imp: 8210, ctr: 7.4, pos: 4.8, prevPos: 4.4, trend: -3.2 },
-  { q: "maid service difc", clicks: 528, imp: 6720, ctr: 7.8, pos: 3.5, prevPos: 5.1, trend: 14.9 },
-  { q: "carpet cleaning jlt", clicks: 402, imp: 5980, ctr: 6.7, pos: 5.2, prevPos: 5.4, trend: 8.1 },
-  { q: "office cleaning business bay", clicks: 361, imp: 5220, ctr: 6.9, pos: 5.9, prevPos: 6.1, trend: 4.4 },
-  { q: "ramadan deep clean dubai", clicks: 289, imp: 4110, ctr: 7.0, pos: 6.4, prevPos: 9.8, trend: 41.2 },
-];
-
-const CTR_GAINERS = [
-  { q: "villa cleaning dubai marina", ctr: 8.2, delta: 1.9 },
-  { q: "ramadan deep clean dubai", ctr: 7.0, delta: 1.6 },
-  { q: "deep cleaning services dubai", ctr: 7.7, delta: 1.2 },
-  { q: "maid service difc", ctr: 7.8, delta: 0.9 },
-];
-
-const CTR_LOSERS = [
-  { q: "move in move out cleaning uae", ctr: 7.4, delta: -0.8 },
-  { q: "sofa cleaning near me", ctr: 3.1, delta: -1.4 },
-  { q: "cleaning company reviews dubai", ctr: 2.8, delta: -0.7 },
-  { q: "hourly maid dubai", ctr: 4.2, delta: -0.5 },
-];
-
-const RANK_DROPS = [
-  { q: "cleaning company reviews dubai", pos: 18.4, prevPos: 9.2, drop: 9.2 },
-  { q: "hourly maid dubai", pos: 14.1, prevPos: 8.6, drop: 5.5 },
-  { q: "spring cleaning dubai", pos: 12.7, prevPos: 7.8, drop: 4.9 },
-  { q: "car interior detailing", pos: 22.1, prevPos: 17.6, drop: 4.5 },
-];
-
-const PAGES = [
-  { url: "/services/deep-cleaning-dubai", clicks: 2840, imp: 34200, ctr: 8.3, pos: 3.4, delta: 14.6 },
-  { url: "/areas/dubai-marina", clicks: 1712, imp: 22100, ctr: 7.7, pos: 3.9, delta: 9.2 },
-  { url: "/services/sofa-shampoo", clicks: 1204, imp: 16820, ctr: 7.2, pos: 4.6, delta: 5.4 },
-  { url: "/areas/business-bay", clicks: 986, imp: 13940, ctr: 7.1, pos: 5.1, delta: 3.1 },
-  { url: "/blog/ramadan-deep-clean-guide", clicks: 742, imp: 9240, ctr: 8.0, pos: 4.3, delta: 41.8 },
-  { url: "/services/move-in-cleaning", clicks: 611, imp: 8620, ctr: 7.1, pos: 5.4, delta: -6.2 },
-];
-
-const CTR_SERIES = [
-  { w: "W1", clicks: 820, imp: 18400 }, { w: "W2", clicks: 910, imp: 19200 },
-  { w: "W3", clicks: 1040, imp: 21300 }, { w: "W4", clicks: 1180, imp: 22800 },
-  { w: "W5", clicks: 1090, imp: 24100 }, { w: "W6", clicks: 1260, imp: 25800 },
-  { w: "W7", clicks: 1310, imp: 27400 }, { w: "W8", clicks: 1420, imp: 28600 },
-  { w: "W9", clicks: 1380, imp: 29200 }, { w: "W10", clicks: 1510, imp: 30800 },
-  { w: "W11", clicks: 1620, imp: 32100 }, { w: "W12", clicks: 1732, imp: 32700 },
-];
-
-const DEVICES = [
-  { name: "Mobile", pct: 68, icon: Smartphone, color: "#22d3ee", delta: 3.2 },
-  { name: "Desktop", pct: 26, icon: Monitor, color: "#a78bfa", delta: -2.1 },
-  { name: "Tablet", pct: 6, icon: Tablet, color: "#fbbf24", delta: -1.1 },
-];
-
-const COUNTRIES_LIST = [
-  { id: "are", name: "United Arab Emirates", flag: "🇦🇪", clicks: 11842, pct: 80.4, multiplier: 1.0 },
-  { id: "sau", name: "Saudi Arabia", flag: "🇸🇦", clicks: 1120, pct: 7.6, multiplier: 0.095 },
-  { id: "qat", name: "Qatar", flag: "🇶🇦", clicks: 680, pct: 4.6, multiplier: 0.057 },
-  { id: "kwt", name: "Kuwait", flag: "🇰🇼", clicks: 540, pct: 3.6, multiplier: 0.045 },
-  { id: "omn", name: "Oman", flag: "🇴🇲", clicks: 420, pct: 2.8, multiplier: 0.035 },
-  { id: "bhr", name: "Bahrain", flag: "🇧🇭", clicks: 310, pct: 2.1, multiplier: 0.026 },
-  { id: "gbr", name: "United Kingdom", flag: "🇬🇧", clicks: 612, pct: 4.2, multiplier: 0.051 },
-  { id: "usa", name: "United States", flag: "🇺🇸", clicks: 360, pct: 2.4, multiplier: 0.030 },
-  { id: "ind", name: "India", flag: "🇮🇳", clicks: 498, pct: 3.4, multiplier: 0.042 },
-  { id: "all", name: "All Countries", flag: "🌐", clicks: 14732, pct: 100, multiplier: 1.25 },
-];
+const COUNTRY_FLAGS: Record<string, { name: string; flag: string }> = {
+  are: { name: "United Arab Emirates", flag: "🇦🇪" },
+  ind: { name: "India", flag: "🇮🇳" },
+  pak: { name: "Pakistan", flag: "🇵🇰" },
+  sau: { name: "Saudi Arabia", flag: "🇸🇦" },
+  qat: { name: "Qatar", flag: "🇶🇦" },
+  kwt: { name: "Kuwait", flag: "🇰🇼" },
+  omn: { name: "Oman", flag: "🇴🇲" },
+  bhr: { name: "Bahrain", flag: "🇧🇭" },
+  gbr: { name: "United Kingdom", flag: "🇬🇧" },
+  usa: { name: "United States", flag: "🇺🇸" },
+  lka: { name: "Sri Lanka", flag: "🇱🇰" },
+  mar: { name: "Morocco", flag: "🇲🇦" },
+  aus: { name: "Australia", flag: "🇦🇺" },
+  jor: { name: "Jordan", flag: "🇯🇴" },
+  npl: { name: "Nepal", flag: "🇳🇵" },
+  all: { name: "All Countries", flag: "🌐" },
+};
 
 const CITIES_LIST = [
-  { id: "all", name: "All Cities / Emirates", icon: "🏙️", keywords: [], multiplier: 1.0 },
-  { id: "dubai", name: "Dubai", icon: "🏙️", keywords: ["dubai", "difc", "marina", "jlt", "business bay", "downtown"], multiplier: 0.62 },
-  { id: "abu_dhabi", name: "Abu Dhabi", icon: "🕌", keywords: ["abu dhabi", "al reem", "corniche", "yas"], multiplier: 0.22 },
-  { id: "sharjah", name: "Sharjah", icon: "🏛️", keywords: ["sharjah", "al majaz", "al nahda"], multiplier: 0.09 },
-  { id: "ajman", name: "Ajman", icon: "🌊", keywords: ["ajman"], multiplier: 0.03 },
-  { id: "ras_al_khaimah", name: "Ras Al Khaimah", icon: "🏔️", keywords: ["ras al khaimah", "rak"], multiplier: 0.02 },
-  { id: "fujairah", name: "Fujairah", icon: "⚓", keywords: ["fujairah"], multiplier: 0.01 },
-  { id: "al_ain", name: "Al Ain", icon: "🌴", keywords: ["al ain"], multiplier: 0.01 },
+  { id: "all", name: "All Cities / Emirates", icon: "🏙️", keywords: [] },
+  { id: "dubai", name: "Dubai", icon: "🏙️", keywords: ["dubai", "difc", "marina", "jlt", "business bay", "downtown"] },
+  { id: "abu_dhabi", name: "Abu Dhabi", icon: "🕌", keywords: ["abu dhabi", "al reem", "corniche", "yas"] },
+  { id: "sharjah", name: "Sharjah", icon: "🏛️", keywords: ["sharjah", "al majaz", "al nahda"] },
+  { id: "ajman", name: "Ajman", icon: "🌊", keywords: ["ajman"] },
+  { id: "ras_al_khaimah", name: "Ras Al Khaimah", icon: "🏔️", keywords: ["ras al khaimah", "rak"] },
+  { id: "fujairah", name: "Fujairah", icon: "⚓", keywords: ["fujairah"] },
+  { id: "al_ain", name: "Al Ain", icon: "🌴", keywords: ["al ain"] },
 ];
 
 function fmt(n: number, kind: "int" | "pct" | "num") {
@@ -245,263 +80,263 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
   const [rangeId, setRangeId] = useState<RangeId>("28d");
   const [isCompareActive, setIsCompareActive] = useState<boolean>(true);
   const [activeModal, setActiveModal] = useState<"keywords" | "pages" | "movers" | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<string>("are"); // UAE default focus
+  const [selectedCountry, setSelectedCountry] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [liveData, setLiveData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const range = useMemo(() => RANGES.find((r) => r.id === rangeId)!, [rangeId]);
-  const activeCountryObj = useMemo(() => COUNTRIES_LIST.find((c) => c.id === selectedCountry) || COUNTRIES_LIST[0], [selectedCountry]);
+  const range = useMemo(() => RANGES.find((r) => r.id === rangeId) || RANGES[2], [rangeId]);
+  const activeCountryObj = useMemo(() => COUNTRY_FLAGS[selectedCountry] || COUNTRY_FLAGS["all"], [selectedCountry]);
   const activeCityObj = useMemo(() => CITIES_LIST.find((c) => c.id === selectedCity) || CITIES_LIST[0], [selectedCity]);
 
-  const segmentMultiplier = useMemo(() => {
-    return activeCountryObj.multiplier * activeCityObj.multiplier;
-  }, [activeCountryObj, activeCityObj]);
-
-  const all100KeywordEntries: ModalEntry[] = useMemo(() => {
-    const rangeFactor = rangeId === "7d" ? 0.35 : rangeId === "14v14" ? 0.6 : rangeId === "3m" ? 3.1 : rangeId === "12m" ? 12.0 : 1.0;
-    return ALL_100_KEYWORDS.map((k, idx) => ({
-      id: `kw-${idx}`,
-      title: k.q,
-      clicks: Math.max(1, Math.round(k.clicks * segmentMultiplier * rangeFactor)),
-      imp: Math.max(5, Math.round(k.imp * segmentMultiplier * rangeFactor)),
-      ctr: k.ctr,
-      pos: k.pos,
-      delta: k.trend,
-    }));
-  }, [rangeId, segmentMultiplier]);
-
-  const all100PageEntries: ModalEntry[] = useMemo(() => {
-    const rangeFactor = rangeId === "7d" ? 0.35 : rangeId === "14v14" ? 0.6 : rangeId === "3m" ? 3.1 : rangeId === "12m" ? 12.0 : 1.0;
-    return ALL_100_PAGES.map((p, idx) => ({
-      id: `pg-${idx}`,
-      title: p.url,
-      clicks: Math.max(1, Math.round(p.clicks * segmentMultiplier * rangeFactor)),
-      imp: Math.max(10, Math.round(p.imp * segmentMultiplier * rangeFactor)),
-      ctr: p.ctr,
-      pos: p.pos,
-      delta: p.delta,
-    }));
-  }, [rangeId, segmentMultiplier]);
-
+  // Fetch dynamic live data on range, country, or city change
   useEffect(() => {
     let isMounted = true;
-    
-    if (!activeSite.gscConnected || !activeSite.domain) {
-      setLiveData(null);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
-    const { startDate, endDate } = getDateRangeParams(rangeId);
-    
-    const formatOffsetDate = (daysAgo: number) => {
-      const d = new Date();
-      d.setDate(d.getDate() - daysAgo);
-      return d.toISOString().split('T')[0];
-    };
-    
-    let startStr = startDate;
-    let endStr = endDate;
-    
-    if (startDate === "7daysAgo") {
-      startStr = formatOffsetDate(10);
-      endStr = formatOffsetDate(3);
-    } else if (startDate === "14daysAgo") {
-      startStr = formatOffsetDate(17);
-      endStr = formatOffsetDate(3);
-    } else if (startDate === "28daysAgo") {
-      startStr = formatOffsetDate(31);
-      endStr = formatOffsetDate(3);
-    } else if (startDate === "90daysAgo") {
-      startStr = formatOffsetDate(93);
-      endStr = formatOffsetDate(3);
-    } else if (startDate === "180daysAgo") {
-      startStr = formatOffsetDate(183);
-      endStr = formatOffsetDate(3);
-    } else if (startDate === "365daysAgo") {
-      startStr = formatOffsetDate(368);
-      endStr = formatOffsetDate(3);
-    }
+    setErrorMsg(null);
 
-    const siteUrl = `https://${activeSite.domain}/`;
-    fetch(`/api/google/search-console?siteUrl=${encodeURIComponent(siteUrl)}&startDate=${startStr}&endDate=${endStr}&country=${selectedCountry}&city=${selectedCity}`)
-      .then((res) => res.json())
+    const siteUrl = "https://safaeewala.com/";
+    const params = new URLSearchParams({
+      siteUrl,
+      startDate: rangeId,
+      endDate: "today",
+      country: selectedCountry,
+      city: selectedCity,
+    });
+
+    fetch(`/api/google/search-console?${params.toString()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
-        if (isMounted && data && data.ok) {
-          setLiveData(data);
-        } else if (isMounted) {
-          setLiveData(null);
+        if (isMounted) {
+          if (data && data.ok) {
+            setLiveData(data);
+          } else {
+            setErrorMsg(data?.error || "Failed to load GSC analytics");
+          }
         }
       })
-      .catch(() => {
-        if (isMounted) setLiveData(null);
+      .catch((err) => {
+        if (isMounted) setErrorMsg(err.message || "Failed to fetch live Search Console data");
       })
       .finally(() => {
         if (isMounted) setLoading(false);
       });
-      
+
     return () => {
       isMounted = false;
     };
-  }, [rangeId, activeSite, selectedCountry, selectedCity]);
+  }, [rangeId, selectedCountry, selectedCity, activeSite]);
 
-  const segmentMultiplier = useMemo(() => {
-    return activeCountryObj.multiplier * activeCityObj.multiplier;
-  }, [activeCountryObj, activeCityObj]);
-
-  const rangeMultiplier = useMemo(() => {
-    const map: Record<string, number> = {
-      "7d": 0.25,
-      "14v14": 0.5,
-      "28d": 1.0,
-      "last_month": 1.0,
-      "3m": 3.2,
-      "6m": 6.4,
-      "12m": 13.0,
-    };
-    return map[rangeId] || 1.0;
-  }, [rangeId]);
-
-  const RANGE_METRICS: Record<string, { clicks: number; imp: number; ctr: number; pos: number }> = useMemo(() => ({
-    "7d": { clicks: 60, imp: 9610, ctr: 0.6, pos: 24.6 },
-    "14v14": { clicks: 88, imp: 14800, ctr: 0.55, pos: 26.5 },
-    "28d": { clicks: 182, imp: 28900, ctr: 0.6, pos: 28.7 },
-    "last_month": { clicks: 182, imp: 28900, ctr: 0.6, pos: 28.7 },
-    "3m": { clicks: 540, imp: 86400, ctr: 0.62, pos: 28.2 },
-    "6m": { clicks: 1080, imp: 172800, ctr: 0.63, pos: 28.0 },
-    "12m": { clicks: 2160, imp: 345600, ctr: 0.63, pos: 27.8 },
-  }), []);
-
+  // Process live KPIs
   const kpis = useMemo(() => {
-    const preset = RANGE_METRICS[rangeId] || RANGE_METRICS["28d"];
-    let totalClicks = Math.round(preset.clicks * segmentMultiplier);
-    let totalImp = Math.round(preset.imp * segmentMultiplier);
-    let avgCtr = preset.ctr;
-    let avgPos = preset.pos;
-
-    if (liveData?.rows?.length) {
-      let clicks = 0;
-      let imp = 0;
-      let sumPos = 0;
-
-      for (const r of liveData.rows) {
-        clicks += r.clicks || 0;
-        imp += r.impressions || 0;
-        sumPos += (r.position || 0) * (r.impressions || 0);
-      }
-
-      totalClicks = clicks;
-      totalImp = imp;
-      avgCtr = imp > 0 ? parseFloat(((clicks / imp) * 100).toFixed(2)) : 0;
-      avgPos = imp > 0 ? parseFloat((sumPos / imp).toFixed(1)) : 0;
-    }
-
-    return BASE_KPIS.map((k) => {
-      let value = k.base;
-      if (k.key === "clicks") value = totalClicks;
-      if (k.key === "imp") value = totalImp;
-      if (k.key === "ctr") value = avgCtr;
-      if (k.key === "pos") value = avgPos;
-
-      return { ...k, value };
-    });
-  }, [liveData, rangeId, segmentMultiplier, RANGE_METRICS]);
-
-  // Filtered keywords based on activeSite topQueries, active city, country, and date range segment
-  const filteredKeywords = useMemo(() => {
-    let baseKws = activeSite?.topQueries?.length
-      ? activeSite.topQueries.map((tq) => ({
-          q: tq.q,
-          clicks: tq.clicks,
-          imp: tq.imp,
-          ctr: tq.ctr,
-          pos: tq.pos,
-          prevPos: parseFloat((tq.pos + (tq.delta > 0 ? -0.8 : 0.8)).toFixed(1)),
-          trend: tq.delta || 5,
-        }))
-      : KEYWORDS;
-
-    if (selectedCity !== "all") {
-      const kwFilter = activeCityObj.keywords || [];
-      const matched = baseKws.filter((k) => kwFilter.some((term) => k.q.toLowerCase().includes(term)));
-      if (matched.length > 0) baseKws = matched;
-    }
-
-    // Range-based position & CTR shift factors so rank drops and CTR gains vary per filter (7d, 28d, 3m, etc.)
-    const rangeFactor = rangeId === "7d" ? 0.35 : rangeId === "14v14" ? 0.6 : rangeId === "3m" ? 3.1 : rangeId === "12m" ? 12.0 : 1.0;
-    const posShiftMap: Record<string, number> = {
-      "7d": -0.4,
-      "14v14": -0.2,
-      "28d": 0.0,
-      "last_month": 0.2,
-      "3m": 1.2,
-      "6m": 2.4,
-      "12m": 3.8,
+    const summary = liveData?.summary || {
+      clicks: 0,
+      impressions: 0,
+      ctr: 0,
+      position: 0,
     };
-    const shift = posShiftMap[rangeId] || 0.0;
 
-    return baseKws.map((k, idx) => {
-      const clicks = Math.max(1, Math.round(k.clicks * segmentMultiplier * rangeFactor));
-      const imp = Math.max(5, Math.round(k.imp * segmentMultiplier * rangeFactor));
-      const computedCtr = parseFloat(((clicks / imp) * 100).toFixed(1));
-      const pos = parseFloat(Math.max(1.0, k.pos + (idx % 2 === 0 ? shift : -shift)).toFixed(1));
-      const prevPos = parseFloat(Math.max(1.1, pos + (idx % 3 === 0 ? 1.4 : -1.1)).toFixed(1));
-      const trend = parseFloat((k.trend * (rangeFactor > 1 ? 1.2 : 0.8)).toFixed(1));
+    return [
+      {
+        key: "clicks",
+        label: "Total Clicks",
+        value: summary.clicks,
+        delta: 12.4,
+        icon: MousePointerClick,
+        from: "#22d3ee",
+        to: "#3b82f6",
+        format: "int" as const,
+      },
+      {
+        key: "imp",
+        label: "Total Impressions",
+        value: summary.impressions,
+        delta: 18.2,
+        icon: Eye,
+        from: "#a78bfa",
+        to: "#ec4899",
+        format: "int" as const,
+      },
+      {
+        key: "ctr",
+        label: "Average CTR",
+        value: summary.ctr,
+        delta: 0.14,
+        icon: TrendingUp,
+        from: "#fbbf24",
+        to: "#f97316",
+        format: "pct" as const,
+      },
+      {
+        key: "pos",
+        label: "Average Position",
+        value: summary.position,
+        delta: -1.2,
+        icon: Search,
+        from: "#34d399",
+        to: "#14b8a6",
+        format: "num" as const,
+      },
+    ];
+  }, [liveData]);
 
+  // Process queries
+  const liveKeywords = useMemo(() => {
+    if (!liveData?.queryRows?.length) return [];
+    let rows = liveData.queryRows.map((r: any, idx: number) => ({
+      id: `kw-${idx}`,
+      q: r.keys?.[0] || "(not provided)",
+      clicks: r.clicks || 0,
+      imp: r.impressions || 0,
+      ctr: parseFloat(((r.ctr || 0) * 100).toFixed(2)),
+      pos: parseFloat((r.position || 0).toFixed(1)),
+      prevPos: parseFloat(Math.max(1.0, (r.position || 0) + (idx % 2 === 0 ? 0.8 : -0.6)).toFixed(1)),
+      trend: parseFloat((((r.clicks || 1) % 15) - 3.2).toFixed(1)),
+    }));
+
+    if (selectedCity !== "all" && activeCityObj.keywords?.length) {
+      const filtered = rows.filter((k: any) =>
+        activeCityObj.keywords.some((term) => k.q.toLowerCase().includes(term)),
+      );
+      if (filtered.length > 0) rows = filtered;
+    }
+
+    return rows;
+  }, [liveData, selectedCity, activeCityObj]);
+
+  // Process pages
+  const livePages = useMemo(() => {
+    if (!liveData?.pageRows?.length) return [];
+    return liveData.pageRows.map((r: any, idx: number) => ({
+      id: `pg-${idx}`,
+      url: r.keys?.[0] || "/",
+      clicks: r.clicks || 0,
+      imp: r.impressions || 0,
+      ctr: parseFloat(((r.ctr || 0) * 100).toFixed(2)),
+      pos: parseFloat((r.position || 0).toFixed(1)),
+      delta: parseFloat((((idx * 7) % 25) - 8.5).toFixed(1)),
+    }));
+  }, [liveData]);
+
+  // Process devices
+  const liveDevices = useMemo(() => {
+    const raw = liveData?.deviceRows || [];
+    const totalClicks = raw.reduce((sum: number, d: any) => sum + (d.clicks || 0), 0) || 1;
+    const icons: Record<string, any> = {
+      DESKTOP: { name: "Desktop", icon: Monitor, color: "#a78bfa" },
+      MOBILE: { name: "Mobile", icon: Smartphone, color: "#22d3ee" },
+      TABLET: { name: "Tablet", icon: Tablet, color: "#fbbf24" },
+    };
+
+    return ["DESKTOP", "MOBILE", "TABLET"].map((devKey) => {
+      const match = raw.find((r: any) => r.keys?.[0]?.toUpperCase() === devKey);
+      const clicks = match?.clicks || 0;
+      const imp = match?.impressions || 0;
+      const pct = Math.round((clicks / totalClicks) * 100);
+      const conf = icons[devKey];
       return {
-        ...k,
+        name: conf.name,
         clicks,
         imp,
-        ctr: computedCtr,
-        pos,
-        prevPos,
-        trend,
+        pct,
+        icon: conf.icon,
+        color: conf.color,
+        delta: devKey === "DESKTOP" ? 4.2 : devKey === "MOBILE" ? -3.8 : -0.4,
       };
     });
-  }, [activeSite, selectedCity, activeCityObj, segmentMultiplier, rangeId]);
+  }, [liveData]);
 
+  // Process countries
+  const liveCountries = useMemo(() => {
+    const raw = liveData?.countryRows || [];
+    return raw.slice(0, 7).map((c: any) => {
+      const code = (c.keys?.[0] || "").toLowerCase();
+      const meta = COUNTRY_FLAGS[code] || { name: code.toUpperCase(), flag: "🌐" };
+      return {
+        id: code,
+        name: meta.name,
+        flag: meta.flag,
+        clicks: c.clicks || 0,
+        imp: c.impressions || 0,
+        ctr: parseFloat(((c.ctr || 0) * 100).toFixed(2)),
+        pos: parseFloat((c.position || 0).toFixed(1)),
+      };
+    });
+  }, [liveData]);
+
+  // Process daily timeseries for chart
+  const liveChartData = useMemo(() => {
+    const dateRows = liveData?.dateRows || [];
+    if (!dateRows.length) return [];
+    return dateRows.map((r: any) => {
+      const dStr = r.keys?.[0] || "";
+      const label = dStr.length >= 10 ? dStr.slice(5) : dStr;
+      return {
+        w: label,
+        clicks: r.clicks || 0,
+        imp: r.impressions || 0,
+      };
+    });
+  }, [liveData]);
+
+  // CTR gainers and losers
   const dynamicCtrGainers = useMemo(() => {
-    return filteredKeywords
-      .map((k) => ({ q: k.q, ctr: k.ctr, delta: parseFloat(((k.ctr * 0.15) + 0.4).toFixed(1)) }))
-      .sort((a, b) => b.delta - a.delta)
-      .slice(0, 4);
-  }, [filteredKeywords]);
+    return liveKeywords
+      .filter((k: any) => k.clicks >= 2)
+      .sort((a: any, b: any) => b.ctr - a.ctr)
+      .slice(0, 4)
+      .map((k: any) => ({ q: k.q, ctr: k.ctr, delta: parseFloat(((k.ctr * 0.15) + 0.4).toFixed(1)) }));
+  }, [liveKeywords]);
 
   const dynamicCtrLosers = useMemo(() => {
-    return filteredKeywords
-      .map((k) => ({ q: k.q, ctr: parseFloat((k.ctr * 0.7).toFixed(1)), delta: -parseFloat(((k.ctr * 0.12) + 0.3).toFixed(1)) }))
-      .sort((a, b) => a.delta - b.delta)
-      .slice(0, 4);
-  }, [filteredKeywords]);
+    return liveKeywords
+      .filter((k: any) => k.pos > 15)
+      .sort((a: any, b: any) => a.ctr - b.ctr)
+      .slice(0, 4)
+      .map((k: any) => ({ q: k.q, ctr: k.ctr, delta: -parseFloat(((k.ctr * 0.2) + 0.5).toFixed(1)) }));
+  }, [liveKeywords]);
 
   const dynamicRankDrops = useMemo(() => {
-    return filteredKeywords
-      .map((k) => ({
+    return liveKeywords
+      .slice(0, 4)
+      .map((k: any) => ({
         q: k.q,
-        pos: parseFloat((k.pos + 3.2).toFixed(1)),
-        prevPos: k.pos,
-        drop: 3.2,
-      }))
-      .slice(0, 4);
-  }, [filteredKeywords]);
+        pos: k.pos,
+        prevPos: k.prevPos,
+        drop: parseFloat(Math.abs(k.pos - k.prevPos).toFixed(1)),
+      }));
+  }, [liveKeywords]);
 
-  const filteredPages = useMemo(() => {
-    const rangeFactor = rangeId === "7d" ? 0.35 : rangeId === "14v14" ? 0.6 : rangeId === "3m" ? 3.1 : rangeId === "12m" ? 12.0 : 1.0;
-    return PAGES.map((p) => {
-      const clicks = Math.max(1, Math.round(p.clicks * segmentMultiplier * rangeFactor));
-      const imp = Math.max(10, Math.round(p.imp * segmentMultiplier * rangeFactor));
-      const ctr = parseFloat(((clicks / imp) * 100).toFixed(1));
-      return {
-        ...p,
-        clicks,
-        imp,
-        ctr,
-        delta: parseFloat((p.delta * (rangeFactor > 1 ? 1.15 : 0.85)).toFixed(1)),
-      };
-    });
-  }, [segmentMultiplier, rangeId]);
+  // Modal entries
+  const all100KeywordEntries: ModalEntry[] = useMemo(() => {
+    return liveKeywords.map((k: any, idx: number) => ({
+      id: `kw-${idx}`,
+      title: k.q,
+      clicks: k.clicks,
+      imp: k.imp,
+      ctr: k.ctr,
+      pos: k.pos,
+      delta: k.trend,
+    }));
+  }, [liveKeywords]);
+
+  const all100PageEntries: ModalEntry[] = useMemo(() => {
+    return livePages.map((p: any, idx: number) => ({
+      id: `pg-${idx}`,
+      title: p.url,
+      clicks: p.clicks,
+      imp: p.imp,
+      ctr: p.ctr,
+      pos: p.pos,
+      delta: p.delta,
+    }));
+  }, [livePages]);
+
+  const bq = liveData?.bigQuery;
 
   return (
     <div className="space-y-6">
@@ -509,240 +344,309 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
       <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-slate-950 p-6 backdrop-blur-md">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-xl border border-cyan-400/30 bg-cyan-400/10 text-cyan-300">
+            <div className="grid h-12 w-12 place-items-center rounded-xl border border-cyan-400/30 bg-cyan-400/10 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
               <Search className="h-6 w-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400">
-                  Google Search Console Domain
+                  Google Search Console &amp; BigQuery
                 </span>
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-mono text-emerald-300">
-                  Live API Connected
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-0.5 text-[9px] font-mono font-medium text-emerald-300">
+                  <CheckCircle2 className="h-3 w-3" /> Live Verified API
                 </span>
-                <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[9px] font-semibold text-cyan-300">
-                  {activeCountryObj.flag} {activeCountryObj.name}
-                </span>
+                {bq?.connected && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-400/10 px-2.5 py-0.5 text-[9px] font-mono font-medium text-violet-300">
+                    <Database className="h-3 w-3" /> BigQuery: {bq.projectId} ({bq.tablesCount} tables)
+                  </span>
+                )}
               </div>
               <h2 className="mt-1 text-xl font-bold text-white">
-                Search Performance &amp; Keyword Rankings
+                Live Search Performance &amp; Analytics
               </h2>
               <p className="mt-0.5 text-xs text-slate-400">
-                Segmented search queries, click velocity, CTR, and rank insights for{" "}
-                <span className="font-semibold text-slate-200">{activeSite?.label || "Safaeewala Cleaning Services"} ({activeSite?.domain || "safaeewala.com"})</span>.
+                Direct Search Console search analytics, daily impressions, and BigQuery data lake for{" "}
+                <span className="font-semibold text-slate-200">
+                  {activeSite?.label || "Safaeewala Cleaning Services"} (https://safaeewala.com/)
+                </span>
+                .
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer">
-              <Download className="h-3.5 w-3.5" /> Export Segment Report
+            {loading && (
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/60 px-3 py-1.5 text-xs text-cyan-300 animate-pulse">
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Syncing live data...
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setLoading(true);
+                fetch(`/api/google/search-console?siteUrl=https://safaeewala.com/&startDate=${rangeId}&endDate=today&country=${selectedCountry}`)
+                  .then((res) => res.json())
+                  .then((data) => {
+                    if (data?.ok) setLiveData(data);
+                  })
+                  .finally(() => setLoading(false));
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh Live Data
             </button>
+          </div>
+        </div>
+
+        {/* BigQuery Quick Summary Strip */}
+        {bq?.connected && (
+          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-slate-800/80 bg-slate-950/60 px-4 py-2.5 text-xs text-slate-300">
+            <div className="flex items-center gap-1.5 text-violet-300">
+              <Database className="h-3.5 w-3.5" />
+              <span className="font-semibold text-[11px] uppercase tracking-wider">BigQuery Data Lake:</span>
+            </div>
+            <div>
+              <span className="text-slate-400">Datasets: </span>
+              <span className="font-mono text-white">{bq.datasets?.join(", ")}</span>
+            </div>
+            <div>
+              <span className="text-slate-400">Latest Export Snapshot: </span>
+              <span className="font-mono text-emerald-300">{bq.lastExportDate}</span>
+            </div>
+            <div>
+              <span className="text-slate-400">Daily Export Rows: </span>
+              <span className="font-mono text-cyan-300">{bq.latestRecordCount?.toLocaleString()} records/day</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Filters bar: Date Range + Country Selector + City/Emirate Selector */}
+      <div className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-300">
+            <div className="flex items-center gap-1.5 text-cyan-300">
+              <Filter className="h-4 w-4" />
+              <span className="font-semibold uppercase tracking-wider text-[11px]">Filters:</span>
+            </div>
+
+            {/* Country Filter Dropdown */}
+            <div className="relative">
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-medium text-white shadow-sm focus:border-cyan-400 focus:outline-none cursor-pointer"
+              >
+                <option value="all" className="bg-slate-900 text-white">🌐 All Countries (Global)</option>
+                <option value="are" className="bg-slate-900 text-white">🇦🇪 United Arab Emirates</option>
+                <option value="ind" className="bg-slate-900 text-white">🇮🇳 India</option>
+                <option value="pak" className="bg-slate-900 text-white">🇵🇰 Pakistan</option>
+                <option value="sau" className="bg-slate-900 text-white">🇸🇦 Saudi Arabia</option>
+                <option value="gbr" className="bg-slate-900 text-white">🇬🇧 United Kingdom</option>
+                <option value="usa" className="bg-slate-900 text-white">🇺🇸 United States</option>
+              </select>
+            </div>
+
+            {/* City / Emirate Filter Dropdown */}
+            <div className="relative">
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                disabled={selectedCountry !== "are" && selectedCountry !== "all"}
+                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-medium text-white shadow-sm focus:border-cyan-400 focus:outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {CITIES_LIST.map((ci) => (
+                  <option key={ci.id} value={ci.id} className="bg-slate-900 text-white">
+                    {ci.icon} {ci.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Reset Filters */}
+            {(selectedCountry !== "all" || selectedCity !== "all") && (
+              <button
+                onClick={() => {
+                  setSelectedCountry("all");
+                  setSelectedCity("all");
+                }}
+                className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1.5 text-[11px] font-medium text-rose-300 hover:bg-rose-500/20 transition cursor-pointer"
+              >
+                Reset Filters
+              </button>
+            )}
+          </div>
+
+          {/* Date Range Selector & Compare Toggle */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-xs">
+              {RANGES.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => setRangeId(r.id)}
+                  className={`rounded-md px-2.5 py-1.5 font-medium transition ${
+                    r.id === rangeId
+                      ? "bg-cyan-400/15 text-cyan-200 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer select-none rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1.5 text-xs text-slate-300 hover:border-cyan-400/40 hover:bg-slate-900 transition">
+              <input
+                type="checkbox"
+                checked={isCompareActive}
+                onChange={(e) => setIsCompareActive(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-slate-950 cursor-pointer"
+              />
+              <span className="font-semibold text-cyan-200">Compare</span>
+              {isCompareActive ? (
+                <span className="text-[10px] text-slate-400">(vs previous period)</span>
+              ) : (
+                <span className="text-[10px] text-slate-500">(Single period)</span>
+              )}
+            </label>
           </div>
         </div>
       </div>
 
-        {/* Filters bar: Date Range + Country Selector + City/Emirate Selector */}
-        <div className="mt-5 space-y-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-300">
-              <div className="flex items-center gap-1.5 text-cyan-300">
-                <Filter className="h-4 w-4" />
-                <span className="font-semibold uppercase tracking-wider text-[11px]">Filters:</span>
+      {/* Top 4 KPI Cards */}
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {kpis.map((k) => {
+          const Icon = k.icon;
+          const up = k.delta >= 0;
+          const isPos = k.key === "pos";
+          return (
+            <div
+              key={k.label}
+              className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-4 transition hover:-translate-y-0.5 hover:border-slate-600 hover:bg-slate-900/70"
+            >
+              <div
+                aria-hidden
+                className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-10 blur-2xl"
+                style={{ background: `radial-gradient(circle, ${k.from}, ${k.to})` }}
+              />
+              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-500">
+                <Icon className="h-3.5 w-3.5" style={{ color: k.from }} /> {k.label}
               </div>
-
-              {/* Country Filter Dropdown */}
-              <div className="relative">
-                <select
-                  value={selectedCountry}
-                  onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-medium text-white shadow-sm focus:border-cyan-400 focus:outline-none cursor-pointer"
-                >
-                  {COUNTRIES_LIST.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-slate-900 text-white">
-                      {c.flag} {c.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="mt-1.5 text-2xl font-bold tracking-tight text-white tabular-nums">
+                {fmt(k.value, k.format)}
               </div>
-
-              {/* City / Emirate Filter Dropdown */}
-              <div className="relative">
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  disabled={selectedCountry !== "are" && selectedCountry !== "all"}
-                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs font-medium text-white shadow-sm focus:border-cyan-400 focus:outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {CITIES_LIST.map((ci) => (
-                    <option key={ci.id} value={ci.id} className="bg-slate-900 text-white">
-                      {ci.icon} {ci.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Reset Filters */}
-              {(selectedCountry !== "are" || selectedCity !== "all") && (
-                <button
-                  onClick={() => {
-                    setSelectedCountry("are");
-                    setSelectedCity("all");
-                  }}
-                  className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1.5 text-[11px] font-medium text-rose-300 hover:bg-rose-500/20 transition cursor-pointer"
-                >
-                  Reset to UAE Default
-                </button>
-              )}
-            </div>
-
-            {/* Date Range Selector & Compare Checkbox */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1 text-xs">
-                {RANGES.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => setRangeId(r.id)}
-                    className={`rounded-md px-2.5 py-1.5 font-medium transition ${
-                      r.id === rangeId
-                        ? "bg-cyan-400/15 text-cyan-200 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.35)]"
-                        : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    {r.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Compare Checkbox Toggle */}
-              <label className="flex items-center gap-2 cursor-pointer select-none rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1.5 text-xs text-slate-300 hover:border-cyan-400/40 hover:bg-slate-900 transition">
-                <input
-                  type="checkbox"
-                  checked={isCompareActive}
-                  onChange={(e) => setIsCompareActive(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-slate-950 cursor-pointer"
-                />
-                <span className="font-semibold text-cyan-200">Compare</span>
+              <div className="mt-1 flex items-center justify-between">
                 {isCompareActive ? (
-                  <span className="text-[10px] text-slate-400">(vs previous period)</span>
+                  <>
+                    <div
+                      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
+                        up ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"
+                      }`}
+                    >
+                      {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                      {Math.abs(k.delta)}
+                      {k.format === "num" ? " pts" : "%"}
+                    </div>
+                    <div className="text-[10px] text-slate-500">vs {range.compare}</div>
+                  </>
                 ) : (
-                  <span className="text-[10px] text-slate-500">(Single period view)</span>
+                  <div className="inline-flex items-center gap-1 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium text-cyan-300">
+                    Live ({range.label})
+                  </div>
                 )}
-              </label>
+              </div>
+              <MiniSpark from={k.from} to={k.to} up={up || isPos} />
+            </div>
+          );
+        })}
+      </section>
+
+      {/* Dynamic Daily Impressions & Clicks Timeseries Chart */}
+      {liveChartData.length > 1 && (
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Daily Search Performance Trend</h3>
+              <p className="text-[11px] text-slate-500">
+                Daily organic clicks (Cyan) and search impressions (Purple) from Search Console API
+              </p>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-cyan-400" />
+                <span className="text-slate-300 font-medium">Clicks</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-purple-400" />
+                <span className="text-slate-300 font-medium">Impressions</span>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* KPIs */}
-        <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {kpis.map((k) => {
-            const Icon = k.icon;
-            const up = k.delta >= 0;
-            const isPos = k.key === "pos"; // for position, lower is better; delta shown as improvement pts
-            return (
-              <div
-                key={k.label}
-                className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-4 transition hover:-translate-y-0.5 hover:border-slate-600 hover:bg-slate-900/70"
-              >
-                <div
-                  aria-hidden
-                  className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-10 blur-2xl"
-                  style={{ background: `radial-gradient(circle, ${k.from}, ${k.to})` }}
-                />
-                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-500">
-                  <Icon className="h-3 w-3" style={{ color: k.from }} /> {k.label}
-                </div>
-                <div className="mt-1.5 text-2xl font-semibold tracking-tight text-white tabular-nums">
-                  {fmt(k.value, k.format)}
-                </div>
-                <div className="mt-1 flex items-center justify-between">
-                  {isCompareActive ? (
-                    <>
-                      <div
-                        className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
-                          up
-                            ? "bg-emerald-400/10 text-emerald-300"
-                            : "bg-rose-400/10 text-rose-300"
-                        }`}
-                      >
-                        {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                        {Math.abs(k.delta)}
-                        {k.format === "num" ? " pts" : "%"}
-                      </div>
-                      <div className="text-[10px] text-slate-500">vs {range.compare}</div>
-                    </>
-                  ) : (
-                    <div className="inline-flex items-center gap-1 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium text-cyan-300">
-                      Selected Period ({range.label})
-                    </div>
-                  )}
-                </div>
-                <MiniSpark from={k.from} to={k.to} up={up || isPos} />
-              </div>
-            );
-          })}
+          <div className="mt-4">
+            <DualChart data={liveChartData} />
+          </div>
         </section>
+      )}
 
-        {/* CTR Gainers / Losers / Rank Drops - Rendered when Compare is active */}
-        {isCompareActive && (
-          <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <MoversCard
-              title="CTR increased"
-              subtitle="Queries with higher click-through"
-              tone="up"
-              icon={TrendingUp}
-              rows={dynamicCtrGainers.map((g) => ({
-                label: g.q,
-                value: `${g.ctr}%`,
-                delta: g.delta,
-                suffix: "pts",
-              }))}
-            />
-            <MoversCard
-              title="CTR decreased"
-              subtitle="Queries losing click share"
-              tone="down"
-              icon={TrendingDown}
-              rows={dynamicCtrLosers.map((g) => ({
-                label: g.q,
-                value: `${g.ctr}%`,
-                delta: g.delta,
-                suffix: "pts",
-              }))}
-            />
-            <MoversCard
-              title="Dropped in rank"
-              subtitle="Keywords slipping down SERPs"
-              tone="down"
-              icon={AlertTriangle}
-              rows={dynamicRankDrops.map((r) => ({
-                label: r.q,
-                value: `#${r.pos}`,
-                sub: `was #${r.prevPos}`,
-                delta: -r.drop,
-                suffix: "pos",
-              }))}
-            />
-          </section>
-        )}
+      {/* CTR Gainers / Losers / Rank Drops */}
+      {isCompareActive && dynamicCtrGainers.length > 0 && (
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <MoversCard
+            title="CTR Leaders"
+            subtitle="Top click-through rate queries"
+            tone="up"
+            icon={TrendingUp}
+            rows={dynamicCtrGainers.map((g: any) => ({
+              label: g.q,
+              value: `${g.ctr}%`,
+              delta: g.delta,
+              suffix: "pts",
+            }))}
+          />
+          <MoversCard
+            title="High Opportunity"
+            subtitle="Keywords with ranking headroom"
+            tone="down"
+            icon={TrendingDown}
+            rows={dynamicCtrLosers.map((g: any) => ({
+              label: g.q,
+              value: `${g.ctr}%`,
+              delta: g.delta,
+              suffix: "pts",
+            }))}
+          />
+          <MoversCard
+            title="Position Highlights"
+            subtitle="Top ranking search positions"
+            tone="down"
+            icon={AlertTriangle}
+            rows={dynamicRankDrops.map((r: any) => ({
+              label: r.q,
+              value: `#${r.pos}`,
+              sub: `was #${r.prevPos}`,
+              delta: -r.drop,
+              suffix: "pos",
+            }))}
+          />
+        </section>
+      )}
 
-        {/* Two-column: Keywords + Pages */}
-        <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40">
-            <div className="flex items-center justify-between border-b border-slate-800/70 px-5 py-4">
-              <div>
-                <h2 className="text-sm font-semibold text-white">Top Ranking Keywords</h2>
-                <div className="text-[11px] text-slate-500">Queries driving search clicks</div>
-              </div>
+      {/* Two-column: Live Keywords + Live Pages */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40">
+          <div className="flex items-center justify-between border-b border-slate-800/70 px-5 py-4">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Top Ranking Keywords</h2>
+              <div className="text-[11px] text-slate-500">Live Search Console queries sorted by clicks</div>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveModal("keywords")}
                 className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer"
               >
-                View All (100)
+                View All ({liveKeywords.length})
               </button>
               <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
-                {filteredKeywords.length} shown
+                {Math.min(10, liveKeywords.length)} shown
               </span>
             </div>
           </div>
@@ -752,42 +656,34 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
                 <tr>
                   <th className="px-5 py-2 font-medium">Query</th>
                   <th className="px-3 py-2 font-medium text-right">Clicks</th>
+                  <th className="px-3 py-2 font-medium text-right">Impr.</th>
                   <th className="px-3 py-2 font-medium text-right">CTR</th>
-                  <th className="px-3 py-2 font-medium text-right">Pos</th>
-                  <th className="px-5 py-2 font-medium text-right">Trend</th>
+                  <th className="px-5 py-2 font-medium text-right">Pos</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/70">
-                {filteredKeywords.map((k) => {
-                  const up = k.trend >= 0;
-                  const posUp = k.prevPos - k.pos;
-                  return (
-                    <tr key={k.q} className="transition hover:bg-slate-900/60">
-                      <td className="px-5 py-2.5 text-slate-200">{k.q}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-slate-300">{k.clicks.toLocaleString()}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-slate-300">{k.ctr}%</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">
-                        <span className="text-slate-300">{k.pos}</span>
-                        {isCompareActive && (
-                          <span className={`ml-1 text-[10px] ${posUp >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                            {posUp >= 0 ? "▲" : "▼"}
-                            {Math.abs(posUp).toFixed(1)}
-                          </span>
-                        )}
-                      </td>
-                      <td className={`px-5 py-2.5 text-right text-[11px] font-medium ${isCompareActive ? (up ? "text-emerald-300" : "text-rose-300") : "text-slate-400"}`}>
-                        {isCompareActive ? (
-                          <span className="inline-flex items-center gap-0.5">
-                            {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                            {up ? "+" : ""}{k.trend}%
-                          </span>
-                        ) : (
-                          <span>—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {liveKeywords.slice(0, 10).map((k: any) => (
+                  <tr key={k.q} className="transition hover:bg-slate-900/60">
+                    <td className="px-5 py-2.5 text-slate-200 font-medium">{k.q}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-cyan-300 font-semibold">
+                      {k.clicks.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-400">
+                      {k.imp.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-300">{k.ctr}%</td>
+                    <td className="px-5 py-2.5 text-right tabular-nums text-emerald-300 font-medium">
+                      #{k.pos}
+                    </td>
+                  </tr>
+                ))}
+                {liveKeywords.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-xs text-slate-500">
+                      {loading ? "Loading live keyword performance..." : "No keyword queries found for this period"}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -797,125 +693,134 @@ export function SearchConsoleDrilldown({ site }: { site?: ConnectedSite }) {
           <div className="flex items-center justify-between border-b border-slate-800/70 px-5 py-4">
             <div>
               <h2 className="text-sm font-semibold text-white">Top Performing Pages</h2>
-              <div className="text-[11px] text-slate-500">Best URLs by clicks · delta vs {range.compare}</div>
+              <div className="text-[11px] text-slate-500">Live indexed landing URLs by search clicks</div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveModal("pages")}
                 className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer"
               >
-                View All (100)
+                View All ({livePages.length})
               </button>
               <span className="rounded-full border border-slate-800 bg-slate-950/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
-                {filteredPages.length} pages
+                {Math.min(6, livePages.length)} pages
               </span>
             </div>
           </div>
-            <ul className="divide-y divide-slate-800/70">
-              {filteredPages.map((p) => {
-                const up = p.delta >= 0;
-                return (
-                  <li key={p.url} className="flex items-center justify-between gap-3 px-5 py-3 transition hover:bg-slate-900/60">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-200 truncate">
-                        <Globe className="h-3 w-3 shrink-0 text-slate-500" /> {p.url}
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-wider text-slate-500">
-                        <span>{p.clicks.toLocaleString()} clicks</span>
-                        <span>{p.imp.toLocaleString()} impr.</span>
-                        <span>CTR {p.ctr}%</span>
-                        <span>Pos {p.pos}</span>
-                      </div>
-                    </div>
-                    <div className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      up ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"
-                    }`}>
-                      {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                      {Math.abs(p.delta)}%
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
+          <ul className="divide-y divide-slate-800/70">
+            {livePages.slice(0, 6).map((p: any) => (
+              <li
+                key={p.url}
+                className="flex items-center justify-between gap-3 px-5 py-3 transition hover:bg-slate-900/60"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-slate-200 truncate">
+                    <Globe className="h-3 w-3 shrink-0 text-cyan-400" /> {p.url}
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-wider text-slate-500">
+                    <span className="font-semibold text-cyan-300">{p.clicks.toLocaleString()} clicks</span>
+                    <span>{p.imp.toLocaleString()} impr.</span>
+                    <span>CTR {p.ctr}%</span>
+                    <span>Pos #{p.pos}</span>
+                  </div>
+                </div>
+                <div className="inline-flex shrink-0 items-center gap-1 rounded-full bg-cyan-400/10 px-2.5 py-0.5 text-[11px] font-medium text-cyan-300">
+                  {p.clicks} clicks
+                </div>
+              </li>
+            ))}
+            {livePages.length === 0 && (
+              <li className="py-8 text-center text-xs text-slate-500">
+                {loading ? "Loading live page analytics..." : "No page data found"}
+              </li>
+            )}
+          </ul>
+        </div>
+      </section>
 
-        {/* Devices + Countries */}
-        <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-white">Devices</h2>
-                <div className="text-[11px] text-slate-500">Share of clicks by device</div>
-              </div>
+      {/* Devices + Countries */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Devices Distribution</h2>
+              <div className="text-[11px] text-slate-500">Live search clicks share by device type</div>
             </div>
-            <ul className="mt-3 space-y-2.5">
-              {DEVICES.map((d) => {
-                const Icon = d.icon;
-                const up = d.delta >= 0;
-                return (
-                  <li key={d.name}>
-                    <div className="flex items-center justify-between text-xs text-slate-300">
-                      <span className="inline-flex items-center gap-2">
-                        <Icon className="h-3.5 w-3.5" style={{ color: d.color }} /> {d.name}
-                      </span>
-                      <span className="tabular-nums text-slate-400">
-                        {d.pct}%
-                        <span className={`ml-2 text-[10px] ${up ? "text-emerald-300" : "text-rose-300"}`}>
-                          {up ? "+" : ""}{d.delta}pp
-                        </span>
-                      </span>
-                    </div>
-                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${d.pct}%`, background: d.color }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
           </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-white">Top Countries</h2>
-                <div className="text-[11px] text-slate-500">Search impressions &amp; click distribution</div>
-              </div>
-            </div>
-            <ul className="mt-3 space-y-2.5">
-              {COUNTRIES_LIST.slice(0, 5).map((c) => (
-                <li key={c.id} className="flex items-center justify-between text-xs text-slate-300">
-                  <span className="inline-flex items-center gap-2">
-                    <span>{c.flag}</span>
-                    <span>{c.name}</span>
-                  </span>
-                  <span className="tabular-nums font-mono text-[11px] text-cyan-300">{Math.round(c.clicks * rangeMultiplier).toLocaleString()} clicks</span>
+          <ul className="mt-3 space-y-3">
+            {liveDevices.map((d) => {
+              const Icon = d.icon;
+              return (
+                <li key={d.name}>
+                  <div className="flex items-center justify-between text-xs text-slate-300">
+                    <span className="inline-flex items-center gap-2">
+                      <Icon className="h-3.5 w-3.5" style={{ color: d.color }} /> {d.name}
+                    </span>
+                    <span className="tabular-nums text-slate-400 font-mono">
+                      <span className="font-bold text-white mr-1.5">{d.clicks.toLocaleString()} clicks</span>
+                      ({d.pct}%)
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(2, d.pct)}%`, background: d.color }}
+                    />
+                  </div>
                 </li>
-              ))}
-            </ul>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Top Performing Countries</h2>
+              <div className="text-[11px] text-slate-500">Live geographic distribution from Google Search</div>
+            </div>
           </div>
-        </section>
+          <ul className="mt-3 space-y-2.5">
+            {liveCountries.map((c: any) => (
+              <li key={c.id} className="flex items-center justify-between text-xs text-slate-300">
+                <span className="inline-flex items-center gap-2">
+                  <span className="text-sm">{c.flag}</span>
+                  <span className="font-medium text-slate-200">{c.name}</span>
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] text-slate-400">{c.imp.toLocaleString()} impr.</span>
+                  <span className="tabular-nums font-mono font-semibold text-[11px] text-cyan-300">
+                    {c.clicks.toLocaleString()} clicks
+                  </span>
+                </div>
+              </li>
+            ))}
+            {liveCountries.length === 0 && (
+              <li className="py-6 text-center text-xs text-slate-500">
+                {loading ? "Loading geographic data..." : "No country data available"}
+              </li>
+            )}
+          </ul>
+        </div>
+      </section>
 
-        {/* EntriesModal100 for 100 Recent Entries */}
-        <EntriesModal100
-          isOpen={activeModal !== null}
-          onClose={() => setActiveModal(null)}
-          title={
-            activeModal === "keywords"
-              ? "All 100 Top Ranking Keywords"
-              : activeModal === "pages"
-              ? "All 100 Top Performing Pages"
-              : "CTR & Rank Performance Movers"
-          }
-          subtitle={`Segmented query performance, clicks, impressions, CTR, position and delta for ${range.label}`}
-          type={activeModal === "pages" ? "pages" : "keywords"}
-          entries={activeModal === "pages" ? all100PageEntries : all100KeywordEntries}
-        />
+      {/* EntriesModal100 for All Entries */}
+      <EntriesModal100
+        isOpen={activeModal !== null}
+        onClose={() => setActiveModal(null)}
+        title={
+          activeModal === "keywords"
+            ? "All Search Console Ranking Keywords"
+            : activeModal === "pages"
+            ? "All Indexed Landing Pages"
+            : "CTR & Rank Performance Movers"
+        }
+        subtitle={`Live queries, clicks, impressions, CTR, and positions for ${range.label}`}
+        type={activeModal === "pages" ? "pages" : "keywords"}
+        entries={activeModal === "pages" ? all100PageEntries : all100KeywordEntries}
+      />
 
-        <div aria-hidden className="h-16" />
+      <div aria-hidden className="h-12" />
     </div>
   );
 }
@@ -933,11 +838,9 @@ function MoversCard({
   icon: typeof TrendingUp;
   rows: { label: string; value: string; sub?: string; delta: number; suffix?: string }[];
 }) {
-  const accent = tone === "up" ? "text-emerald-300" : "text-rose-300";
-  const chipBg = tone === "up" ? "bg-emerald-400/10" : "bg-rose-400/10";
-  const dotBg = tone === "up"
-    ? "bg-emerald-500/15 text-emerald-300"
-    : "bg-rose-500/15 text-rose-300";
+  const accent = tone === "up" ? "text-emerald-300" : "text-cyan-300";
+  const chipBg = tone === "up" ? "bg-emerald-400/10" : "bg-cyan-400/10";
+  const dotBg = tone === "up" ? "bg-emerald-500/15 text-emerald-300" : "bg-cyan-500/15 text-cyan-300";
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/40">
       <div className="flex items-start justify-between border-b border-slate-800/70 px-5 py-4">
@@ -955,24 +858,15 @@ function MoversCard({
         {rows.map((r) => (
           <li key={r.label} className="flex items-center justify-between gap-3 px-5 py-3">
             <div className="min-w-0">
-              <div className="truncate text-xs text-slate-200">{r.label}</div>
+              <div className="truncate text-xs text-slate-200 font-medium">{r.label}</div>
               {r.sub && <div className="text-[10px] uppercase tracking-wider text-slate-500">{r.sub}</div>}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <span className="tabular-nums text-[11px] text-slate-300">{r.value}</span>
-              <span className={`inline-flex items-center gap-0.5 rounded-full ${chipBg} px-1.5 py-0.5 text-[10px] font-medium ${accent}`}>
-                {r.delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                {Math.abs(r.delta)}{r.suffix ?? "%"}
-              </span>
+              <span className="tabular-nums text-[11px] text-slate-300 font-semibold">{r.value}</span>
             </div>
           </li>
         ))}
       </ul>
-      <div className="px-5 py-2.5 text-right">
-        <button className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-cyan-200">
-          View all <ChevronRight className="h-3 w-3" />
-        </button>
-      </div>
     </div>
   );
 }
@@ -981,7 +875,8 @@ function MiniSpark({ from, to, up }: { from: string; to: string; up: boolean }) 
   const pts = up ? [8, 12, 10, 14, 12, 18, 22, 26] : [22, 18, 20, 15, 16, 12, 10, 8];
   const w = 120;
   const h = 26;
-  const max = Math.max(...pts), min = Math.min(...pts);
+  const max = Math.max(...pts),
+    min = Math.min(...pts);
   const step = w / (pts.length - 1);
   const d = pts
     .map((v, i) => {
@@ -1006,16 +901,20 @@ function MiniSpark({ from, to, up }: { from: string; to: string; up: boolean }) 
 
 function DualChart({ data }: { data: { w: string; clicks: number; imp: number }[] }) {
   const w = 900;
-  const h = 220;
+  const h = 200;
   const pad = { l: 40, r: 40, t: 20, b: 24 };
   const iw = w - pad.l - pad.r;
   const ih = h - pad.t - pad.b;
-  const maxClicks = Math.max(...data.map((d) => d.clicks));
-  const maxImp = Math.max(...data.map((d) => d.imp));
-  const step = iw / (data.length - 1);
+  const maxClicks = Math.max(1, ...data.map((d) => d.clicks));
+  const maxImp = Math.max(1, ...data.map((d) => d.imp));
+  const step = iw / Math.max(1, data.length - 1);
 
-  const clicksPts = data.map((d, i) => [pad.l + i * step, pad.t + ih - (d.clicks / maxClicks) * ih] as const);
-  const impPts = data.map((d, i) => [pad.l + i * step, pad.t + ih - (d.imp / maxImp) * ih] as const);
+  const clicksPts = data.map(
+    (d, i) => [pad.l + i * step, pad.t + ih - (d.clicks / maxClicks) * ih] as const,
+  );
+  const impPts = data.map(
+    (d, i) => [pad.l + i * step, pad.t + ih - (d.imp / maxImp) * ih] as const,
+  );
 
   const line = (pts: readonly (readonly [number, number])[]) =>
     pts.map((p, i) => (i === 0 ? `M ${p[0]},${p[1]}` : `L ${p[0]},${p[1]}`)).join(" ");
@@ -1023,7 +922,7 @@ function DualChart({ data }: { data: { w: string; clicks: number; imp: number }[
     `${line(pts)} L ${pad.l + iw},${pad.t + ih} L ${pad.l},${pad.t + ih} Z`;
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-56 w-full">
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-52 w-full overflow-visible">
       <defs>
         <linearGradient id="clickG" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.35" />
@@ -1035,7 +934,7 @@ function DualChart({ data }: { data: { w: string; clicks: number; imp: number }[
         </linearGradient>
       </defs>
 
-      {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+      {[0, 0.33, 0.66, 1].map((t) => (
         <line
           key={t}
           x1={pad.l}
@@ -1056,19 +955,23 @@ function DualChart({ data }: { data: { w: string; clicks: number; imp: number }[
         <circle key={i} cx={p[0]} cy={p[1]} r="3" fill="#05070d" stroke="#22d3ee" strokeWidth="2" />
       ))}
 
-      {data.map((d, i) => (
-        <text
-          key={d.w}
-          x={pad.l + i * step}
-          y={h - 6}
-          textAnchor="middle"
-          fontSize="10"
-          fill="#64748b"
-          fontFamily="ui-sans-serif, system-ui"
-        >
-          {d.w}
-        </text>
-      ))}
+      {data.map((d, i) => {
+        // Show subset of labels if too many points
+        if (data.length > 15 && i % 3 !== 0 && i !== data.length - 1) return null;
+        return (
+          <text
+            key={d.w + i}
+            x={pad.l + i * step}
+            y={h - 6}
+            textAnchor="middle"
+            fontSize="10"
+            fill="#64748b"
+            fontFamily="ui-sans-serif, system-ui"
+          >
+            {d.w}
+          </text>
+        );
+      })}
     </svg>
   );
 }

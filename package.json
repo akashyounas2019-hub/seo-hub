@@ -10,7 +10,6 @@
     "preview": "vite preview",
     "db:seed": "node --env-file=.env --import tsx src/db/seed.ts",
     "db:push": "drizzle-kit push",
-    "worker": "node worker/claude-worker.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

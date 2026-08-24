@@ -45,8 +45,21 @@ const DEFAULT_AGENTS = [
 ];
 
 const DEFAULT_SITES = [
-  { slug: "safaeewala", name: "Safaeewala Dubai", domain: "safaeewala.com", city: "Dubai", region: "UAE" },
-  { slug: "spotless-ae", name: "Spotless Cleaning AE", domain: "spotlesscleaningservices.ae", city: "Dubai", region: "UAE" },
+  {
+    slug: "safaeewala",
+    name: "Safaeewala Cleaning Services",
+    domain: "safaeewala.com",
+    city: "Dubai",
+    region: "UAE",
+    health: "onboarding" as const,
+    gaConnected: true,
+    gaPropertyId: "377896920",
+    gaPropertyLabel: "GA4-Safaeewala-Dubai (377896920)",
+    gscConnected: true,
+    gscPropertyUrl: "https://safaeewala.com/",
+    gbpConnected: false,
+    wpConnected: false,
+  },
 ];
 
 async function main() {

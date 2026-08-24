@@ -276,27 +276,25 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
   const { allSites } = useSite();
-  const [activeAlertsCount, setActiveAlertsCount] = useState(11);
+  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
 
   useEffect(() => {
+    let isMounted = true;
     const checkAlerts = () => {
-      const saved = localStorage.getItem("aks.alerts");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          const count = parsed.filter((a: any) => a.status === "active").length;
+      fetch("/api/alerts")
+        .then((res) => res.json())
+        .then((json) => {
+          if (!isMounted || !json?.ok) return;
+          const count = (json.alerts || []).filter((a: any) => a.status === "open").length;
           setActiveAlertsCount(count);
-        } catch (e) {}
-      } else {
-        setActiveAlertsCount(11);
-      }
+        })
+        .catch(() => {});
     };
     checkAlerts();
-    window.addEventListener("aks-alerts-changed", checkAlerts);
-    window.addEventListener("storage", checkAlerts);
+    const interval = setInterval(checkAlerts, 30000);
     return () => {
-      window.removeEventListener("aks-alerts-changed", checkAlerts);
-      window.removeEventListener("storage", checkAlerts);
+      isMounted = false;
+      clearInterval(interval);
     };
   }, []);
 

@@ -94,6 +94,10 @@ export async function ensureSchema(): Promise<void> {
         CREATE TYPE task_priority AS ENUM ('low','normal','high','urgent');
       EXCEPTION WHEN duplicate_object THEN null; END $$;
 
+      DO $$ BEGIN
+        CREATE TYPE site_health AS ENUM ('healthy','attention','onboarding');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
       CREATE TABLE IF NOT EXISTS sites (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         slug text NOT NULL,
@@ -103,10 +107,36 @@ export async function ensureSchema(): Promise<void> {
         region text,
         knowledge_base text,
         structured_kb jsonb NOT NULL DEFAULT '{}'::jsonb,
+        health site_health NOT NULL DEFAULT 'onboarding',
+        pages_total integer NOT NULL DEFAULT 0,
+        pages_indexed integer NOT NULL DEFAULT 0,
+        open_fixes integer NOT NULL DEFAULT 0,
+        ga_connected boolean NOT NULL DEFAULT false,
+        ga_property_id text,
+        ga_property_label text,
+        gsc_connected boolean NOT NULL DEFAULT false,
+        gsc_property_url text,
+        gbp_connected boolean NOT NULL DEFAULT false,
+        gbp_location_name text,
+        wp_connected boolean NOT NULL DEFAULT false,
+        wp_detail text,
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
       ALTER TABLE sites ADD COLUMN IF NOT EXISTS structured_kb jsonb DEFAULT '{}'::jsonb;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS health site_health NOT NULL DEFAULT 'onboarding';
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS pages_total integer NOT NULL DEFAULT 0;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS pages_indexed integer NOT NULL DEFAULT 0;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS open_fixes integer NOT NULL DEFAULT 0;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS ga_connected boolean NOT NULL DEFAULT false;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS ga_property_id text;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS ga_property_label text;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS gsc_connected boolean NOT NULL DEFAULT false;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS gsc_property_url text;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS gbp_connected boolean NOT NULL DEFAULT false;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS gbp_location_name text;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_connected boolean NOT NULL DEFAULT false;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_detail text;
       CREATE UNIQUE INDEX IF NOT EXISTS sites_slug_uq ON sites(slug);
       CREATE UNIQUE INDEX IF NOT EXISTS sites_domain_uq ON sites(domain);
 
@@ -258,6 +288,20 @@ export async function ensureSchema(): Promise<void> {
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
+
+      CREATE TABLE IF NOT EXISTS alerts (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        site_id uuid REFERENCES sites(id) ON DELETE CASCADE,
+        severity text NOT NULL DEFAULT 'info',
+        title text NOT NULL,
+        message text,
+        source text NOT NULL DEFAULT 'system',
+        status text NOT NULL DEFAULT 'open',
+        created_at timestamptz NOT NULL DEFAULT now(),
+        resolved_at timestamptz
+      );
+      CREATE INDEX IF NOT EXISTS alerts_status_idx ON alerts(status, created_at);
+      CREATE INDEX IF NOT EXISTS alerts_site_idx ON alerts(site_id);
     `);
     _migrated = true;
   } finally {
