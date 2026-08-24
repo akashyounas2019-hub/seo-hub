@@ -151,10 +151,10 @@ const NODES_DATA: EcosystemNode[] = [
     color: "#38bdf8",
     accentGradient: "from-sky-500/20 via-indigo-500/10 to-transparent",
     details: {
-      description: "PostgreSQL relational store + pgvector embedding database for Obsidian 2nd Brain RAG knowledge.",
+      description: "PostgreSQL relational store for site Knowledge Base data, sitemap page inventory, and CRM records.",
       version: "PostgreSQL 15",
       authMethod: "Anon Key / Service Role JWT",
-      activePipelines: ["Obsidian Markdown RAG Indexer", "CRM Contact Store", "Audit Logs Persistence"],
+      activePipelines: ["Knowledge Base Structuring", "Site Pages Inventory", "CRM Contact Store", "Audit Logs Persistence"],
     },
   },
   {

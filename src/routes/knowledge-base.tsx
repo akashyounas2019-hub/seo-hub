@@ -12,17 +12,18 @@ import {
   HelpCircle,
   FileText,
   ShieldAlert,
-  Tag,
   CheckCircle2,
   Cpu,
   Server,
   ArrowRight,
+  MapPin,
+  RefreshCw,
 } from "lucide-react";
 import { useSite } from "@/lib/site-context";
 import { compileFullKnowledge } from "@/lib/ai-knowledge";
 import type { StructuredKnowledgeBase, KbServiceItem, KbFaqItem } from "@/db/schema";
-import { DEFAULT_OBSIDIAN_VAULT, parseObsidianNote, type ObsidianNote } from "@/lib/obsidian";
 import { BUSINESS_CATEGORIES } from "@/lib/business-categories";
+import { SitePagesPanel } from "@/components/site-pages-panel";
 
 export const Route = createFileRoute("/knowledge-base")({
   head: () => ({
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/knowledge-base")({
       { title: "Knowledge Base — AKS SEO Console" },
       {
         name: "description",
-        content: "Centralized RAG Knowledge Base hub for website projects, service catalogs, brand rules, and Obsidian 2nd Brain vaults.",
+        content: "Centralized RAG Knowledge Base hub for website projects, service catalogs, brand rules, and the full site page inventory.",
       },
     ],
   }),
@@ -40,15 +41,8 @@ export const Route = createFileRoute("/knowledge-base")({
 function KnowledgeBasePage() {
   const { currentSite, allSites, setCurrentSiteId } = useSite();
   const [activeTab, setActiveTab] = useState<
-    "services" | "brand" | "faqs" | "policies" | "network" | "obsidian" | "preview"
+    "services" | "brand" | "faqs" | "policies" | "network" | "pages" | "preview"
   >("services");
-
-  // Obsidian 2nd Brain state
-  const [obsidianVault, setObsidianVault] = useState<ObsidianNote[]>(DEFAULT_OBSIDIAN_VAULT);
-  const [selectedNoteId, setSelectedNoteId] = useState<string>(DEFAULT_OBSIDIAN_VAULT[0]?.id || "");
-  const [newObsidianTitle, setNewObsidianTitle] = useState("");
-  const [newObsidianCat, setNewObsidianCat] = useState("SEO SOP");
-  const [newObsidianContent, setNewObsidianContent] = useState("");
 
   // Local state for interactive editing — hydrated from the real Postgres
   // `sites` row on mount / site switch, and saved back via PATCH /api/sites/$id.
@@ -98,6 +92,30 @@ function KnowledgeBasePage() {
       }
     } catch {
       toast.error("Failed to save business category");
+    }
+  };
+
+  const [gbpSyncing, setGbpSyncing] = useState(false);
+
+  const syncFromGbp = async () => {
+    if (!currentSite.id) return;
+    setGbpSyncing(true);
+    try {
+      const res = await fetch(`/api/sites/${currentSite.id}/gbp-sync`, { method: "POST" });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success(`Synced from Google Business Profile: ${json.synced.businessName || "location"}`);
+        // Re-fetch the site so the structuredKb business profile reflects the sync.
+        const siteRes = await fetch(`/api/sites/${currentSite.id}`);
+        const siteJson = await siteRes.json();
+        if (siteJson?.ok && siteJson.site) setStructured(siteJson.site.structuredKb || {});
+      } else {
+        toast.error(json?.error || "Failed to sync from Google Business Profile");
+      }
+    } catch {
+      toast.error("Failed to sync from Google Business Profile");
+    } finally {
+      setGbpSyncing(false);
     }
   };
 
@@ -399,6 +417,32 @@ function KnowledgeBasePage() {
           </select>
         </div>
 
+        {/* Google Business Profile sync — manual trigger, no scheduler in this app */}
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-500">
+                <MapPin className="h-3 w-3" /> Google Business Profile
+              </div>
+              <p className="text-xs text-slate-500">
+                Pulls the real business name, address, and phone from your connected Google Business Profile into
+                this site's Knowledge Base. Manual sync — click whenever the listing changes.
+                {currentSite.gbpConnected && currentSite.gbpLocation && (
+                  <span className="text-emerald-400"> Currently synced: {currentSite.gbpLocation}.</span>
+                )}
+              </p>
+            </div>
+            <button
+              onClick={syncFromGbp}
+              disabled={gbpSyncing}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-400/20 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${gbpSyncing ? "animate-spin" : ""}`} />
+              {gbpSyncing ? "Syncing…" : "Sync from GBP"}
+            </button>
+          </div>
+        </div>
+
         {/* Knowledge Studio Component Card */}
         <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-slate-800/80 pb-4">
@@ -428,7 +472,7 @@ function KnowledgeBasePage() {
               { id: "faqs", label: "FAQs & Verified Q&A", icon: HelpCircle, count: structured.faqs?.length },
               { id: "policies", label: "Policies & Guarantees", icon: ShieldAlert, count: structured.policies?.length },
               { id: "network", label: "Network-Wide Mandates", icon: ShieldCheck },
-              { id: "obsidian", label: "Obsidian 2nd Brain Vault", icon: FileText, count: obsidianVault.length },
+              { id: "pages", label: "Site Pages", icon: FileText },
               { id: "preview", label: "Live Agent Prompt Dry-Run", icon: Bot },
             ].map((t) => {
               const active = activeTab === t.id;
@@ -454,149 +498,8 @@ function KnowledgeBasePage() {
             })}
           </div>
 
-          {/* Obsidian 2nd Brain Vault Tab */}
-          {activeTab === "obsidian" && (
-            <div className="space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-500/20 bg-cyan-950/20 p-4">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-6 w-6 text-cyan-300" />
-                  <div>
-                    <h3 className="text-sm font-bold text-white">Obsidian 2nd Brain Studio</h3>
-                    <p className="text-xs text-slate-400">
-                      Import Markdown SOPs, wikilink strategies (<span className="text-cyan-300 font-mono">[[Note Title]]</span>), and #tags into your PostgreSQL vector engine.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    toast.success("Obsidian Vault indexed into PostgreSQL RAG vector engine!");
-                  }}
-                  className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-cyan-300 transition"
-                >
-                  Index Vault into RAG Engine
-                </button>
-              </div>
-
-              {/* Add / Import Markdown Note Form */}
-              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-3">
-                <div className="text-xs font-semibold text-white">Add New Obsidian Note / SOP</div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <input
-                    placeholder="Note Title (e.g. Dubai Municipality SOP)"
-                    value={newObsidianTitle}
-                    onChange={(e) => setNewObsidianTitle(e.target.value)}
-                    className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 focus:border-cyan-400/50 focus:outline-none"
-                  />
-                  <input
-                    placeholder="Category (e.g. GMB Strategy, Technical)"
-                    value={newObsidianCat}
-                    onChange={(e) => setNewObsidianCat(e.target.value)}
-                    className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 focus:border-cyan-400/50 focus:outline-none"
-                  />
-                </div>
-                <textarea
-                  placeholder="Paste Obsidian Markdown content with [[Wikilinks]] and #tags..."
-                  rows={4}
-                  value={newObsidianContent}
-                  onChange={(e) => setNewObsidianContent(e.target.value)}
-                  className="w-full rounded-lg border border-slate-800 bg-slate-900 p-3 font-mono text-xs text-slate-100 focus:border-cyan-400/50 focus:outline-none"
-                />
-                <button
-                  onClick={() => {
-                    if (!newObsidianTitle.trim() || !newObsidianContent.trim()) return;
-                    const parsed = parseObsidianNote(newObsidianContent, newObsidianTitle);
-                    parsed.category = newObsidianCat.trim() || "SEO Knowledge";
-                    setObsidianVault((prev) => [parsed, ...prev]);
-                    setSelectedNoteId(parsed.id);
-                    setNewObsidianTitle("");
-                    setNewObsidianContent("");
-                    toast.success(`Obsidian Note "${parsed.title}" created & parsed!`);
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-400 px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-cyan-300"
-                >
-                  <Plus className="h-4 w-4" /> Save to Obsidian Vault
-                </button>
-              </div>
-
-              {/* Obsidian Vault Grid & Reader */}
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                {/* Note List sidebar */}
-                <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-                  <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Vault Notes ({obsidianVault.length})</div>
-                  {obsidianVault.map((note) => {
-                    const active = note.id === selectedNoteId;
-                    return (
-                      <button
-                        key={note.id}
-                        onClick={() => setSelectedNoteId(note.id)}
-                        className={`w-full rounded-lg border p-2.5 text-left transition ${
-                          active
-                            ? "border-cyan-400/60 bg-cyan-500/15 text-white shadow-[0_0_12px_rgba(34,211,238,0.2)]"
-                            : "border-slate-800/80 bg-slate-900/60 text-slate-300 hover:border-slate-700 hover:text-white"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between text-xs font-semibold">
-                          <span className="truncate">{note.title}</span>
-                          <Tag className="h-3 w-3 text-cyan-300 shrink-0" />
-                        </div>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] text-cyan-300">{note.category}</span>
-                          {note.tags.slice(0, 2).map((t) => (
-                            <span key={t} className="rounded bg-slate-900 px-1.5 py-0.5 text-[9px] text-slate-400">#{t}</span>
-                          ))}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Selected Note Content Viewer */}
-                <div className="lg:col-span-2 rounded-xl border border-slate-800 bg-slate-950/80 p-5 space-y-4">
-                  {(() => {
-                    const activeNote = obsidianVault.find((n) => n.id === selectedNoteId) || obsidianVault[0];
-                    if (!activeNote) return <div className="text-xs text-slate-500">No note selected</div>;
-                    return (
-                      <>
-                        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-800/80 pb-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[9px] font-semibold text-cyan-300">
-                                {activeNote.category}
-                              </span>
-                              <span className="text-[10px] text-slate-500">Updated: {activeNote.lastModified}</span>
-                            </div>
-                            <h2 className="mt-1 text-lg font-bold text-white">{activeNote.title}</h2>
-                          </div>
-                        </div>
-
-                        {/* Wikilinks relationships badge bar */}
-                        {activeNote.wikilinks.length > 0 && (
-                          <div className="rounded-lg border border-cyan-500/20 bg-slate-900/60 p-3">
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Obsidian [[Wikilinks]] Connected Notes</div>
-                            <div className="mt-1.5 flex flex-wrap gap-1.5">
-                              {activeNote.wikilinks.map((wl) => (
-                                <span
-                                  key={wl}
-                                  className="inline-flex items-center gap-1 rounded-md border border-cyan-400/40 bg-cyan-400/10 px-2 py-1 text-xs font-medium text-cyan-200"
-                                >
-                                  [[{wl}]]
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Note Content */}
-                        <pre className="max-h-[350px] overflow-y-auto whitespace-pre-wrap font-mono text-xs text-slate-200 bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
-                          {activeNote.content}
-                        </pre>
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Site Pages Tab — real sitemap.xml inventory, replaces the old decorative Obsidian tab */}
+          {activeTab === "pages" && <SitePagesPanel siteId={currentSite.id} domain={currentSite.domain} />}
 
           {/* 1. Services Catalog Tab */}
           {activeTab === "services" && (

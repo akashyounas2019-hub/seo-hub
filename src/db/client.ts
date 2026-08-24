@@ -427,6 +427,18 @@ export async function ensureSchema(): Promise<void> {
         ('Low/medium priority auto-approved by Head of Department', 'low', NULL::text, NULL::uuid, false, true)
       ) AS v(name, min_priority, category, site_id, requires_approval, enabled)
       WHERE NOT EXISTS (SELECT 1 FROM approval_rules);
+
+      CREATE TABLE IF NOT EXISTS site_pages (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+        url text NOT NULL,
+        lastmod text,
+        changefreq text,
+        priority text,
+        last_crawled_at timestamptz NOT NULL DEFAULT now()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS site_pages_site_url_uq ON site_pages(site_id, url);
+      CREATE INDEX IF NOT EXISTS site_pages_site_idx ON site_pages(site_id);
     `);
     _migrated = true;
   } finally {

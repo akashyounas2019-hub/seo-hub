@@ -587,6 +587,30 @@ export const approvalRules = pgTable(
   },
 );
 
+// Real per-URL inventory from a site's own sitemap.xml (src/lib/sitemap-crawler.ts).
+// Replaces the hardcoded pagesTotal/pagesIndexed numbers that used to live in
+// sites.$siteId.tsx's fake SITES lookup -- refreshed on demand from the
+// Knowledge Base page's "Site Pages" tab, not on a schedule (no cron in this
+// app; matches the orchestrator's manual-trigger-only design).
+export const sitePages = pgTable(
+  "site_pages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    lastmod: text("lastmod"),
+    changefreq: text("changefreq"),
+    priority: text("priority"),
+    lastCrawledAt: timestamp("last_crawled_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    siteUrlUq: uniqueIndex("site_pages_site_url_uq").on(t.siteId, t.url),
+    siteIdx: index("site_pages_site_idx").on(t.siteId),
+  }),
+);
+
 export type Site = typeof sites.$inferSelect;
 export type NewSite = typeof sites.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
@@ -603,5 +627,6 @@ export type AuditLogEntry = typeof auditLog.$inferSelect;
 export type NotificationPref = typeof notificationPrefs.$inferSelect;
 export type SettingsAutomationRule = typeof settingsAutomationRules.$inferSelect;
 export type ApprovalRule = typeof approvalRules.$inferSelect;
+export type SitePage = typeof sitePages.$inferSelect;
 
 

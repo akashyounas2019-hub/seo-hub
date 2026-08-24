@@ -53,7 +53,6 @@ import { Route as ApiJobsIndexRouteImport } from './routes/api.jobs.index'
 import { Route as ApiJobsIdRouteImport } from './routes/api.jobs.$id'
 import { Route as ApiJobsClaimRouteImport } from './routes/api.jobs.claim'
 import { Route as ApiKnowledgeAutocrawlRouteImport } from './routes/api.knowledge.autocrawl'
-import { Route as ApiKnowledgeObsidianRouteImport } from './routes/api.knowledge.obsidian'
 import { Route as ApiOrchestratorRunRouteImport } from './routes/api.orchestrator.run'
 import { Route as ApiSeoSuiteRunRouteImport } from './routes/api.seo-suite.run'
 import { Route as ApiSettingsApikeysRouteImport } from './routes/api.settings.apikeys'
@@ -76,6 +75,8 @@ import { Route as ApiJobsIdHeartbeatRouteImport } from './routes/api.jobs.$id.he
 import { Route as ApiSettingsAutomationRulesIdRouteImport } from './routes/api.settings.automation-rules.$id'
 import { Route as ApiSettingsRolesIdRouteImport } from './routes/api.settings.roles.$id'
 import { Route as ApiSettingsWebhooksIdRouteImport } from './routes/api.settings.webhooks.$id'
+import { Route as ApiSitesIdGbpSyncRouteImport } from './routes/api.sites.$id.gbp-sync'
+import { Route as ApiSitesIdPagesRouteImport } from './routes/api.sites.$id.pages'
 import { Route as ApiSettingsWebhooksIdTestRouteImport } from './routes/api.settings.webhooks.$id.test'
 
 const IndexRoute = IndexRouteImport.update({
@@ -300,11 +301,6 @@ const ApiKnowledgeAutocrawlRoute = ApiKnowledgeAutocrawlRouteImport.update({
   path: '/api/knowledge/autocrawl',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiKnowledgeObsidianRoute = ApiKnowledgeObsidianRouteImport.update({
-  id: '/api/knowledge/obsidian',
-  path: '/api/knowledge/obsidian',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiOrchestratorRunRoute = ApiOrchestratorRunRouteImport.update({
   id: '/api/orchestrator/run',
   path: '/api/orchestrator/run',
@@ -418,6 +414,16 @@ const ApiSettingsWebhooksIdRoute = ApiSettingsWebhooksIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiSettingsWebhooksRoute,
 } as any)
+const ApiSitesIdGbpSyncRoute = ApiSitesIdGbpSyncRouteImport.update({
+  id: '/gbp-sync',
+  path: '/gbp-sync',
+  getParentRoute: () => ApiSitesIdRoute,
+} as any)
+const ApiSitesIdPagesRoute = ApiSitesIdPagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
+  getParentRoute: () => ApiSitesIdRoute,
+} as any)
 const ApiSettingsWebhooksIdTestRoute =
   ApiSettingsWebhooksIdTestRouteImport.update({
     id: '/test',
@@ -468,7 +474,6 @@ export interface FileRoutesByFullPath {
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
-  '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
@@ -479,7 +484,7 @@ export interface FileRoutesByFullPath {
   '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
-  '/api/sites/$id': typeof ApiSitesIdRoute
+  '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
@@ -493,6 +498,8 @@ export interface FileRoutesByFullPath {
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
+  '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
+  '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRoutesByTo {
@@ -538,7 +545,6 @@ export interface FileRoutesByTo {
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
-  '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
@@ -549,7 +555,7 @@ export interface FileRoutesByTo {
   '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
-  '/api/sites/$id': typeof ApiSitesIdRoute
+  '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts': typeof ApiAlertsIndexRoute
@@ -563,6 +569,8 @@ export interface FileRoutesByTo {
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
+  '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
+  '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRoutesById {
@@ -609,7 +617,6 @@ export interface FileRoutesById {
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
-  '/api/knowledge/obsidian': typeof ApiKnowledgeObsidianRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
@@ -620,7 +627,7 @@ export interface FileRoutesById {
   '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
-  '/api/sites/$id': typeof ApiSitesIdRoute
+  '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/tasks/$id': typeof ApiTasksIdRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
@@ -634,6 +641,8 @@ export interface FileRoutesById {
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
+  '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
+  '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRouteTypes {
@@ -681,7 +690,6 @@ export interface FileRouteTypes {
     | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
-    | '/api/knowledge/obsidian'
     | '/api/orchestrator/run'
     | '/api/seo-suite/run'
     | '/api/settings/apikeys'
@@ -706,6 +714,8 @@ export interface FileRouteTypes {
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
+    | '/api/sites/$id/gbp-sync'
+    | '/api/sites/$id/pages'
     | '/api/settings/webhooks/$id/test'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -751,7 +761,6 @@ export interface FileRouteTypes {
     | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
-    | '/api/knowledge/obsidian'
     | '/api/orchestrator/run'
     | '/api/seo-suite/run'
     | '/api/settings/apikeys'
@@ -776,6 +785,8 @@ export interface FileRouteTypes {
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
+    | '/api/sites/$id/gbp-sync'
+    | '/api/sites/$id/pages'
     | '/api/settings/webhooks/$id/test'
   id:
     | '__root__'
@@ -821,7 +832,6 @@ export interface FileRouteTypes {
     | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
-    | '/api/knowledge/obsidian'
     | '/api/orchestrator/run'
     | '/api/seo-suite/run'
     | '/api/settings/apikeys'
@@ -846,6 +856,8 @@ export interface FileRouteTypes {
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
+    | '/api/sites/$id/gbp-sync'
+    | '/api/sites/$id/pages'
     | '/api/settings/webhooks/$id/test'
   fileRoutesById: FileRoutesById
 }
@@ -891,7 +903,6 @@ export interface RootRouteChildren {
   ApiJobsIdRoute: typeof ApiJobsIdRouteWithChildren
   ApiJobsClaimRoute: typeof ApiJobsClaimRoute
   ApiKnowledgeAutocrawlRoute: typeof ApiKnowledgeAutocrawlRoute
-  ApiKnowledgeObsidianRoute: typeof ApiKnowledgeObsidianRoute
   ApiOrchestratorRunRoute: typeof ApiOrchestratorRunRoute
   ApiSeoSuiteRunRoute: typeof ApiSeoSuiteRunRoute
   ApiSettingsApikeysRoute: typeof ApiSettingsApikeysRoute
@@ -902,7 +913,7 @@ export interface RootRouteChildren {
   ApiSettingsNotificationsRoute: typeof ApiSettingsNotificationsRoute
   ApiSettingsRolesRoute: typeof ApiSettingsRolesRouteWithChildren
   ApiSettingsWebhooksRoute: typeof ApiSettingsWebhooksRouteWithChildren
-  ApiSitesIdRoute: typeof ApiSitesIdRoute
+  ApiSitesIdRoute: typeof ApiSitesIdRouteWithChildren
   ApiTasksIdRoute: typeof ApiTasksIdRoute
   ApiTasksPendingApprovalRoute: typeof ApiTasksPendingApprovalRoute
   ApiAlertsIndexRoute: typeof ApiAlertsIndexRoute
@@ -1221,13 +1232,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiKnowledgeAutocrawlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/knowledge/obsidian': {
-      id: '/api/knowledge/obsidian'
-      path: '/api/knowledge/obsidian'
-      fullPath: '/api/knowledge/obsidian'
-      preLoaderRoute: typeof ApiKnowledgeObsidianRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/orchestrator/run': {
       id: '/api/orchestrator/run'
       path: '/api/orchestrator/run'
@@ -1382,6 +1386,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSettingsWebhooksIdRouteImport
       parentRoute: typeof ApiSettingsWebhooksRoute
     }
+    '/api/sites/$id/gbp-sync': {
+      id: '/api/sites/$id/gbp-sync'
+      path: '/gbp-sync'
+      fullPath: '/api/sites/$id/gbp-sync'
+      preLoaderRoute: typeof ApiSitesIdGbpSyncRouteImport
+      parentRoute: typeof ApiSitesIdRoute
+    }
+    '/api/sites/$id/pages': {
+      id: '/api/sites/$id/pages'
+      path: '/pages'
+      fullPath: '/api/sites/$id/pages'
+      preLoaderRoute: typeof ApiSitesIdPagesRouteImport
+      parentRoute: typeof ApiSitesIdRoute
+    }
     '/api/settings/webhooks/$id/test': {
       id: '/api/settings/webhooks/$id/test'
       path: '/test'
@@ -1479,6 +1497,20 @@ const ApiSettingsWebhooksRouteChildren: ApiSettingsWebhooksRouteChildren = {
 const ApiSettingsWebhooksRouteWithChildren =
   ApiSettingsWebhooksRoute._addFileChildren(ApiSettingsWebhooksRouteChildren)
 
+interface ApiSitesIdRouteChildren {
+  ApiSitesIdGbpSyncRoute: typeof ApiSitesIdGbpSyncRoute
+  ApiSitesIdPagesRoute: typeof ApiSitesIdPagesRoute
+}
+
+const ApiSitesIdRouteChildren: ApiSitesIdRouteChildren = {
+  ApiSitesIdGbpSyncRoute: ApiSitesIdGbpSyncRoute,
+  ApiSitesIdPagesRoute: ApiSitesIdPagesRoute,
+}
+
+const ApiSitesIdRouteWithChildren = ApiSitesIdRoute._addFileChildren(
+  ApiSitesIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgencyHealthRoute: AgencyHealthRoute,
@@ -1521,7 +1553,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiJobsIdRoute: ApiJobsIdRouteWithChildren,
   ApiJobsClaimRoute: ApiJobsClaimRoute,
   ApiKnowledgeAutocrawlRoute: ApiKnowledgeAutocrawlRoute,
-  ApiKnowledgeObsidianRoute: ApiKnowledgeObsidianRoute,
   ApiOrchestratorRunRoute: ApiOrchestratorRunRoute,
   ApiSeoSuiteRunRoute: ApiSeoSuiteRunRoute,
   ApiSettingsApikeysRoute: ApiSettingsApikeysRoute,
@@ -1532,7 +1563,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSettingsNotificationsRoute: ApiSettingsNotificationsRoute,
   ApiSettingsRolesRoute: ApiSettingsRolesRouteWithChildren,
   ApiSettingsWebhooksRoute: ApiSettingsWebhooksRouteWithChildren,
-  ApiSitesIdRoute: ApiSitesIdRoute,
+  ApiSitesIdRoute: ApiSitesIdRouteWithChildren,
   ApiTasksIdRoute: ApiTasksIdRoute,
   ApiTasksPendingApprovalRoute: ApiTasksPendingApprovalRoute,
   ApiAlertsIndexRoute: ApiAlertsIndexRoute,
