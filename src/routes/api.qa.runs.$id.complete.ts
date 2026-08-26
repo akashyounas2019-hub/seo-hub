@@ -33,6 +33,11 @@ export const Route = createFileRoute("/api/qa/runs/$id/complete")({
           const pagesChecked = Number(body.pagesChecked) || 0;
           const durationMs = Number(body.durationMs) || null;
 
+          // Idempotent: a run should be completed once, but if this run_id is
+          // re-completed (e.g. a manually retried job), replace its findings
+          // rather than accumulating duplicates alongside the old set.
+          await d.delete(qaFindings).where(eq(qaFindings.runId, params.id));
+
           if (findings.length > 0) {
             await d.insert(qaFindings).values(
               findings.map((f: any) => ({
