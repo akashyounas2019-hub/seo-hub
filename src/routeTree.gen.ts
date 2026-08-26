@@ -54,6 +54,8 @@ import { Route as ApiJobsIdRouteImport } from './routes/api.jobs.$id'
 import { Route as ApiJobsClaimRouteImport } from './routes/api.jobs.claim'
 import { Route as ApiKnowledgeAutocrawlRouteImport } from './routes/api.knowledge.autocrawl'
 import { Route as ApiOrchestratorRunRouteImport } from './routes/api.orchestrator.run'
+import { Route as ApiQaRunRouteImport } from './routes/api.qa.run'
+import { Route as ApiQaRunsRouteImport } from './routes/api.qa.runs'
 import { Route as ApiSeoSuiteRunRouteImport } from './routes/api.seo-suite.run'
 import { Route as ApiSettingsApikeysRouteImport } from './routes/api.settings.apikeys'
 import { Route as ApiSettingsAuditRouteImport } from './routes/api.settings.audit'
@@ -72,11 +74,14 @@ import { Route as ApiAutomationFlowsIdRouteImport } from './routes/api.automatio
 import { Route as ApiJobsIdCompleteRouteImport } from './routes/api.jobs.$id.complete'
 import { Route as ApiJobsIdFailRouteImport } from './routes/api.jobs.$id.fail'
 import { Route as ApiJobsIdHeartbeatRouteImport } from './routes/api.jobs.$id.heartbeat'
+import { Route as ApiQaRunsIdRouteImport } from './routes/api.qa.runs.$id'
 import { Route as ApiSettingsAutomationRulesIdRouteImport } from './routes/api.settings.automation-rules.$id'
 import { Route as ApiSettingsRolesIdRouteImport } from './routes/api.settings.roles.$id'
 import { Route as ApiSettingsWebhooksIdRouteImport } from './routes/api.settings.webhooks.$id'
 import { Route as ApiSitesIdGbpSyncRouteImport } from './routes/api.sites.$id.gbp-sync'
 import { Route as ApiSitesIdPagesRouteImport } from './routes/api.sites.$id.pages'
+import { Route as ApiQaRunsIdCompleteRouteImport } from './routes/api.qa.runs.$id.complete'
+import { Route as ApiQaRunsIdStatusRouteImport } from './routes/api.qa.runs.$id.status'
 import { Route as ApiSettingsWebhooksIdTestRouteImport } from './routes/api.settings.webhooks.$id.test'
 
 const IndexRoute = IndexRouteImport.update({
@@ -306,6 +311,16 @@ const ApiOrchestratorRunRoute = ApiOrchestratorRunRouteImport.update({
   path: '/api/orchestrator/run',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiQaRunRoute = ApiQaRunRouteImport.update({
+  id: '/api/qa/run',
+  path: '/api/qa/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiQaRunsRoute = ApiQaRunsRouteImport.update({
+  id: '/api/qa/runs',
+  path: '/api/qa/runs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSeoSuiteRunRoute = ApiSeoSuiteRunRouteImport.update({
   id: '/api/seo-suite/run',
   path: '/api/seo-suite/run',
@@ -398,6 +413,11 @@ const ApiJobsIdHeartbeatRoute = ApiJobsIdHeartbeatRouteImport.update({
   path: '/heartbeat',
   getParentRoute: () => ApiJobsIdRoute,
 } as any)
+const ApiQaRunsIdRoute = ApiQaRunsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiQaRunsRoute,
+} as any)
 const ApiSettingsAutomationRulesIdRoute =
   ApiSettingsAutomationRulesIdRouteImport.update({
     id: '/$id',
@@ -423,6 +443,16 @@ const ApiSitesIdPagesRoute = ApiSitesIdPagesRouteImport.update({
   id: '/pages',
   path: '/pages',
   getParentRoute: () => ApiSitesIdRoute,
+} as any)
+const ApiQaRunsIdCompleteRoute = ApiQaRunsIdCompleteRouteImport.update({
+  id: '/complete',
+  path: '/complete',
+  getParentRoute: () => ApiQaRunsIdRoute,
+} as any)
+const ApiQaRunsIdStatusRoute = ApiQaRunsIdStatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => ApiQaRunsIdRoute,
 } as any)
 const ApiSettingsWebhooksIdTestRoute =
   ApiSettingsWebhooksIdTestRouteImport.update({
@@ -475,6 +505,8 @@ export interface FileRoutesByFullPath {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
+  '/api/qa/run': typeof ApiQaRunRoute
+  '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
   '/api/settings/audit': typeof ApiSettingsAuditRoute
@@ -495,11 +527,14 @@ export interface FileRoutesByFullPath {
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
   '/api/jobs/$id/fail': typeof ApiJobsIdFailRoute
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
+  '/api/qa/runs/$id': typeof ApiQaRunsIdRouteWithChildren
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
+  '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRoutesByTo {
@@ -546,6 +581,8 @@ export interface FileRoutesByTo {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
+  '/api/qa/run': typeof ApiQaRunRoute
+  '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
   '/api/settings/audit': typeof ApiSettingsAuditRoute
@@ -566,11 +603,14 @@ export interface FileRoutesByTo {
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
   '/api/jobs/$id/fail': typeof ApiJobsIdFailRoute
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
+  '/api/qa/runs/$id': typeof ApiQaRunsIdRouteWithChildren
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
+  '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRoutesById {
@@ -618,6 +658,8 @@ export interface FileRoutesById {
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
+  '/api/qa/run': typeof ApiQaRunRoute
+  '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
   '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
   '/api/settings/audit': typeof ApiSettingsAuditRoute
@@ -638,11 +680,14 @@ export interface FileRoutesById {
   '/api/jobs/$id/complete': typeof ApiJobsIdCompleteRoute
   '/api/jobs/$id/fail': typeof ApiJobsIdFailRoute
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
+  '/api/qa/runs/$id': typeof ApiQaRunsIdRouteWithChildren
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
+  '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
 }
 export interface FileRouteTypes {
@@ -691,6 +736,8 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/orchestrator/run'
+    | '/api/qa/run'
+    | '/api/qa/runs'
     | '/api/seo-suite/run'
     | '/api/settings/apikeys'
     | '/api/settings/audit'
@@ -711,11 +758,14 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/complete'
     | '/api/jobs/$id/fail'
     | '/api/jobs/$id/heartbeat'
+    | '/api/qa/runs/$id'
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/pages'
+    | '/api/qa/runs/$id/complete'
+    | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -762,6 +812,8 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/orchestrator/run'
+    | '/api/qa/run'
+    | '/api/qa/runs'
     | '/api/seo-suite/run'
     | '/api/settings/apikeys'
     | '/api/settings/audit'
@@ -782,11 +834,14 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/complete'
     | '/api/jobs/$id/fail'
     | '/api/jobs/$id/heartbeat'
+    | '/api/qa/runs/$id'
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/pages'
+    | '/api/qa/runs/$id/complete'
+    | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
   id:
     | '__root__'
@@ -833,6 +888,8 @@ export interface FileRouteTypes {
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
     | '/api/orchestrator/run'
+    | '/api/qa/run'
+    | '/api/qa/runs'
     | '/api/seo-suite/run'
     | '/api/settings/apikeys'
     | '/api/settings/audit'
@@ -853,11 +910,14 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/complete'
     | '/api/jobs/$id/fail'
     | '/api/jobs/$id/heartbeat'
+    | '/api/qa/runs/$id'
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/pages'
+    | '/api/qa/runs/$id/complete'
+    | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
   fileRoutesById: FileRoutesById
 }
@@ -904,6 +964,8 @@ export interface RootRouteChildren {
   ApiJobsClaimRoute: typeof ApiJobsClaimRoute
   ApiKnowledgeAutocrawlRoute: typeof ApiKnowledgeAutocrawlRoute
   ApiOrchestratorRunRoute: typeof ApiOrchestratorRunRoute
+  ApiQaRunRoute: typeof ApiQaRunRoute
+  ApiQaRunsRoute: typeof ApiQaRunsRouteWithChildren
   ApiSeoSuiteRunRoute: typeof ApiSeoSuiteRunRoute
   ApiSettingsApikeysRoute: typeof ApiSettingsApikeysRoute
   ApiSettingsAuditRoute: typeof ApiSettingsAuditRoute
@@ -1239,6 +1301,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOrchestratorRunRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/qa/run': {
+      id: '/api/qa/run'
+      path: '/api/qa/run'
+      fullPath: '/api/qa/run'
+      preLoaderRoute: typeof ApiQaRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/qa/runs': {
+      id: '/api/qa/runs'
+      path: '/api/qa/runs'
+      fullPath: '/api/qa/runs'
+      preLoaderRoute: typeof ApiQaRunsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/seo-suite/run': {
       id: '/api/seo-suite/run'
       path: '/api/seo-suite/run'
@@ -1365,6 +1441,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiJobsIdHeartbeatRouteImport
       parentRoute: typeof ApiJobsIdRoute
     }
+    '/api/qa/runs/$id': {
+      id: '/api/qa/runs/$id'
+      path: '/$id'
+      fullPath: '/api/qa/runs/$id'
+      preLoaderRoute: typeof ApiQaRunsIdRouteImport
+      parentRoute: typeof ApiQaRunsRoute
+    }
     '/api/settings/automation-rules/$id': {
       id: '/api/settings/automation-rules/$id'
       path: '/$id'
@@ -1399,6 +1482,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/sites/$id/pages'
       preLoaderRoute: typeof ApiSitesIdPagesRouteImport
       parentRoute: typeof ApiSitesIdRoute
+    }
+    '/api/qa/runs/$id/complete': {
+      id: '/api/qa/runs/$id/complete'
+      path: '/complete'
+      fullPath: '/api/qa/runs/$id/complete'
+      preLoaderRoute: typeof ApiQaRunsIdCompleteRouteImport
+      parentRoute: typeof ApiQaRunsIdRoute
+    }
+    '/api/qa/runs/$id/status': {
+      id: '/api/qa/runs/$id/status'
+      path: '/status'
+      fullPath: '/api/qa/runs/$id/status'
+      preLoaderRoute: typeof ApiQaRunsIdStatusRouteImport
+      parentRoute: typeof ApiQaRunsIdRoute
     }
     '/api/settings/webhooks/$id/test': {
       id: '/api/settings/webhooks/$id/test'
@@ -1446,6 +1543,32 @@ const ApiJobsIdRouteChildren: ApiJobsIdRouteChildren = {
 
 const ApiJobsIdRouteWithChildren = ApiJobsIdRoute._addFileChildren(
   ApiJobsIdRouteChildren,
+)
+
+interface ApiQaRunsIdRouteChildren {
+  ApiQaRunsIdCompleteRoute: typeof ApiQaRunsIdCompleteRoute
+  ApiQaRunsIdStatusRoute: typeof ApiQaRunsIdStatusRoute
+}
+
+const ApiQaRunsIdRouteChildren: ApiQaRunsIdRouteChildren = {
+  ApiQaRunsIdCompleteRoute: ApiQaRunsIdCompleteRoute,
+  ApiQaRunsIdStatusRoute: ApiQaRunsIdStatusRoute,
+}
+
+const ApiQaRunsIdRouteWithChildren = ApiQaRunsIdRoute._addFileChildren(
+  ApiQaRunsIdRouteChildren,
+)
+
+interface ApiQaRunsRouteChildren {
+  ApiQaRunsIdRoute: typeof ApiQaRunsIdRouteWithChildren
+}
+
+const ApiQaRunsRouteChildren: ApiQaRunsRouteChildren = {
+  ApiQaRunsIdRoute: ApiQaRunsIdRouteWithChildren,
+}
+
+const ApiQaRunsRouteWithChildren = ApiQaRunsRoute._addFileChildren(
+  ApiQaRunsRouteChildren,
 )
 
 interface ApiSettingsAutomationRulesRouteChildren {
@@ -1554,6 +1677,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiJobsClaimRoute: ApiJobsClaimRoute,
   ApiKnowledgeAutocrawlRoute: ApiKnowledgeAutocrawlRoute,
   ApiOrchestratorRunRoute: ApiOrchestratorRunRoute,
+  ApiQaRunRoute: ApiQaRunRoute,
+  ApiQaRunsRoute: ApiQaRunsRouteWithChildren,
   ApiSeoSuiteRunRoute: ApiSeoSuiteRunRoute,
   ApiSettingsApikeysRoute: ApiSettingsApikeysRoute,
   ApiSettingsAuditRoute: ApiSettingsAuditRoute,

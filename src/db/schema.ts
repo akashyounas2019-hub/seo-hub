@@ -611,6 +611,61 @@ export const sitePages = pgTable(
   }),
 );
 
+// Real QA Suite persistence. Replaces the fully-mocked qa-suite.tsx (hardcoded
+// fake sites, hardcoded test-suite numbers that never changed, setTimeout
+// fake run states). A qa_run is one real Playwright session against one
+// site/scope; qa_findings holds the individual pass/fail checks it produced
+// (viewport overflow, broken links, missing schema, axe-core violations,
+// Core Web Vitals). Executed by worker/aks-worker.mjs via the same
+// claude_jobs queue as every other job kind, just with a "qa:run" branch
+// that drives Playwright directly instead of the claude CLI.
+export const qaRunStatusEnum = pgEnum("qa_run_status", ["queued", "running", "passed", "warning", "failed"]);
+
+export const qaRuns = pgTable(
+  "qa_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    scope: text("scope").notNull().default("full"), // "full" | "landing" | "blog" | "page"
+    targetUrl: text("target_url"), // set when scope = "page"
+    status: qaRunStatusEnum("status").notNull().default("queued"),
+    jobId: uuid("job_id").references(() => claudeJobs.id, { onDelete: "set null" }),
+    pagesChecked: integer("pages_checked").notNull().default(0),
+    checksTotal: integer("checks_total").notNull().default(0),
+    checksPassed: integer("checks_passed").notNull().default(0),
+    checksFailed: integer("checks_failed").notNull().default(0),
+    durationMs: integer("duration_ms"),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+  },
+  (t) => ({
+    siteCreatedIdx: index("qa_runs_site_created_idx").on(t.siteId, t.createdAt),
+  }),
+);
+
+export const qaFindings = pgTable(
+  "qa_findings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runId: uuid("run_id")
+      .notNull()
+      .references(() => qaRuns.id, { onDelete: "cascade" }),
+    suite: text("suite").notNull(), // "viewport" | "links" | "schema" | "accessibility" | "vitals"
+    pageUrl: text("page_url").notNull(),
+    severity: text("severity").notNull().default("info"), // "critical" | "warning" | "info"
+    passed: boolean("passed").notNull(),
+    message: text("message").notNull(),
+    detail: jsonb("detail").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    runIdx: index("qa_findings_run_idx").on(t.runId),
+  }),
+);
+
 export type Site = typeof sites.$inferSelect;
 export type NewSite = typeof sites.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
@@ -628,5 +683,7 @@ export type NotificationPref = typeof notificationPrefs.$inferSelect;
 export type SettingsAutomationRule = typeof settingsAutomationRules.$inferSelect;
 export type ApprovalRule = typeof approvalRules.$inferSelect;
 export type SitePage = typeof sitePages.$inferSelect;
+export type QaRun = typeof qaRuns.$inferSelect;
+export type QaFinding = typeof qaFindings.$inferSelect;
 
 

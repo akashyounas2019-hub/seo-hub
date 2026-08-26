@@ -439,6 +439,41 @@ export async function ensureSchema(): Promise<void> {
       );
       CREATE UNIQUE INDEX IF NOT EXISTS site_pages_site_url_uq ON site_pages(site_id, url);
       CREATE INDEX IF NOT EXISTS site_pages_site_idx ON site_pages(site_id);
+
+      DO $$ BEGIN
+        CREATE TYPE qa_run_status AS ENUM ('queued', 'running', 'passed', 'warning', 'failed');
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+      CREATE TABLE IF NOT EXISTS qa_runs (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+        scope text NOT NULL DEFAULT 'full',
+        target_url text,
+        status qa_run_status NOT NULL DEFAULT 'queued',
+        job_id uuid REFERENCES claude_jobs(id) ON DELETE SET NULL,
+        pages_checked integer NOT NULL DEFAULT 0,
+        checks_total integer NOT NULL DEFAULT 0,
+        checks_passed integer NOT NULL DEFAULT 0,
+        checks_failed integer NOT NULL DEFAULT 0,
+        duration_ms integer,
+        error text,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        finished_at timestamptz
+      );
+      CREATE INDEX IF NOT EXISTS qa_runs_site_created_idx ON qa_runs(site_id, created_at);
+
+      CREATE TABLE IF NOT EXISTS qa_findings (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        run_id uuid NOT NULL REFERENCES qa_runs(id) ON DELETE CASCADE,
+        suite text NOT NULL,
+        page_url text NOT NULL,
+        severity text NOT NULL DEFAULT 'info',
+        passed boolean NOT NULL,
+        message text NOT NULL,
+        detail jsonb,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+      CREATE INDEX IF NOT EXISTS qa_findings_run_idx ON qa_findings(run_id);
     `);
     _migrated = true;
   } finally {

@@ -16,6 +16,7 @@ import { spawn } from "node:child_process";
 import { writeFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir, hostname, userInfo } from "node:os";
 import { join } from "node:path";
+import { runQaSuite } from "./qa-engine.mjs";
 
 const PORTAL = process.env.AKS_WORKER_PORTAL_URL || "http://localhost:3333";
 const POLL_INTERVAL_MS = Number(process.env.AKS_WORKER_POLL_INTERVAL_MS ?? 15_000);
@@ -162,15 +163,61 @@ async function applyKnowledgeBaseResult(job, output) {
   }
 }
 
+/**
+ * QA runs don't go through the claude CLI at all -- they drive Playwright
+ * directly (qa-engine.mjs). The claude_jobs row still exists so this kind
+ * shares the same claim/heartbeat/complete lifecycle as every other job,
+ * but the real result (findings) is posted to the qa_runs-specific
+ * endpoints, since a Markdown blob isn't the right shape for structured
+ * pass/fail findings.
+ */
+async function workQaJob(job) {
+  const input = job.input || {};
+  const runId = input.runId;
+  if (!runId) throw new Error("qa:run job is missing input.runId");
+
+  await api(`/api/qa/runs/${runId}/status`, { method: "POST", body: JSON.stringify({ status: "running" }) });
+
+  const started = Date.now();
+  try {
+    const { findings, pagesChecked } = await runQaSuite({
+      baseUrl: input.baseUrl,
+      scope: input.scope || "full",
+      targetUrl: input.targetUrl,
+    });
+    const durationMs = Date.now() - started;
+
+    await api(`/api/qa/runs/${runId}/complete`, {
+      method: "POST",
+      body: JSON.stringify({ findings, pagesChecked, durationMs }),
+    });
+
+    const failed = findings.filter((f) => !f.passed).length;
+    return { output: `QA run complete — ${pagesChecked} page(s) checked, ${findings.length} check(s), ${failed} failing.`, durationMs };
+  } catch (err) {
+    await api(`/api/qa/runs/${runId}/status`, {
+      method: "POST",
+      body: JSON.stringify({ status: "failed", error: err.message }),
+    }).catch(() => {});
+    throw err;
+  }
+}
+
 async function workOne(job) {
   console.log(`[worker] claimed ${job.id} — ${job.title} (${job.kind})`);
   const hb = setInterval(() => heartbeat(job.id), 60_000);
   await heartbeat(job.id);
   try {
-    const { output, durationMs } = await runClaude(job.prompt || job.title);
+    let output, durationMs;
 
-    if (job.kind === "knowledge:structure-from-crawl") {
-      await applyKnowledgeBaseResult(job, output);
+    if (job.kind === "qa:run") {
+      ({ output, durationMs } = await workQaJob(job));
+    } else {
+      ({ output, durationMs } = await runClaude(job.prompt || job.title));
+
+      if (job.kind === "knowledge:structure-from-crawl") {
+        await applyKnowledgeBaseResult(job, output);
+      }
     }
 
     await complete(job.id, output, durationMs);
