@@ -269,6 +269,35 @@ function buildSeoSuitePrompt(toolId: string, input: Record<string, any>): string
     ? `\nLIVE DATA (source of truth — ground your analysis in this, never invent numbers or content that isn't here or in the Knowledge Base):\n${dataBlocks.join("\n\n")}\n`
     : "";
 
+  // Most SEO Suite tools are report-only by design (their output shows in
+  // the tool page's report pane and stops there). A tool marked
+  // producesTasks: true (currently just Strategy Plan) additionally asks
+  // for a trailing JSON task block -- api.jobs.$id.complete.ts extracts it
+  // with the same extractJson() the orchestrator uses and runs it through
+  // the same approval-rules pipeline into kanban_tasks. This is how a
+  // "what should we do next" tool actually reaches Approvals instead of
+  // just producing a document nothing downstream ever reads.
+  const taskInstruction = tool?.producesTasks
+    ? `\n\nAFTER the Markdown report, on a new line, append a fenced block starting with `
+      + "\`\`\`tasks"
+      + ` containing a SINGLE valid JSON object (no other text inside the fence) matching exactly this shape:
+
+{
+  "tasks": [
+    {
+      "title": string,
+      "description": string,
+      "category": one of "technical" | "content" | "local" | "schema" | "strategy" | "other",
+      "priority": one of "low" | "medium" | "high" | "critical",
+      "assignee": string (a plausible SEO specialist role, e.g. "Technical SEO Expert", "Content Strategist"),
+      "reasoning": string (1-2 sentences citing the specific plan item that justifies this task)
+    }
+  ]
+}
+
+Only include tasks that are concrete, actionable next steps drawn directly from the report above -- not a restatement of every roadmap bullet. Return 3-10 tasks. If the report genuinely has nothing actionable yet (e.g. data was too sparse), return {"tasks": []} rather than inventing filler.`
+    : "";
+
   return `You are an expert SEO specialist running the "${toolLabel}" tool${tool ? ` (${tool.description})` : ""} for a local-business SEO agency's client.
 
 ${siteBlock}${categoryHint}
@@ -276,7 +305,7 @@ ${siteBlock}${categoryHint}
 USER-PROVIDED INPUTS:
 ${inputsBlock}
 ${dataSection}
-TASK: Produce a thorough, executive-ready Markdown report for this tool. Ground every specific claim in the live data and Knowledge Base context provided above/below — if a data source is missing or not connected, say so explicitly rather than inventing numbers, scores, or findings. Structure the report with clear headings, a prioritized action list (Critical/High/Medium), and concrete next steps a local-business owner could actually act on.`;
+TASK: Produce a thorough, executive-ready Markdown report for this tool. Ground every specific claim in the live data and Knowledge Base context provided above/below — if a data source is missing or not connected, say so explicitly rather than inventing numbers, scores, or findings. Structure the report with clear headings, a prioritized action list (Critical/High/Medium), and concrete next steps a local-business owner could actually act on.${taskInstruction}`;
 }
 
 export function buildPromptForKind(kind: string, input: Record<string, any>): string {

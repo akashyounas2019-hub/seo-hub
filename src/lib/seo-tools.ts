@@ -38,6 +38,14 @@ export type SeoTool = {
   runtime: string; // avg runtime label
   output: string; // output format
   inputs: { label: string; placeholder: string; type?: "url" | "text" | "textarea" }[];
+  // When true, this tool's prompt (job-templates.ts) also asks the model for
+  // a trailing JSON task list, and api.jobs.$id.complete.ts extracts it and
+  // runs it through the same approval-rules pipeline the orchestrator uses
+  // (kanban_tasks, status "pending_approval" or auto-approved). Most tools
+  // are report-only by design; this is opt-in per tool so a tool built to
+  // answer "what should we do next" (Strategy Plan) can actually reach
+  // Approvals, without every audit/analysis tool spamming the queue.
+  producesTasks?: boolean;
 };
 
 export const SEO_CATEGORIES: Record<SeoToolCategory, { label: string; hint: string }> = {
@@ -233,6 +241,7 @@ export const SEO_TOOLS: SeoTool[] = [
       { label: "Domain", placeholder: "example.ae", type: "url" },
       { label: "Primary market", placeholder: "Dubai / UAE" },
     ],
+    producesTasks: true,
   },
   {
     id: "programmatic",

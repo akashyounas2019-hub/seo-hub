@@ -23,18 +23,39 @@ function extractJson(output: string): any {
   }
 }
 
-async function applyOrchestratorResult(job: any, output: string) {
+/**
+ * Same shape-extraction as extractJson(), but scoped to a ```tasks fenced
+ * block specifically -- used for SEO Suite tools (Strategy Plan) whose
+ * output is primarily a Markdown report with a task list appended at the
+ * end, as opposed to the orchestrator's output which is pure JSON.
+ */
+function extractTasksBlock(output: string): any {
+  const fenced = output.match(/```tasks\s*([\s\S]*?)```/);
+  if (!fenced) return null;
+  try {
+    return JSON.parse(fenced[1].trim());
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Inserts a model-proposed task list into kanban_tasks, running each task
+ * through the approval-rules engine to decide pending_approval vs.
+ * auto-approved. Shared by the orchestrator (whole-output JSON) and any
+ * SEO Suite tool marked producesTasks: true (a ```tasks fenced block
+ * trailing its Markdown report) -- same destination, same rules, two
+ * different sources of the task list.
+ */
+async function insertProposedTasks(tasks: any[], siteId: string | undefined, sourceLabel: string) {
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    console.warn(`[${sourceLabel}] produced no parseable tasks`);
+    return 0;
+  }
+
   const { db, ensureSchema } = await import("@/db/client");
   const { kanbanTasks, approvalRules } = await import("@/db/schema");
   const { evaluateApproval } = await import("@/lib/approval-rules");
-
-  const siteId = job.input?.siteId as string | undefined;
-  const parsed = extractJson(output);
-  const tasks = parsed?.tasks;
-  if (!Array.isArray(tasks) || tasks.length === 0) {
-    console.warn(`[orchestrator] job ${job.id} produced no parseable tasks`);
-    return;
-  }
 
   await ensureSchema();
   const d = db();
@@ -50,12 +71,13 @@ async function applyOrchestratorResult(job: any, output: string) {
   }));
 
   const now = new Date();
+  let inserted = 0;
   for (const t of tasks) {
     if (!t?.title) continue;
     const priority = ["low", "medium", "high", "critical"].includes(t.priority) ? t.priority : "medium";
     const decision = evaluateApproval({ priority, category: t.category || null, siteId: siteId || null }, evaluableRules);
 
-    const id = `orch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = `${sourceLabel}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     await d.insert(kanbanTasks).values({
       id,
       siteId: siteId || "safaeewala",
@@ -69,9 +91,26 @@ async function applyOrchestratorResult(job: any, output: string) {
       createdAt: now,
       updatedAt: now,
     });
+    inserted++;
   }
 
-  console.log(`[orchestrator] job ${job.id} — inserted ${tasks.length} task(s) for site ${siteId}`);
+  console.log(`[${sourceLabel}] inserted ${inserted} task(s) for site ${siteId}`);
+  return inserted;
+}
+
+async function applyOrchestratorResult(job: any, output: string) {
+  const parsed = extractJson(output);
+  await insertProposedTasks(parsed?.tasks, job.input?.siteId, "orchestrator");
+}
+
+async function applySeoSuiteTasks(job: any, output: string) {
+  const { getSeoTool } = await import("@/lib/seo-tools");
+  const toolId = job.input?.toolId as string | undefined;
+  const tool = toolId ? getSeoTool(toolId) : undefined;
+  if (!tool?.producesTasks) return; // report-only tool -- nothing to extract
+
+  const parsed = extractTasksBlock(output);
+  await insertProposedTasks(parsed?.tasks, job.input?.siteId, `seo-suite:${toolId}`);
 }
 
 export const Route = createFileRoute("/api/jobs/$id/complete")({
@@ -103,6 +142,8 @@ export const Route = createFileRoute("/api/jobs/$id/complete")({
 
             if (job?.kind === "seo:orchestrator-review") {
               await applyOrchestratorResult(job, body.outputMarkdown || "");
+            } else if (job?.kind?.startsWith("seo-suite:")) {
+              await applySeoSuiteTasks(job, body.outputMarkdown || "");
             } else if (job && (job.input as any)?.taskId) {
               const taskId = (job.input as any).taskId;
               await d.update(kanbanTasks).set({
