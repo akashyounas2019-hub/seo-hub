@@ -69,6 +69,11 @@ export const Route = createFileRoute("/api/qa/runs/$id/complete")({
               checksFailed,
               durationMs,
               finishedAt: new Date(),
+              // Clear any error left over from a prior failed attempt on this
+              // run row -- without this, a run that failed once (e.g. browser
+              // not installed yet) and then succeeded on retry kept showing
+              // its old error message alongside real, successful findings.
+              error: null,
             })
             .where(eq(qaRuns.id, params.id));
 
