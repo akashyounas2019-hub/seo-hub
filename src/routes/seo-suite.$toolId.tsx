@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { getSeoTool, SEO_CATEGORIES, SEO_TOOLS, type SeoTool } from "@/lib/seo-tools";
 import { useSite } from "@/lib/site-context";
+import { MarkdownReport } from "@/components/markdown-report";
+import { RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/seo-suite/$toolId")({
   head: ({ params }) => {
@@ -286,10 +288,11 @@ function SeoToolPage() {
                 <button
                   type="submit"
                   disabled={running}
+                  title={reportMarkdown ? "Runs a real new AI call — not a cached replay" : undefined}
                   className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${tool.accent} px-4 py-2 text-xs font-semibold text-slate-950 shadow hover:brightness-110 disabled:cursor-wait disabled:opacity-70`}
                 >
-                  <PlayCircle className="h-4 w-4" />
-                  {running ? (statusLabel || "Running…") : "Run analysis"}
+                  {reportMarkdown ? <RefreshCw className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+                  {running ? (statusLabel || "Running…") : reportMarkdown ? "Regenerate" : "Run analysis"}
                 </button>
               </div>
             </div>
@@ -364,9 +367,19 @@ function SeoToolPage() {
               <Sparkles className="h-3 w-3" /> {reportMarkdown ? "Live result" : "No run yet"}
             </span>
           </div>
-          <pre className="mt-4 max-h-96 overflow-auto rounded-xl border border-slate-800 bg-black/40 p-4 text-[12px] leading-relaxed text-slate-300 whitespace-pre-wrap">
-{reportMarkdown || `Run "${tool.title}" to generate a real report here.\n\nThis tool executes through the real claude_jobs pipeline — the AKS worker (npm run worker) must be running to pick up the job.`}
-          </pre>
+          <div className="mt-4 max-h-96 overflow-auto rounded-xl border border-slate-800 bg-black/40 p-4">
+            {reportMarkdown ? (
+              <MarkdownReport content={reportMarkdown} />
+            ) : (
+              <p className="text-[12px] leading-relaxed text-slate-500">
+                Run "{tool.title}" to generate a real report here.
+                <br />
+                <br />
+                This tool executes through the real claude_jobs pipeline — the AKS worker (npm run worker) must be
+                running to pick up the job.
+              </p>
+            )}
+          </div>
         </section>
 
         {/* Peer tools */}

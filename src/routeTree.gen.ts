@@ -85,6 +85,7 @@ import { Route as ApiSitesIdIssuesRouteImport } from './routes/api.sites.$id.iss
 import { Route as ApiSitesIdPagesRouteImport } from './routes/api.sites.$id.pages'
 import { Route as ApiSitesIdWpVerifyRouteImport } from './routes/api.sites.$id.wp-verify'
 import { Route as ApiTasksIdPublishRouteImport } from './routes/api.tasks.$id.publish'
+import { Route as ApiTasksIdRegenerateRouteImport } from './routes/api.tasks.$id.regenerate'
 import { Route as ApiQaRunsIdCompleteRouteImport } from './routes/api.qa.runs.$id.complete'
 import { Route as ApiQaRunsIdStatusRouteImport } from './routes/api.qa.runs.$id.status'
 import { Route as ApiSettingsWebhooksIdTestRouteImport } from './routes/api.settings.webhooks.$id.test'
@@ -474,6 +475,11 @@ const ApiTasksIdPublishRoute = ApiTasksIdPublishRouteImport.update({
   path: '/publish',
   getParentRoute: () => ApiTasksIdRoute,
 } as any)
+const ApiTasksIdRegenerateRoute = ApiTasksIdRegenerateRouteImport.update({
+  id: '/regenerate',
+  path: '/regenerate',
+  getParentRoute: () => ApiTasksIdRoute,
+} as any)
 const ApiQaRunsIdCompleteRoute = ApiQaRunsIdCompleteRouteImport.update({
   id: '/complete',
   path: '/complete',
@@ -568,6 +574,7 @@ export interface FileRoutesByFullPath {
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
   '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
   '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
+  '/api/tasks/$id/regenerate': typeof ApiTasksIdRegenerateRoute
   '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
   '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
@@ -649,6 +656,7 @@ export interface FileRoutesByTo {
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
   '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
   '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
+  '/api/tasks/$id/regenerate': typeof ApiTasksIdRegenerateRoute
   '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
   '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
@@ -731,6 +739,7 @@ export interface FileRoutesById {
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
   '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
   '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
+  '/api/tasks/$id/regenerate': typeof ApiTasksIdRegenerateRoute
   '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
   '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
@@ -814,6 +823,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id/pages'
     | '/api/sites/$id/wp-verify'
     | '/api/tasks/$id/publish'
+    | '/api/tasks/$id/regenerate'
     | '/api/qa/runs/$id/complete'
     | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
@@ -895,6 +905,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id/pages'
     | '/api/sites/$id/wp-verify'
     | '/api/tasks/$id/publish'
+    | '/api/tasks/$id/regenerate'
     | '/api/qa/runs/$id/complete'
     | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
@@ -976,6 +987,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id/pages'
     | '/api/sites/$id/wp-verify'
     | '/api/tasks/$id/publish'
+    | '/api/tasks/$id/regenerate'
     | '/api/qa/runs/$id/complete'
     | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
@@ -1580,6 +1592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksIdPublishRouteImport
       parentRoute: typeof ApiTasksIdRoute
     }
+    '/api/tasks/$id/regenerate': {
+      id: '/api/tasks/$id/regenerate'
+      path: '/regenerate'
+      fullPath: '/api/tasks/$id/regenerate'
+      preLoaderRoute: typeof ApiTasksIdRegenerateRouteImport
+      parentRoute: typeof ApiTasksIdRoute
+    }
     '/api/qa/runs/$id/complete': {
       id: '/api/qa/runs/$id/complete'
       path: '/complete'
@@ -1737,10 +1756,12 @@ const ApiSitesIdRouteWithChildren = ApiSitesIdRoute._addFileChildren(
 
 interface ApiTasksIdRouteChildren {
   ApiTasksIdPublishRoute: typeof ApiTasksIdPublishRoute
+  ApiTasksIdRegenerateRoute: typeof ApiTasksIdRegenerateRoute
 }
 
 const ApiTasksIdRouteChildren: ApiTasksIdRouteChildren = {
   ApiTasksIdPublishRoute: ApiTasksIdPublishRoute,
+  ApiTasksIdRegenerateRoute: ApiTasksIdRegenerateRoute,
 }
 
 const ApiTasksIdRouteWithChildren = ApiTasksIdRoute._addFileChildren(

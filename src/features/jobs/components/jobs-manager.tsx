@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { jobsStore, type AIJob } from "@/lib/jobs-store";
 import { TEMPLATES } from "@/lib/job-templates";
+import { MarkdownReport } from "@/components/markdown-report";
 
 export function JobsManagerModal({ onClose }: { onClose: () => void }) {
   const [jobs, setJobs] = useState<AIJob[]>([]);
@@ -43,6 +44,29 @@ export function JobsManagerModal({ onClose }: { onClose: () => void }) {
   const pendingCount = jobs.filter((j) => j.status === "pending").length;
   const runningCount = jobs.filter((j) => j.status === "running" || j.status === "claimed").length;
   const doneCount = jobs.filter((j) => j.status === "done").length;
+
+  const [regenerating, setRegenerating] = useState(false);
+  const handleRegenerate = async (job: AIJob) => {
+    if (regenerating) return;
+    setRegenerating(true);
+    try {
+      // A genuinely new claude_jobs row with the same kind/input -- a real
+      // new AI call, not a cached replay of the same output.
+      const created = await jobsStore.create({
+        kind: job.kind,
+        title: job.title,
+        input: job.input,
+        priority: job.priority,
+        createdBy: "Operator (regenerate)",
+      });
+      if (created) {
+        await reload();
+        setSelectedJob(created);
+      }
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   return (
     <div
@@ -175,23 +199,31 @@ export function JobsManagerModal({ onClose }: { onClose: () => void }) {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    AI Output (Markdown Output)
+                    AI Output
                   </span>
                   {selectedJob.outputMarkdown && (
-                    <button
-                      onClick={() => navigator.clipboard.writeText(selectedJob.outputMarkdown || "")}
-                      className="text-[11px] text-cyan-300 hover:underline"
-                    >
-                      Copy Output
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => navigator.clipboard.writeText(selectedJob.outputMarkdown || "")}
+                        className="text-[11px] text-cyan-300 hover:underline"
+                      >
+                        Copy Output
+                      </button>
+                      <button
+                        onClick={() => handleRegenerate(selectedJob)}
+                        disabled={regenerating}
+                        title="Runs a real new AI call — not a cached replay"
+                        className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[11px] font-medium text-cyan-200 hover:bg-cyan-400/20 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${regenerating ? "animate-spin" : ""}`} /> Regenerate
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                <div className="min-h-[220px] rounded-xl border border-slate-800 bg-slate-900/60 p-4 font-mono text-xs text-slate-200">
+                <div className="min-h-[220px] rounded-xl border border-slate-800 bg-slate-900/60 p-4">
                   {selectedJob.outputMarkdown ? (
-                    <pre className="whitespace-pre-wrap font-sans leading-relaxed">
-                      {selectedJob.outputMarkdown}
-                    </pre>
+                    <MarkdownReport content={selectedJob.outputMarkdown} />
                   ) : selectedJob.status === "failed" ? (
                     <div className="text-rose-400">Error: {selectedJob.error}</div>
                   ) : selectedJob.status === "running" || selectedJob.status === "claimed" ? (

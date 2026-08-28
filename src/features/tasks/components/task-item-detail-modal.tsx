@@ -3,12 +3,15 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
+  Copy,
   Loader2,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Priority, Status, Task } from "../types";
 import { EXPERTS } from "@/lib/agents";
+import { MarkdownReport } from "@/components/markdown-report";
 
 type JobStatus = "pending" | "claimed" | "running" | "done" | "failed" | "cancelled";
 
@@ -32,9 +35,10 @@ const JOB_STATUS_META: Record<JobStatus, { label: string; cls: string }> = {
  * the old getSubItemsForTask() fabricated checklist (hardcoded fake URLs,
  * invented DR scores, invented FAQ text keyed off the task title) with the
  * task's actual execution state -- there is nothing to show until a real
- * job exists, and nothing here is invented.
+ * job exists, and nothing here is invented. `generation` lets a caller
+ * (the Regenerate button) force a fresh poll cycle after starting a new job.
  */
-function useJobStatus(jobId: string | undefined) {
+function useJobStatus(jobId: string | undefined, generation: number) {
   const [job, setJob] = useState<JobState>(null);
   const [loading, setLoading] = useState(!!jobId);
 
@@ -46,6 +50,7 @@ function useJobStatus(jobId: string | undefined) {
     }
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
+    setLoading(true);
 
     const poll = async () => {
       try {
@@ -71,7 +76,7 @@ function useJobStatus(jobId: string | undefined) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [jobId]);
+  }, [jobId, generation]);
 
   return { job, loading };
 }
@@ -90,7 +95,10 @@ export function TaskItemDetailModal({
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [status, setStatus] = useState<Status>(task.status);
   const [assignee, setAssignee] = useState<string>(task.assignee);
-  const { job, loading } = useJobStatus(task.jobId);
+  const [currentJobId, setCurrentJobId] = useState<string | undefined>(task.jobId);
+  const [generation, setGeneration] = useState(0);
+  const [regenerating, setRegenerating] = useState(false);
+  const { job, loading } = useJobStatus(currentJobId, generation);
 
   const handleSave = () => {
     onUpdate(task.id, { priority, status, assignee });
@@ -98,8 +106,35 @@ export function TaskItemDetailModal({
     onClose();
   };
 
+  const handleRegenerate = async () => {
+    if (regenerating) return;
+    setRegenerating(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/regenerate`, { method: "POST" });
+      const json = await res.json();
+      if (json?.ok && json.jobId) {
+        setCurrentJobId(json.jobId);
+        setGeneration((g) => g + 1);
+        setStatus("inprogress");
+        toast.success("Regenerating — a new AI run has started");
+      } else {
+        toast.error(json?.error || "Failed to regenerate");
+      }
+    } catch {
+      toast.error("Failed to regenerate");
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  const handleCopy = () => {
+    if (!job?.outputMarkdown) return;
+    navigator.clipboard.writeText(job.outputMarkdown).then(() => toast.success("Report copied"));
+  };
+
   const statusMeta = job ? JOB_STATUS_META[job.status] : null;
   const jobInFlight = job && ["pending", "claimed", "running"].includes(job.status);
+  const canRegenerate = !!task.jobId && !jobInFlight;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md animate-in fade-in duration-200">
@@ -199,9 +234,30 @@ export function TaskItemDetailModal({
 
           {/* Execution status -- real claude_jobs state, nothing fabricated */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-white">Execution</h3>
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white">Result</h3>
+              {job?.outputMarkdown && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={handleCopy}
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-[11px] text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+                  >
+                    <Copy className="h-3 w-3" /> Copy
+                  </button>
+                  <button
+                    onClick={handleRegenerate}
+                    disabled={!canRegenerate || regenerating}
+                    title={jobInFlight ? "Wait for the current run to finish first" : "Run this task again — a real new AI call, not a cached replay"}
+                    className="inline-flex items-center gap-1 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-200 hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${regenerating ? "animate-spin" : ""}`} />
+                    {regenerating ? "Starting…" : "Regenerate"}
+                  </button>
+                </div>
+              )}
+            </div>
 
-            {!task.jobId ? (
+            {!currentJobId ? (
               <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-5 text-center text-xs text-slate-500">
                 No job has been started for this task yet. Move it to "In Progress" to enqueue real execution
                 through the AKS worker.
@@ -211,21 +267,30 @@ export function TaskItemDetailModal({
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading job status…
               </div>
             ) : job?.status === "failed" ? (
-              <div className="flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-500/5 p-4 text-xs text-rose-200">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <div>
-                  <div className="font-semibold">Job failed</div>
-                  {job.error && <div className="mt-1 whitespace-pre-line text-rose-300/80">{job.error}</div>}
+              <div className="space-y-2">
+                <div className="flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-500/5 p-4 text-xs text-rose-200">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <div>
+                    <div className="font-semibold">Job failed</div>
+                    {job.error && <div className="mt-1 whitespace-pre-line text-rose-300/80">{job.error}</div>}
+                  </div>
                 </div>
+                <button
+                  onClick={handleRegenerate}
+                  disabled={regenerating}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-medium text-cyan-200 hover:bg-cyan-400/20 disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${regenerating ? "animate-spin" : ""}`} /> Retry
+                </button>
               </div>
             ) : job?.outputMarkdown ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 text-xs text-emerald-300">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Real output from the AKS worker
                 </div>
-                <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 font-mono text-xs text-slate-200">
-                  {job.outputMarkdown}
-                </pre>
+                <div className="max-h-96 overflow-y-auto rounded-xl border border-slate-800/80 bg-slate-900/60 p-4">
+                  <MarkdownReport content={job.outputMarkdown} />
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/30 p-5 text-xs text-slate-500">
