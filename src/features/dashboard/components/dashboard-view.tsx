@@ -34,10 +34,9 @@ import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
 import { EXPERTS, buildSubAgentId } from "@/lib/agents";
 
-// The 6 specialist experts, excluding the Team Leader -- the leader gets
-// its own dedicated card above the grid (it delegates to these 6, it isn't
-// one of them), and CONNECTOR_CLASSES below is positionally tuned for
-// exactly 6 grid cells.
+// The 7 specialist experts, excluding the Team Leader -- the leader gets
+// its own dedicated card above the grid (it delegates to these 7, it isn't
+// one of them).
 const specialistExperts = EXPERTS.filter((e) => e.id !== "leader");
 import { JobsManagerModal } from "@/features/jobs/components/jobs-manager";
 import { useDashboard, type CustomAgent } from "../hooks/use-dashboard";
@@ -66,14 +65,17 @@ const ACCENT_CHOICES = [
   "from-indigo-400 to-blue-500",
 ];
 
-const CONNECTOR_CLASSES: { left: string; right: string }[] = [
-  { left: "hidden", right: "hidden sm:block" },
-  { left: "hidden sm:block", right: "hidden sm:block" },
-  { left: "hidden sm:block", right: "hidden sm:block" },
-  { left: "hidden sm:block", right: "hidden sm:block" },
-  { left: "hidden sm:block", right: "hidden sm:block" },
-  { left: "hidden sm:block", right: "hidden" },
-];
+// First card hides its left connector, last card hides its right connector,
+// everything in between shows both -- computed from position rather than a
+// fixed-length array, so it stays correct regardless of how many specialist
+// experts exist (was hardcoded for exactly 6; specialistExperts is now 7
+// after the Quality Auditor / Research split).
+function connectorClasses(idx: number, total: number): { left: string; right: string } {
+  return {
+    left: idx === 0 ? "hidden" : "hidden sm:block",
+    right: idx === total - 1 ? "hidden" : "hidden sm:block",
+  };
+}
 
 export function DashboardView() {
   const [showJobs, setShowJobs] = useState(false);
@@ -225,12 +227,13 @@ export function DashboardView() {
             <div className="mx-auto h-8 w-px bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
           </div>
 
-          {/* Experts grid */}
-          <section className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+          {/* Experts grid -- xl:grid-cols-7 to fit all specialistExperts in
+              one row without wrapping (was 6 before the Research split) */}
+          <section className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7">
             {specialistExperts.map((e, idx) => {
               const Icon = e.icon;
               const isOpen = open === e.id;
-              const conn = CONNECTOR_CLASSES[idx] || { left: "hidden sm:block", right: "hidden sm:block" };
+              const conn = connectorClasses(idx, specialistExperts.length);
               return (
                 <div
                   key={e.id}

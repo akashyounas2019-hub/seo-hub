@@ -145,7 +145,7 @@ export function AgentDetailView({ id }: { id: string }) {
                 {isSub
                   ? `· reports to ${expert.title}`
                   : expert.id === "leader"
-                  ? "· oversees all 6 specialist experts"
+                  ? "· oversees all 7 specialist experts"
                   : `· ${resolved.subs.length} sub-agents · reports to SEO Team Leader`}
               </p>
             </div>

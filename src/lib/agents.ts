@@ -1,4 +1,4 @@
-import { FileText, Link2, Settings2, Crown, ShieldCheck, Sparkles, Globe } from "lucide-react";
+import { FileText, Link2, Settings2, Crown, ShieldCheck, Sparkles, Globe, Target } from "lucide-react";
 
 export type Sub = { name: string; desc: string };
 export type Expert = {
@@ -14,7 +14,7 @@ export const EXPERTS: Expert[] = [
   {
     id: "leader",
     title: "SEO Team Leader",
-    tag: "Orchestrator · oversees all 6 experts",
+    tag: "Orchestrator · oversees all 7 experts",
     icon: Crown,
     accent: "from-yellow-400 to-amber-500",
     // The Team Leader doesn't have its own sub-agent roster the way the 6
@@ -74,6 +74,20 @@ export const EXPERTS: Expert[] = [
       { name: "Content QA", desc: "E-E-A-T & accuracy checks" },
       { name: "Compliance Bot", desc: "Guidelines & policy review" },
       { name: "Report Generator", desc: "Exec-ready summaries" },
+    ],
+  },
+  // Split out of the old 8-sub "Quality Auditor" -- keyword/market research
+  // has almost nothing to do with quality/compliance auditing, and no other
+  // expert in this roster mixes two unrelated skill domains under one
+  // title. Same 4 sub-agents that used to live under "auditor", now under
+  // their own coherent parent.
+  {
+    id: "research",
+    title: "Research & Intelligence Expert",
+    tag: "Keyword & Market Research",
+    icon: Target,
+    accent: "from-indigo-400 to-purple-500",
+    subs: [
       { name: "Keyword Miner", desc: "Volume, difficulty, intent" },
       { name: "SERP Analytics Analyst", desc: "Competitor SERP dissection & analytics" },
       { name: "Trend Breacher", desc: "Emerging query patterns & trend detection" },
@@ -108,13 +122,66 @@ export const EXPERTS: Expert[] = [
 ];
 
 export const DEFAULT_SKILLS: Record<string, string> = {
-  leader: "Live GSC/GA4 + Knowledge Base review, task prioritization, delegation across the 6 specialist experts, approval-gated recommendations",
-  onpage: "SEO copywriting, on-page optimization, schema markup, keyword targeting, content structuring",
+  leader: "Live GSC/GA4 + Knowledge Base review, task prioritization, delegation across the 7 specialist experts, approval-gated recommendations",
+  onpage: "SEO copywriting & meta optimization, topical content structuring, internal linking architecture, JSON-LD schema authoring",
   offpage: "Link building, digital PR, outreach, brand mentions, disavow management",
   technical: "Core Web Vitals, crawl budget, log analysis, JS rendering, indexation",
-  auditor: "Site auditing, E-E-A-T review, compliance, executive reporting, keyword research, SERP analytics, trend detection, audience profiling",
+  auditor: "Site auditing, E-E-A-T review, compliance review, executive reporting",
+  research: "Keyword research, SERP analytics, trend detection, audience profiling",
   geo: "Generative Engine Optimization (GEO), AI Overviews, Perplexity citation engineering, entity grounding",
   international: "Geo-grid heatmaps, Google Business Profile review sentiment automation, hreflang validation, En/Ar localization",
+};
+
+// Real, per-sub-agent skill strings -- keyed by the full sub-agent id
+// (buildSubAgentId(parentId, subName), e.g. "onpage__meta-optimizer").
+// Previously every sub-agent had NO skill string of its own: getDefaultProfile()
+// looked up DEFAULT_SKILLS[id] using the full sub-agent id, which never
+// matched any key (DEFAULT_SKILLS only has parent ids) and fell through to
+// "" -- every one of the 27 sub-agent profile pages showed a genuinely
+// blank skill set, not an inherited one. Each entry below is specific to
+// what that one sub-agent's name/desc actually describes, not a copy of
+// its siblings'.
+export const SUB_AGENT_SKILLS: Record<string, string> = {
+  // On-Page Expert
+  "onpage__meta-optimizer": "Title tag & meta description writing, Open Graph / Twitter Card tags, SERP snippet CTR optimization",
+  "onpage__content-strategist": "Topical map planning, content brief authoring, search-intent alignment, content gap analysis",
+  "onpage__internal-linker": "Anchor text planning, topic silo architecture, orphan page discovery, link equity distribution",
+  "onpage__schema-writer": "JSON-LD authoring (LocalBusiness, Service, FAQPage, Product), rich-result eligibility validation",
+
+  // Off-Page Expert
+  "offpage__backlink-prospector": "Referring-domain discovery, competitor backlink gap analysis, link opportunity qualification",
+  "offpage__outreach-agent": "Personalized pitch drafting, outreach sequencing, response tracking",
+  "offpage__digital-pr": "Brand mention monitoring, unlinked-mention reclamation, press/citation building",
+  "offpage__disavow-manager": "Toxic link identification, disavow file management, link-risk scoring",
+
+  // Technical SEO Expert
+  "technical__crawl-analyst": "Robots.txt auditing, XML sitemap validation, crawl-budget analysis, indexation status tracking",
+  "technical__core-web-vitals": "LCP/INP/CLS diagnostics, PageSpeed Insights interpretation, render-blocking resource identification",
+  "technical__rendering-bot": "JS-rendered content SEO, hydration timing checks, client vs. server rendering diffs",
+  "technical__log-file-parser": "Server log analysis, bot crawl-pattern detection, crawl-frequency anomaly flagging",
+
+  // Quality Auditor
+  "auditor__site-auditor": "Full-site technical + content health scans, prioritized issue lists",
+  "auditor__content-qa": "E-E-A-T verification, factual accuracy checks, author-bio and citation validation",
+  "auditor__compliance-bot": "Search engine guideline adherence, YMYL/regulatory compliance review",
+  "auditor__report-generator": "Executive-ready report synthesis, findings summarization, stakeholder-facing formatting",
+
+  // Research & Intelligence Expert
+  "research__keyword-miner": "Search volume/difficulty analysis, keyword clustering, intent classification",
+  "research__serp-analytics-analyst": "SERP feature dissection, competitor ranking analysis, SERP volatility tracking",
+  "research__trend-breacher": "Emerging query pattern detection, seasonal demand forecasting, trend-to-content mapping",
+  "research__audience-profiler": "Persona construction, search-intent segmentation, audience-need mapping",
+
+  // GEO / AI Search Expert
+  "geo__ai-citation-optimizer": "ChatGPT/Perplexity/Gemini AI Overview citation tuning, source-authority signaling for LLM retrieval",
+  "geo__llm-entity-grounding": "Knowledge-graph entity consistency, sameAs linking, structured entity disambiguation",
+  "geo__prompt-presence-tracker": "Brand visibility tracking across generative-search prompts, share-of-voice measurement",
+
+  // International & Local Expert
+  "international__review-sentiment-responder": "Automated Google Business Profile review response drafting, sentiment-aware tone matching",
+  "international__geo-grid-map-tracker": "5x5 local ranking heatmap generation, geo-grid rank-tracking analysis",
+  "international__hreflang-validator": "Hreflang tag validation, cross-border canonical/indexation conflict detection",
+  "international__regional-localization-bot": "En/Ar dialect adaptation, regional terminology and cultural localization",
 };
 
 export type Task = {
@@ -234,10 +301,16 @@ const SEED_MEMORY: Record<string, string> = {
 };
 
 export function getDefaultProfile(id: string): AgentProfile {
-  const { parentId } = parseAgentId(id);
+  const { parentId, subSlug } = parseAgentId(id);
   const nowIso = new Date().toISOString();
+  // Sub-agents get their own real skill string (SUB_AGENT_SKILLS); parent
+  // agents (and the id === parentId case, i.e. no subSlug) use DEFAULT_SKILLS.
+  // A custom sub-agent added via "Add sub-agent" (not in the static roster)
+  // has no entry in either map -- falls through to "" honestly rather than
+  // inventing placeholder skills for a role nobody has described yet.
+  const skills = subSlug ? (SUB_AGENT_SKILLS[id] ?? "") : (DEFAULT_SKILLS[id] ?? "");
   return {
-    skills: DEFAULT_SKILLS[id] ?? "",
+    skills,
     tasks: [],
     settings: { ...DEFAULT_SETTINGS },
     memory: SEED_MEMORY[parentId] ?? "",
