@@ -10,6 +10,7 @@ import {
   Settings2,
   RefreshCw,
   Trash2,
+  Zap,
 } from "lucide-react";
 import { useSite } from "@/lib/site-context";
 
@@ -88,24 +89,42 @@ function ApprovalsPage() {
     load();
   }, []);
 
+  const [immediateIds, setImmediateIds] = useState<Set<string>>(new Set());
+  const toggleImmediate = (id: string) => {
+    setImmediateIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const siteLabel = (siteId: string | null) => allSites.find((s) => s.id === siteId)?.label || siteId || "Unknown site";
 
-  async function decide(id: string, approve: boolean) {
+  async function decide(id: string, approve: boolean, immediate?: boolean) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     try {
       // Approving sends the task straight to "inprogress" rather than
       // "todo" -- api.tasks.$id.ts creates a real claude_jobs row the
       // moment a task enters "inprogress", so approval actually starts
       // execution instead of just moving it to a backlog someone has to
-      // separately notice and drag over.
+      // separately notice and drag over. `immediate` forces the job to
+      // "critical" priority, which api.jobs.claim.ts now actually honors --
+      // it claims ahead of everything else already queued.
       const res = await fetch(`/api/tasks/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: approve ? "inprogress" : "rejected" }),
+        body: JSON.stringify({ status: approve ? "inprogress" : "rejected", immediate: approve ? !!immediate : undefined }),
       });
       const json = await res.json();
       if (json?.error) throw new Error(json.error);
-      toast.success(approve ? "Task approved — real execution started" : "Task rejected");
+      toast.success(
+        approve
+          ? immediate
+            ? "Task approved — jumped to front of the queue"
+            : "Task approved — real execution started"
+          : "Task rejected",
+      );
     } catch (err: any) {
       toast.error(err?.message || "Failed to update task");
       load();
@@ -214,19 +233,30 @@ function ApprovalsPage() {
                       <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {timeAgo(t.createdAt)}</span>
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <button
-                      onClick={() => decide(t.id, false)}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
-                    >
-                      <XCircle className="h-3.5 w-3.5" /> Reject
-                    </button>
-                    <button
-                      onClick={() => decide(t.id, true)}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Approve
-                    </button>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => decide(t.id, false)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
+                      >
+                        <XCircle className="h-3.5 w-3.5" /> Reject
+                      </button>
+                      <button
+                        onClick={() => decide(t.id, true, immediateIds.has(t.id))}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Approve
+                      </button>
+                    </div>
+                    <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={immediateIds.has(t.id)}
+                        onChange={() => toggleImmediate(t.id)}
+                        className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-amber-400 accent-amber-400 focus:ring-amber-400/40"
+                      />
+                      <Zap className="h-3 w-3 text-amber-300" /> Immediate — bypass queue
+                    </label>
                   </div>
                 </div>
               </article>

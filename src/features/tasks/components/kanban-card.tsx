@@ -1,4 +1,6 @@
-import { GripVertical, Sparkles, Timer, Trash2, Users } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { CheckCircle2, GripVertical, Loader2, Sparkles, Timer, Trash2, Users, XCircle } from "lucide-react";
 import { PRIORITY_META } from "../constants";
 import type { Priority, Task } from "../types";
 import { relativeDue } from "../utils/storage";
@@ -11,6 +13,7 @@ export function KanbanCard({
   onRemove,
   onPriorityChange,
   onClick,
+  onPublished,
 }: {
   task: Task;
   dragging: boolean;
@@ -19,7 +22,48 @@ export function KanbanCard({
   onRemove: () => void;
   onPriorityChange: (p: Priority) => void;
   onClick?: () => void;
+  // Called after a real successful WordPress publish so the board can
+  // refresh -- only relevant for cards in the "review" column.
+  onPublished?: () => void;
 }) {
+  const [publishing, setPublishing] = useState(false);
+
+  const handlePublish = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (publishing) return;
+    setPublishing(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/publish`, { method: "POST" });
+      const json = await res.json();
+      if (json?.ok) {
+        toast.success("Published to WordPress", { description: json.publishedUrl });
+        onPublished?.();
+      } else {
+        toast.error(json?.error || "Failed to publish");
+      }
+    } catch {
+      toast.error("Failed to publish");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleCancel = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+      const json = await res.json();
+      if (json?.error) throw new Error(json.error);
+      toast.success("Task cancelled");
+      onPublished?.(); // reuse the same "refresh the board" callback
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to cancel task");
+    }
+  };
   const meta = PRIORITY_META[task.priority];
   const due = relativeDue(task.due);
   const overdue = task.due ? new Date(task.due).getTime() < Date.now() && task.status !== "done" : false;
@@ -104,6 +148,26 @@ export function KanbanCard({
           </span>
         )}
       </div>
+
+      {task.status === "review" && (
+        <div className="mt-2.5 flex items-center gap-1.5 border-t border-slate-800/70 pt-2.5 pl-5">
+          <button
+            onClick={handleCancel}
+            className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-rose-400/30 bg-rose-500/10 px-2 py-1 text-[10px] font-medium text-rose-200 hover:bg-rose-500/20"
+          >
+            <XCircle className="h-3 w-3" /> Reject & Cancel
+          </button>
+          <button
+            onClick={handlePublish}
+            disabled={publishing || !task.outputMarkdown}
+            title={!task.outputMarkdown ? "No AI output to publish yet" : "Publish to WordPress"}
+            className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-emerald-200 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+            {publishing ? "Publishing…" : "Approve & Publish"}
+          </button>
+        </div>
+      )}
     </article>
   );
 }

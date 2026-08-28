@@ -56,6 +56,7 @@ export function AgentDashboardView() {
     onDragStart,
     onDragEnd,
     onDropTo,
+    refetch,
   } = useTasks();
 
   return (
@@ -202,6 +203,7 @@ export function AgentDashboardView() {
                       <KanbanCard
                         key={t.id}
                         task={t}
+                        onPublished={refetch}
                         dragging={dragId === t.id}
                         onDragStart={() => onDragStart(t.id)}
                         onDragEnd={onDragEnd}

@@ -28,6 +28,7 @@ import { compileFullKnowledge } from "@/lib/ai-knowledge";
 import type { StructuredKnowledgeBase, KbServiceItem, KbFaqItem } from "@/db/schema";
 import { BUSINESS_CATEGORIES } from "@/lib/business-categories";
 import { SitePagesPanel } from "@/components/site-pages-panel";
+import { WordPressConnectionPanel } from "@/components/wordpress-connection-panel";
 
 export const Route = createFileRoute("/knowledge-base")({
   head: () => ({
@@ -55,6 +56,22 @@ function KnowledgeBasePage() {
   const [businessCategory, setBusinessCategory] = useState<string>("");
   const [kbLoading, setKbLoading] = useState(true);
   const [kbSaving, setKbSaving] = useState(false);
+  const [wpConnected, setWpConnected] = useState(false);
+  const [wpSiteUrl, setWpSiteUrl] = useState<string | null>(null);
+  const [wpUsername, setWpUsername] = useState<string | null>(null);
+
+  const refetchSite = () => {
+    if (!currentSite.id) return;
+    fetch(`/api/sites/${currentSite.id}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json?.ok || !json.site) return;
+        setWpConnected(!!json.site.wpConnected);
+        setWpSiteUrl(json.site.wpSiteUrl || null);
+        setWpUsername(json.site.wpUsername || null);
+      })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     if (!currentSite.id) return;
@@ -67,6 +84,9 @@ function KnowledgeBasePage() {
         setPlainText(json.site.knowledgeBase || "");
         setStructured(json.site.structuredKb || {});
         setBusinessCategory(json.site.businessCategory || "");
+        setWpConnected(!!json.site.wpConnected);
+        setWpSiteUrl(json.site.wpSiteUrl || null);
+        setWpUsername(json.site.wpUsername || null);
       })
       .catch(() => {
         if (!cancelled) toast.error("Failed to load Knowledge Base from Postgres");
@@ -490,6 +510,16 @@ function KnowledgeBasePage() {
             </button>
           </div>
         </div>
+
+        {/* WordPress publishing connection — required for the "To Review"
+            approve-and-publish action on the agent dashboard's Kanban board */}
+        <WordPressConnectionPanel
+          siteId={currentSite.id}
+          wpConnected={wpConnected}
+          wpSiteUrl={wpSiteUrl}
+          wpUsername={wpUsername}
+          onConnected={refetchSite}
+        />
 
         {/* Knowledge Studio Component Card */}
         <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 lg:p-8">

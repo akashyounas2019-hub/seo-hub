@@ -19,21 +19,18 @@ export function useTasks() {
 
   const agents = useMemo(() => EXPERTS.map((e) => e.title), []);
 
-  useEffect(() => {
-    // Initial local storage hydration
-    const s = loadState(SEED_TASKS, SEED_TEMPLATES);
-    setTasks(s.tasks);
-    setTemplates(s.templates);
-
-    // Sync from database API. Tasks awaiting owner sign-off or rejected by
-    // the approval-rules engine live on the Approvals screen, not this
-    // assignment board -- filter them out here so this board only shows
-    // work that's actually been approved to move.
-    fetch("/api/tasks")
+  // Sync from database API. Tasks awaiting owner sign-off, rejected by the
+  // approval-rules engine, or cancelled in "review" live on the Approvals
+  // screen (or nowhere) -- filter them out here so this board only shows
+  // work that's actually approved and in flight. Exposed as `refetch` so
+  // real actions elsewhere on the board (publish, cancel) can pull the
+  // board's state back in sync after they happen server-side.
+  const refetch = () => {
+    return fetch("/api/tasks")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && Array.isArray(data.tasks) && data.tasks.length > 0) {
-          setTasks(data.tasks.filter((t: Task) => (t.status as string) !== "pending_approval" && (t.status as string) !== "rejected"));
+          setTasks(data.tasks.filter((t: Task) => !["pending_approval", "rejected", "cancelled"].includes(t.status as string)));
         }
         if (data && Array.isArray(data.templates) && data.templates.length > 0) {
           setTemplates(data.templates);
@@ -41,8 +38,17 @@ export function useTasks() {
       })
       .catch(() => {
         /* fallback to local storage */
-      })
-      .finally(() => setHydrated(true));
+      });
+  };
+
+  useEffect(() => {
+    // Initial local storage hydration
+    const s = loadState(SEED_TASKS, SEED_TEMPLATES);
+    setTasks(s.tasks);
+    setTemplates(s.templates);
+
+    refetch().finally(() => setHydrated(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -200,5 +206,6 @@ export function useTasks() {
     onDragStart,
     onDragEnd,
     onDropTo,
+    refetch,
   };
 }

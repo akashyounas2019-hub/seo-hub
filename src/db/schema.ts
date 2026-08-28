@@ -126,6 +126,14 @@ export const sites = pgTable(
     gbpLocationName: text("gbp_location_name"),
     wpConnected: boolean("wp_connected").notNull().default(false),
     wpDetail: text("wp_detail"),
+    // Real WordPress REST API credentials for publishing (src/lib/wordpress.ts).
+    // wpDetail above is just a display string; these are what
+    // api.tasks.$id.publish.ts actually authenticates with. App password is
+    // AES-256-GCM encrypted at rest via src/lib/crypto.ts, same pattern as
+    // every other API secret in org_settings.
+    wpSiteUrl: text("wp_site_url"),
+    wpUsername: text("wp_username"),
+    wpAppPasswordCiphertext: text("wp_app_password_ciphertext"),
     // Per-site business vertical, set during onboarding. Free text (not a
     // Postgres enum) matching how automation_flows.category and
     // alerts.severity are modeled -- new verticals can be added in
@@ -454,6 +462,11 @@ export const kanbanTasks = pgTable(
     // flip straight to "todo" with no record of who or what approved it.
     approvedBy: text("approved_by"),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
+    // Real result of publishing this task's output to the live site via the
+    // WordPress REST API (src/lib/wordpress.ts) -- set only on an actual
+    // successful publish, never synthesized.
+    publishedUrl: text("published_url"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

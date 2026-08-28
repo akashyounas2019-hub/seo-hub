@@ -80,6 +80,8 @@ import { Route as ApiSettingsRolesIdRouteImport } from './routes/api.settings.ro
 import { Route as ApiSettingsWebhooksIdRouteImport } from './routes/api.settings.webhooks.$id'
 import { Route as ApiSitesIdGbpSyncRouteImport } from './routes/api.sites.$id.gbp-sync'
 import { Route as ApiSitesIdPagesRouteImport } from './routes/api.sites.$id.pages'
+import { Route as ApiSitesIdWpVerifyRouteImport } from './routes/api.sites.$id.wp-verify'
+import { Route as ApiTasksIdPublishRouteImport } from './routes/api.tasks.$id.publish'
 import { Route as ApiQaRunsIdCompleteRouteImport } from './routes/api.qa.runs.$id.complete'
 import { Route as ApiQaRunsIdStatusRouteImport } from './routes/api.qa.runs.$id.status'
 import { Route as ApiSettingsWebhooksIdTestRouteImport } from './routes/api.settings.webhooks.$id.test'
@@ -444,6 +446,16 @@ const ApiSitesIdPagesRoute = ApiSitesIdPagesRouteImport.update({
   path: '/pages',
   getParentRoute: () => ApiSitesIdRoute,
 } as any)
+const ApiSitesIdWpVerifyRoute = ApiSitesIdWpVerifyRouteImport.update({
+  id: '/wp-verify',
+  path: '/wp-verify',
+  getParentRoute: () => ApiSitesIdRoute,
+} as any)
+const ApiTasksIdPublishRoute = ApiTasksIdPublishRouteImport.update({
+  id: '/publish',
+  path: '/publish',
+  getParentRoute: () => ApiTasksIdRoute,
+} as any)
 const ApiQaRunsIdCompleteRoute = ApiQaRunsIdCompleteRouteImport.update({
   id: '/complete',
   path: '/complete',
@@ -517,7 +529,7 @@ export interface FileRoutesByFullPath {
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
-  '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
@@ -533,6 +545,8 @@ export interface FileRoutesByFullPath {
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
+  '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
   '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
   '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
@@ -593,7 +607,7 @@ export interface FileRoutesByTo {
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
-  '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts': typeof ApiAlertsIndexRoute
   '/api/jobs': typeof ApiJobsIndexRoute
@@ -609,6 +623,8 @@ export interface FileRoutesByTo {
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
+  '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
   '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
   '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
@@ -670,7 +686,7 @@ export interface FileRoutesById {
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
-  '/api/tasks/$id': typeof ApiTasksIdRoute
+  '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
@@ -686,6 +702,8 @@ export interface FileRoutesById {
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
+  '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
   '/api/qa/runs/$id/complete': typeof ApiQaRunsIdCompleteRoute
   '/api/qa/runs/$id/status': typeof ApiQaRunsIdStatusRoute
   '/api/settings/webhooks/$id/test': typeof ApiSettingsWebhooksIdTestRoute
@@ -764,6 +782,8 @@ export interface FileRouteTypes {
     | '/api/settings/webhooks/$id'
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/pages'
+    | '/api/sites/$id/wp-verify'
+    | '/api/tasks/$id/publish'
     | '/api/qa/runs/$id/complete'
     | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
@@ -840,6 +860,8 @@ export interface FileRouteTypes {
     | '/api/settings/webhooks/$id'
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/pages'
+    | '/api/sites/$id/wp-verify'
+    | '/api/tasks/$id/publish'
     | '/api/qa/runs/$id/complete'
     | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
@@ -916,6 +938,8 @@ export interface FileRouteTypes {
     | '/api/settings/webhooks/$id'
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/pages'
+    | '/api/sites/$id/wp-verify'
+    | '/api/tasks/$id/publish'
     | '/api/qa/runs/$id/complete'
     | '/api/qa/runs/$id/status'
     | '/api/settings/webhooks/$id/test'
@@ -976,7 +1000,7 @@ export interface RootRouteChildren {
   ApiSettingsRolesRoute: typeof ApiSettingsRolesRouteWithChildren
   ApiSettingsWebhooksRoute: typeof ApiSettingsWebhooksRouteWithChildren
   ApiSitesIdRoute: typeof ApiSitesIdRouteWithChildren
-  ApiTasksIdRoute: typeof ApiTasksIdRoute
+  ApiTasksIdRoute: typeof ApiTasksIdRouteWithChildren
   ApiTasksPendingApprovalRoute: typeof ApiTasksPendingApprovalRoute
   ApiAlertsIndexRoute: typeof ApiAlertsIndexRoute
   ApiJobsIndexRoute: typeof ApiJobsIndexRoute
@@ -1483,6 +1507,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSitesIdPagesRouteImport
       parentRoute: typeof ApiSitesIdRoute
     }
+    '/api/sites/$id/wp-verify': {
+      id: '/api/sites/$id/wp-verify'
+      path: '/wp-verify'
+      fullPath: '/api/sites/$id/wp-verify'
+      preLoaderRoute: typeof ApiSitesIdWpVerifyRouteImport
+      parentRoute: typeof ApiSitesIdRoute
+    }
+    '/api/tasks/$id/publish': {
+      id: '/api/tasks/$id/publish'
+      path: '/publish'
+      fullPath: '/api/tasks/$id/publish'
+      preLoaderRoute: typeof ApiTasksIdPublishRouteImport
+      parentRoute: typeof ApiTasksIdRoute
+    }
     '/api/qa/runs/$id/complete': {
       id: '/api/qa/runs/$id/complete'
       path: '/complete'
@@ -1623,15 +1661,29 @@ const ApiSettingsWebhooksRouteWithChildren =
 interface ApiSitesIdRouteChildren {
   ApiSitesIdGbpSyncRoute: typeof ApiSitesIdGbpSyncRoute
   ApiSitesIdPagesRoute: typeof ApiSitesIdPagesRoute
+  ApiSitesIdWpVerifyRoute: typeof ApiSitesIdWpVerifyRoute
 }
 
 const ApiSitesIdRouteChildren: ApiSitesIdRouteChildren = {
   ApiSitesIdGbpSyncRoute: ApiSitesIdGbpSyncRoute,
   ApiSitesIdPagesRoute: ApiSitesIdPagesRoute,
+  ApiSitesIdWpVerifyRoute: ApiSitesIdWpVerifyRoute,
 }
 
 const ApiSitesIdRouteWithChildren = ApiSitesIdRoute._addFileChildren(
   ApiSitesIdRouteChildren,
+)
+
+interface ApiTasksIdRouteChildren {
+  ApiTasksIdPublishRoute: typeof ApiTasksIdPublishRoute
+}
+
+const ApiTasksIdRouteChildren: ApiTasksIdRouteChildren = {
+  ApiTasksIdPublishRoute: ApiTasksIdPublishRoute,
+}
+
+const ApiTasksIdRouteWithChildren = ApiTasksIdRoute._addFileChildren(
+  ApiTasksIdRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
@@ -1689,7 +1741,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSettingsRolesRoute: ApiSettingsRolesRouteWithChildren,
   ApiSettingsWebhooksRoute: ApiSettingsWebhooksRouteWithChildren,
   ApiSitesIdRoute: ApiSitesIdRouteWithChildren,
-  ApiTasksIdRoute: ApiTasksIdRoute,
+  ApiTasksIdRoute: ApiTasksIdRouteWithChildren,
   ApiTasksPendingApprovalRoute: ApiTasksPendingApprovalRoute,
   ApiAlertsIndexRoute: ApiAlertsIndexRoute,
   ApiJobsIndexRoute: ApiJobsIndexRoute,

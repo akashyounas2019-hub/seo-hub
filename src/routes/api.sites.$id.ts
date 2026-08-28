@@ -21,6 +21,8 @@ const ALLOWED_FIELDS = [
   "gbpLocationName",
   "wpConnected",
   "wpDetail",
+  "wpSiteUrl",
+  "wpUsername",
   "businessCategory",
 ];
 
@@ -36,7 +38,8 @@ export const Route = createFileRoute("/api/sites/$id")({
           await ensureSchema();
           const d = db();
           const [site] = await d.select().from(sites).where(eq(sites.id, params.id)).limit(1);
-          return Response.json({ ok: true, site: site || null });
+          const { wpAppPasswordCiphertext, ...safeSite } = (site || {}) as any;
+          return Response.json({ ok: true, site: site ? safeSite : null });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message }, { status: 500 });
         }
@@ -62,15 +65,27 @@ export const Route = createFileRoute("/api/sites/$id")({
             if (body[key] !== undefined) updates[key] = body[key];
           }
 
+          // wpAppPassword arrives as plaintext (a WordPress Application
+          // Password, e.g. "abcd efgh ijkl mnop") and is encrypted at rest
+          // here -- never stored or echoed back in plaintext, same pattern
+          // as every other API secret in org_settings (src/lib/crypto.ts).
+          let changedFields = Object.keys(updates).filter((k) => k !== "updatedAt");
+          if (body.wpAppPassword) {
+            const { encrypt } = await import("@/lib/crypto");
+            updates.wpAppPasswordCiphertext = encrypt(String(body.wpAppPassword));
+            changedFields = [...changedFields, "wpAppPassword"];
+          }
+
           await d.update(sites).set(updates).where(eq(sites.id, params.id));
           const [updated] = await d.select().from(sites).where(eq(sites.id, params.id)).limit(1);
 
-          const changedFields = Object.keys(updates).filter((k) => k !== "updatedAt");
           if (changedFields.length > 0) {
             await logAudit(actorEmailFromRequest(request), "site.updated", { siteId: params.id, fields: changedFields });
           }
 
-          return Response.json({ ok: true, site: updated || null });
+          // Never echo the encrypted app password back to the client.
+          const { wpAppPasswordCiphertext, ...safeSite } = (updated || {}) as any;
+          return Response.json({ ok: true, site: updated ? safeSite : null });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message }, { status: 500 });
         }

@@ -155,6 +155,9 @@ export async function ensureSchema(): Promise<void> {
       ALTER TABLE sites ADD COLUMN IF NOT EXISTS gbp_location_name text;
       ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_connected boolean NOT NULL DEFAULT false;
       ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_detail text;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_site_url text;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_username text;
+      ALTER TABLE sites ADD COLUMN IF NOT EXISTS wp_app_password_ciphertext text;
       ALTER TABLE sites ADD COLUMN IF NOT EXISTS business_category text;
       CREATE UNIQUE INDEX IF NOT EXISTS sites_slug_uq ON sites(slug);
       CREATE UNIQUE INDEX IF NOT EXISTS sites_domain_uq ON sites(domain);
@@ -317,11 +320,15 @@ export async function ensureSchema(): Promise<void> {
         output_markdown text,
         approved_by text,
         approved_at timestamptz,
+        published_url text,
+        published_at timestamptz,
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
       ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS approved_by text;
       ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS approved_at timestamptz;
+      ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS published_url text;
+      ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS published_at timestamptz;
 
       CREATE TABLE IF NOT EXISTS kanban_task_templates (
         id text PRIMARY KEY,

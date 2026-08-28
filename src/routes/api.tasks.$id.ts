@@ -43,16 +43,26 @@ export const Route = createFileRoute("/api/tasks/$id")({
           const task = existing[0];
           let jobId = task.jobId;
 
-          // If status changed to inprogress and no job exists, create a job
+          // If status changed to inprogress and no job exists, create a job.
+          // `immediate` (set when approving in /approvals with the
+          // "Immediate" checkbox) forces claude_jobs.priority to "critical",
+          // which api.jobs.claim.ts now actually honors -- the job jumps to
+          // the front of the real claim queue instead of waiting FIFO
+          // behind whatever else is pending.
           if (body.status === "inprogress" && !jobId) {
+            const jobPriority = body.immediate
+              ? "critical"
+              : (body.priority || task.priority) === "critical"
+                ? "high"
+                : "normal";
             const [job] = await d.insert(claudeJobs).values({
               kind: "kanban_task_execution",
               title: `Execute SEO Task: ${task.title}`,
-              input: { taskId: params.id, assignee: body.assignee || task.assignee, desc: task.desc || task.title, priority: body.priority || task.priority },
+              input: { taskId: params.id, assignee: body.assignee || task.assignee, desc: task.desc || task.title, priority: body.priority || task.priority, immediate: !!body.immediate },
               status: "pending",
-              priority: (body.priority || task.priority) === "critical" ? "high" : "normal",
+              priority: jobPriority,
               preferWorker: "mac",
-              triggerSource: "kanban_drag",
+              triggerSource: body.immediate ? "approvals_immediate" : "kanban_drag",
             }).returning();
             jobId = job.id;
           }
