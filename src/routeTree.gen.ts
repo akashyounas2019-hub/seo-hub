@@ -39,6 +39,7 @@ import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scout
 import { Route as SeoSuiteIndexRouteImport } from './routes/seo-suite.index'
 import { Route as SeoSuiteToolIdRouteImport } from './routes/seo-suite.$toolId'
 import { Route as SitesSiteIdRouteImport } from './routes/sites.$siteId'
+import { Route as ApiAgentsMetricsRouteImport } from './routes/api.agents.metrics'
 import { Route as ApiAlertsIndexRouteImport } from './routes/api.alerts.index'
 import { Route as ApiAlertsIdRouteImport } from './routes/api.alerts.$id'
 import { Route as ApiAnalyticsSyncRouteImport } from './routes/api.analytics.sync'
@@ -238,6 +239,11 @@ const SeoSuiteToolIdRoute = SeoSuiteToolIdRouteImport.update({
 const SitesSiteIdRoute = SitesSiteIdRouteImport.update({
   id: '/sites/$siteId',
   path: '/sites/$siteId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAgentsMetricsRoute = ApiAgentsMetricsRouteImport.update({
+  id: '/api/agents/metrics',
+  path: '/api/agents/metrics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAlertsIndexRoute = ApiAlertsIndexRouteImport.update({
@@ -516,6 +522,7 @@ export interface FileRoutesByFullPath {
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
   '/seo-suite/': typeof SeoSuiteIndexRoute
+  '/api/agents/metrics': typeof ApiAgentsMetricsRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
@@ -596,6 +603,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsIndexRoute
   '/scout-team': typeof ScoutTeamIndexRoute
   '/seo-suite': typeof SeoSuiteIndexRoute
+  '/api/agents/metrics': typeof ApiAgentsMetricsRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
@@ -677,6 +685,7 @@ export interface FileRoutesById {
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
   '/seo-suite/': typeof SeoSuiteIndexRoute
+  '/api/agents/metrics': typeof ApiAgentsMetricsRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
@@ -759,6 +768,7 @@ export interface FileRouteTypes {
     | '/analytics/'
     | '/scout-team/'
     | '/seo-suite/'
+    | '/api/agents/metrics'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/approval-rules/$id'
@@ -839,6 +849,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/scout-team'
     | '/seo-suite'
+    | '/api/agents/metrics'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/approval-rules/$id'
@@ -919,6 +930,7 @@ export interface FileRouteTypes {
     | '/analytics/'
     | '/scout-team/'
     | '/seo-suite/'
+    | '/api/agents/metrics'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/approval-rules/$id'
@@ -1000,6 +1012,7 @@ export interface RootRouteChildren {
   AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   ScoutTeamIndexRoute: typeof ScoutTeamIndexRoute
   SeoSuiteIndexRoute: typeof SeoSuiteIndexRoute
+  ApiAgentsMetricsRoute: typeof ApiAgentsMetricsRoute
   ApiAlertsIdRoute: typeof ApiAlertsIdRoute
   ApiAnalyticsSyncRoute: typeof ApiAnalyticsSyncRoute
   ApiAutomationFlowsRoute: typeof ApiAutomationFlowsRouteWithChildren
@@ -1243,6 +1256,13 @@ declare module '@tanstack/react-router' {
       path: '/sites/$siteId'
       fullPath: '/sites/$siteId'
       preLoaderRoute: typeof SitesSiteIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/agents/metrics': {
+      id: '/api/agents/metrics'
+      path: '/api/agents/metrics'
+      fullPath: '/api/agents/metrics'
+      preLoaderRoute: typeof ApiAgentsMetricsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/alerts/': {
@@ -1758,6 +1778,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsIndexRoute: AnalyticsIndexRoute,
   ScoutTeamIndexRoute: ScoutTeamIndexRoute,
   SeoSuiteIndexRoute: SeoSuiteIndexRoute,
+  ApiAgentsMetricsRoute: ApiAgentsMetricsRoute,
   ApiAlertsIdRoute: ApiAlertsIdRoute,
   ApiAnalyticsSyncRoute: ApiAnalyticsSyncRoute,
   ApiAutomationFlowsRoute: ApiAutomationFlowsRouteWithChildren,

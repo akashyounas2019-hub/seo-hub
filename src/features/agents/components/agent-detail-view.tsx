@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowUpRight,
+  BarChart3,
   Bell,
   Brain,
   CalendarClock,
+  CheckCircle2,
   Cpu,
   Eraser,
   Gauge,
@@ -16,8 +19,10 @@ import {
   ScrollText,
   Settings2,
   Sparkles,
+  Target,
   Trash2,
   UserPlus,
+  XCircle,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import { Button } from "@/components/ui/button";
@@ -136,7 +141,12 @@ export function AgentDetailView({ id }: { id: string }) {
                 </h1>
               </div>
               <p className="mt-1 text-xs text-slate-400">
-                {displayTag} {isSub ? `· reports to ${expert.title}` : `· ${resolved.subs.length} sub-agents · reports to AKS SEO Team Leader`}
+                {displayTag}{" "}
+                {isSub
+                  ? `· reports to ${expert.title}`
+                  : expert.id === "leader"
+                  ? "· oversees all 6 specialist experts"
+                  : `· ${resolved.subs.length} sub-agents · reports to SEO Team Leader`}
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
@@ -380,6 +390,8 @@ export function AgentDetailView({ id }: { id: string }) {
               </div>
             </Card>
 
+            <PerformanceCard agentName={displayTitle} accent={expert.accent} />
+
             <Card title="Agent settings" icon={<Settings2 className="h-4 w-4" />} accent={expert.accent}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <SettingRow icon={<Gauge className="h-4 w-4" />} label="Default priority">
@@ -399,11 +411,15 @@ export function AgentDetailView({ id }: { id: string }) {
                     onChange={(e) => updateSettings({ model: e.target.value })}
                     className="h-8 rounded-md border border-slate-800 bg-slate-900/60 px-2 text-xs text-slate-100"
                   >
-                    <option value="gpt-4o">gpt-4o</option>
-                    <option value="gpt-4o-mini">gpt-4o-mini</option>
-                    <option value="claude-sonnet">claude-sonnet</option>
-                    <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+                    <option value="aks-worker">AKS Worker (claude CLI) — real execution</option>
+                    <option value="gpt-4o" disabled>gpt-4o — not connected</option>
+                    <option value="gpt-4o-mini" disabled>gpt-4o-mini — not connected</option>
+                    <option value="gemini-2.5-pro" disabled>gemini-2.5-pro — not connected</option>
                   </select>
+                  <p className="mt-1 text-[10px] text-slate-500">
+                    Every real task this app executes runs through the AKS Worker (worker/aks-worker.mjs → the
+                    claude CLI). Other options are shown for visibility but have no execution path yet.
+                  </p>
                 </SettingRow>
                 <div className="sm:col-span-2">
                   <Label className="mb-2 block text-[11px] text-slate-400">
@@ -448,6 +464,165 @@ export function AgentDetailView({ id }: { id: string }) {
 
         <div aria-hidden className="h-16" />
       </div>
+    </div>
+  );
+}
+
+type AgentMetrics = {
+  assignee: string;
+  totalTasks: number;
+  completedTasks: number;
+  rejectedOrCancelled: number;
+  openTasks: number;
+  publishedTasks: number;
+  accuracyRate: number | null;
+  dailyCompleted: Record<string, number>;
+  firstTaskAt: string | null;
+  lastTaskAt: string | null;
+};
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Real performance dashboard, sourced from api.agents.metrics.ts ->
+ * kanban_tasks.assignee -- no invented numbers. Matches on exact title
+ * equality against the assignee string stored on real tasks; the
+ * orchestrator/Strategy Plan model doesn't always pick an assignee name
+ * that matches an EXPERTS title or sub-agent exactly (it writes free-text
+ * role names like "Local SEO Specialist"), so an agent can show zero real
+ * tasks even if AI-generated work exists under a differently-worded role
+ * name. That's surfaced honestly below rather than fuzzy-matched.
+ */
+function PerformanceCard({ agentName, accent }: { agentName: string; accent: string }) {
+  const [metrics, setMetrics] = useState<AgentMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [allAssignees, setAllAssignees] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch("/api/agents/metrics")
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled || !json?.ok) return;
+        setMetrics(json.byAssignee[agentName] || null);
+        setAllAssignees(Object.keys(json.byAssignee));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [agentName]);
+
+  const dailyRows = metrics
+    ? Object.entries(metrics.dailyCompleted).sort((a, b) => (a[0] < b[0] ? 1 : -1)).slice(0, 14)
+    : [];
+  const todayCount = metrics?.dailyCompleted[todayIso()] || 0;
+
+  return (
+    <Card title="Performance" icon={<BarChart3 className="h-4 w-4" />} accent={accent}>
+      {loading ? (
+        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-6 text-center text-xs text-slate-500">
+          Loading real task history…
+        </div>
+      ) : !metrics || metrics.totalTasks === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-6 text-center text-xs text-slate-500">
+          No real task history under the exact name "{agentName}" yet. AI-generated tasks (orchestrator, Strategy
+          Plan) are assigned a free-text role name that doesn't always match this agent's title exactly
+          {allAssignees.length > 0 && (
+            <> — real assignee names on record right now: {allAssignees.join(", ")}.</>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+            <StatCard label="Completed today" value={todayCount} icon={<CheckCircle2 className="h-3.5 w-3.5" />} />
+            <StatCard label="Total since inception" value={metrics.totalTasks} icon={<ListTodo className="h-3.5 w-3.5" />} />
+            <StatCard
+              label="Accuracy rate"
+              value={metrics.accuracyRate !== null ? `${metrics.accuracyRate}%` : "—"}
+              icon={<Target className="h-3.5 w-3.5" />}
+              hint={metrics.accuracyRate === null ? "No terminal tasks yet" : undefined}
+            />
+            <StatCard label="Published live" value={metrics.publishedTasks} icon={<ArrowUpRight className="h-3.5 w-3.5" />} />
+          </div>
+
+          {/* Status breakdown table */}
+          <div className="overflow-hidden rounded-lg border border-slate-800">
+            <table className="w-full text-xs">
+              <thead className="bg-slate-900/60 text-[10px] uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="px-3 py-2 text-left">Status</th>
+                  <th className="px-3 py-2 text-right">Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-t border-slate-800/70">
+                  <td className="flex items-center gap-1.5 px-3 py-2 text-emerald-300">
+                    <CheckCircle2 className="h-3 w-3" /> Completed
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums text-white">{metrics.completedTasks}</td>
+                </tr>
+                <tr className="border-t border-slate-800/70">
+                  <td className="px-3 py-2 text-slate-400">Open (in progress / review)</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-white">{metrics.openTasks}</td>
+                </tr>
+                <tr className="border-t border-slate-800/70">
+                  <td className="flex items-center gap-1.5 px-3 py-2 text-rose-300">
+                    <XCircle className="h-3 w-3" /> Rejected / cancelled
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums text-white">{metrics.rejectedOrCancelled}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Daily completed table */}
+          {dailyRows.length > 0 && (
+            <div className="overflow-hidden rounded-lg border border-slate-800">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-900/60 text-[10px] uppercase tracking-wider text-slate-500">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Date</th>
+                    <th className="px-3 py-2 text-right">Tasks completed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyRows.map(([day, count]) => (
+                    <tr key={day} className="border-t border-slate-800/70">
+                      <td className="px-3 py-2 text-slate-300">{day}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-white">{count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p className="text-[10px] text-slate-500">
+            {metrics.firstTaskAt && `First task ${new Date(metrics.firstTaskAt).toLocaleDateString()}`}
+            {metrics.lastTaskAt && ` · Most recent ${new Date(metrics.lastTaskAt).toLocaleDateString()}`}
+          </p>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function StatCard({ label, value, icon, hint }: { label: string; value: string | number; icon: React.ReactNode; hint?: string }) {
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-500">
+        {icon} {label}
+      </div>
+      <div className="mt-1 text-xl font-semibold tabular-nums text-white">{value}</div>
+      {hint && <div className="mt-0.5 text-[10px] text-slate-600">{hint}</div>}
     </div>
   );
 }

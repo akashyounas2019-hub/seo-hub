@@ -21,8 +21,10 @@ export function useDashboard() {
     return () => clearTimeout(t);
   }, [open]);
 
+  // EXPERTS now includes the Team Leader as a real entry (id "leader"),
+  // so it's already counted once by EXPERTS.length -- no separate +1.
   const totalSubs = EXPERTS.reduce((a, e) => a + e.subs.length, 0);
-  const totalAgents = 1 /* leader */ + EXPERTS.length + totalSubs + customAgents.length;
+  const totalAgents = EXPERTS.length + totalSubs + customAgents.length;
   const working = Math.round(totalAgents * 0.72);
   const offline = totalAgents - working;
 

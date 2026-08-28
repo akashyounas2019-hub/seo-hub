@@ -33,6 +33,12 @@ import {
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
 import { EXPERTS, buildSubAgentId } from "@/lib/agents";
+
+// The 6 specialist experts, excluding the Team Leader -- the leader gets
+// its own dedicated card above the grid (it delegates to these 6, it isn't
+// one of them), and CONNECTOR_CLASSES below is positionally tuned for
+// exactly 6 grid cells.
+const specialistExperts = EXPERTS.filter((e) => e.id !== "leader");
 import { JobsManagerModal } from "@/features/jobs/components/jobs-manager";
 import { useDashboard, type CustomAgent } from "../hooks/use-dashboard";
 
@@ -191,10 +197,12 @@ export function DashboardView() {
               <div className="absolute inset-0 -m-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-cyan-500/20 blur-2xl" />
               <div className="relative flex flex-col items-center gap-3 rounded-2xl border border-cyan-400/30 bg-slate-950/70 px-5 py-5 text-center backdrop-blur">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-900/60 ring-1 ring-cyan-400/40 shadow-[0_0_40px_rgba(34,211,238,0.5)]">
-                  <img src={leaderBot} alt="AKS SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
+                  <img src={leaderBot} alt="SEO Team Leader bot" className="h-full w-full object-contain" width={512} height={512} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-lg font-semibold text-white">AKS SEO Team Leader</div>
+                  <Link to="/agents/$id" params={{ id: "leader" }} className="text-lg font-semibold text-white hover:text-cyan-300 transition">
+                    SEO Team Leader
+                  </Link>
                   <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
                       <span className="relative flex h-1.5 w-1.5">
@@ -207,7 +215,7 @@ export function DashboardView() {
                       <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Healthy
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                      <Network className="h-3 w-3 text-cyan-300" /> {EXPERTS.length} experts
+                      <Network className="h-3 w-3 text-cyan-300" /> {specialistExperts.length} experts
                     </span>
                   </div>
                 </div>
@@ -219,7 +227,7 @@ export function DashboardView() {
 
           {/* Experts grid */}
           <section className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-            {EXPERTS.map((e, idx) => {
+            {specialistExperts.map((e, idx) => {
               const Icon = e.icon;
               const isOpen = open === e.id;
               const conn = CONNECTOR_CLASSES[idx] || { left: "hidden sm:block", right: "hidden sm:block" };
@@ -537,7 +545,7 @@ function AssignJobModal({ onClose, customAgents }: { onClose: () => void; custom
   const [status, setStatus] = useState<"assigned" | "queued">("assigned");
 
   const allAgents = [
-    ...EXPERTS.map((e) => ({ id: e.id, name: e.title })),
+    ...specialistExperts.map((e) => ({ id: e.id, name: e.title })),
     ...customAgents.map((a) => ({ id: a.id, name: a.name })),
   ];
 

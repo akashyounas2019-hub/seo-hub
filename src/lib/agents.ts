@@ -1,4 +1,4 @@
-import { FileText, Link2, Settings2, Search, ShieldCheck, Sparkles, Globe } from "lucide-react";
+import { FileText, Link2, Settings2, Crown, ShieldCheck, Sparkles, Globe } from "lucide-react";
 
 export type Sub = { name: string; desc: string };
 export type Expert = {
@@ -11,6 +11,19 @@ export type Expert = {
 };
 
 export const EXPERTS: Expert[] = [
+  {
+    id: "leader",
+    title: "SEO Team Leader",
+    tag: "Orchestrator · oversees all 6 experts",
+    icon: Crown,
+    accent: "from-yellow-400 to-amber-500",
+    // The Team Leader doesn't have its own sub-agent roster the way the 6
+    // specialist experts do -- its real function is the orchestrator
+    // (seo:orchestrator-review job kind, api.orchestrator.run.ts), which
+    // reviews live site data and delegates work across the other 6 experts.
+    // No fabricated sub-agents here.
+    subs: [],
+  },
   {
     id: "onpage",
     title: "On-Page Expert",
@@ -95,6 +108,7 @@ export const EXPERTS: Expert[] = [
 ];
 
 export const DEFAULT_SKILLS: Record<string, string> = {
+  leader: "Live GSC/GA4 + Knowledge Base review, task prioritization, delegation across the 6 specialist experts, approval-gated recommendations",
   onpage: "SEO copywriting, on-page optimization, schema markup, keyword targeting, content structuring",
   offpage: "Link building, digital PR, outreach, brand mentions, disavow management",
   technical: "Core Web Vitals, crawl budget, log analysis, JS rendering, indexation",
@@ -124,7 +138,7 @@ export type AgentSettings = {
 export const DEFAULT_SETTINGS: AgentSettings = {
   status: "active",
   priority: "medium",
-  model: "gpt-4o",
+  model: "aks-worker",
   notifyOnComplete: true,
   autonomy: 60,
   notes: "",
