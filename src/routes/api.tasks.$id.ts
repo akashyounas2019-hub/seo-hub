@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { actorEmailFromRequest, logAudit } from "@/lib/audit";
 
 export const Route = createFileRoute("/api/tasks/$id")({
   server: {
@@ -66,6 +67,21 @@ export const Route = createFileRoute("/api/tasks/$id")({
           if (body.title !== undefined) updates.title = body.title;
           if (body.desc !== undefined) updates.desc = body.desc;
           if (jobId) updates.jobId = jobId;
+
+          // A task leaving pending_approval via a human action in /approvals
+          // gets real attribution -- who approved/rejected it, not silence.
+          const wasPendingApproval = task.status === "pending_approval";
+          const leavingPendingApproval = wasPendingApproval && body.status !== undefined && body.status !== "pending_approval";
+          if (leavingPendingApproval) {
+            const actor = actorEmailFromRequest(request);
+            updates.approvedBy = actor;
+            updates.approvedAt = new Date();
+            await logAudit(actor, body.status === "rejected" ? "task.rejected" : "task.approved", {
+              taskId: params.id,
+              title: task.title,
+              newStatus: body.status,
+            });
+          }
 
           await d.update(kanbanTasks).set(updates).where(eq(kanbanTasks.id, params.id));
           return Response.json({ success: true, taskId: params.id, updates });

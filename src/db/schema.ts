@@ -16,7 +16,7 @@ import {
   doublePrecision,
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["owner", "admin", "editor", "viewer"]);
+export const userRoleEnum = pgEnum("user_role", ["owner", "admin", "head_of_department", "editor", "viewer"]);
 export const siteUserRoleEnum = pgEnum("site_user_role", ["manager", "worker"]);
 export const leadStatusEnum = pgEnum("lead_status", [
   "new",
@@ -447,6 +447,13 @@ export const kanbanTasks = pgTable(
     templateId: text("template_id"),
     jobId: text("job_id"),
     outputMarkdown: text("output_markdown"),
+    // Real attribution for who moved this out of pending_approval -- either
+    // an owner's explicit click in /approvals, or an auto-approval decided
+    // by evaluateApproval() under a rule with requiresApproval: false
+    // ("Head of Department" tier). Previously this was silent: a task could
+    // flip straight to "todo" with no record of who or what approved it.
+    approvedBy: text("approved_by"),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

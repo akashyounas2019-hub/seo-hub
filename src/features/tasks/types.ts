@@ -14,6 +14,8 @@ export type Task = {
   templateId?: string;
   jobId?: string;
   outputMarkdown?: string;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
   createdAt: string;
 };
 

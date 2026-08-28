@@ -93,14 +93,19 @@ function ApprovalsPage() {
   async function decide(id: string, approve: boolean) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     try {
+      // Approving sends the task straight to "inprogress" rather than
+      // "todo" -- api.tasks.$id.ts creates a real claude_jobs row the
+      // moment a task enters "inprogress", so approval actually starts
+      // execution instead of just moving it to a backlog someone has to
+      // separately notice and drag over.
       const res = await fetch(`/api/tasks/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: approve ? "todo" : "rejected" }),
+        body: JSON.stringify({ status: approve ? "inprogress" : "rejected" }),
       });
       const json = await res.json();
       if (json?.error) throw new Error(json.error);
-      toast.success(approve ? "Task approved — forwarded to agent queue" : "Task rejected");
+      toast.success(approve ? "Task approved — real execution started" : "Task rejected");
     } catch (err: any) {
       toast.error(err?.message || "Failed to update task");
       load();

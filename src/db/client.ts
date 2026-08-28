@@ -80,7 +80,7 @@ export async function ensureSchema(): Promise<void> {
     // the main DDL block that references 'owner'/'editor'/'viewer'.
     await execDDL(`
       DO $$ BEGIN
-        CREATE TYPE user_role AS ENUM ('owner','admin','editor','viewer');
+        CREATE TYPE user_role AS ENUM ('owner','admin','head_of_department','editor','viewer');
       EXCEPTION WHEN duplicate_object THEN null; END $$;
       -- If user_role already existed with the old admin/manager/student
       -- values (pre-Settings-persistence deploys), add the new ones
@@ -89,6 +89,10 @@ export async function ensureSchema(): Promise<void> {
       DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'owner'; EXCEPTION WHEN others THEN null; END $$;
       DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'editor'; EXCEPTION WHEN others THEN null; END $$;
       DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'viewer'; EXCEPTION WHEN others THEN null; END $$;
+      -- head_of_department: real role backing the Approvals screen's
+      -- "Head of Department can auto-approve independently" policy label,
+      -- which previously had no actual identity behind it.
+      DO $$ BEGIN ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'head_of_department'; EXCEPTION WHEN others THEN null; END $$;
     `);
 
     await execDDL(`
@@ -311,9 +315,13 @@ export async function ensureSchema(): Promise<void> {
         template_id text,
         job_id text,
         output_markdown text,
+        approved_by text,
+        approved_at timestamptz,
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       );
+      ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS approved_by text;
+      ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS approved_at timestamptz;
 
       CREATE TABLE IF NOT EXISTS kanban_task_templates (
         id text PRIMARY KEY,

@@ -2,6 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { evaluateApproval, type EvaluableRule } from "@/lib/approval-rules";
 import { actorEmailFromRequest, logAudit } from "@/lib/audit";
 
+async function resolveHeadOfDepartment(): Promise<string> {
+  const { db } = await import("@/db/client");
+  const { users } = await import("@/db/schema");
+  const { eq } = await import("drizzle-orm");
+  try {
+    const d = db();
+    const [hod] = await d.select().from(users).where(eq(users.role, "head_of_department" as any)).limit(1);
+    return hod ? (hod.email || hod.name || "Head of Department") : "Head of Department (unassigned)";
+  } catch {
+    return "Head of Department (unassigned)";
+  }
+}
+
 export const Route = createFileRoute("/api/tasks/pending-approval")({
   server: {
     handlers: {
@@ -53,13 +66,21 @@ export const Route = createFileRoute("/api/tasks/pending-approval")({
           }));
 
           let autoApproved = 0;
+          let hodLabel: string | null = null;
           for (const task of pending) {
             const decision = evaluateApproval(
               { priority: task.priority, category: task.templateId, siteId: task.siteId },
               evaluableRules,
             );
             if (!decision.requiresApproval) {
-              await d.update(kanbanTasks).set({ status: "todo", updatedAt: new Date() }).where(eq(kanbanTasks.id, task.id));
+              if (!hodLabel) hodLabel = await resolveHeadOfDepartment();
+              const now = new Date();
+              await d.update(kanbanTasks).set({
+                status: "todo",
+                approvedBy: hodLabel,
+                approvedAt: now,
+                updatedAt: now,
+              }).where(eq(kanbanTasks.id, task.id));
               autoApproved++;
             }
           }

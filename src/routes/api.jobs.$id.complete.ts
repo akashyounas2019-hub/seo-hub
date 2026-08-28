@@ -40,6 +40,26 @@ function extractTasksBlock(output: string): any {
 }
 
 /**
+ * Real attribution for an auto-approved task: the Head of Department user
+ * account (users.role = 'head_of_department'), if one exists. Falls back to
+ * a generic label when none has been added in Settings > Roles yet -- never
+ * silent, but never claims a specific person approved something when no
+ * such person is configured.
+ */
+async function resolveHeadOfDepartment(): Promise<string> {
+  const { db } = await import("@/db/client");
+  const { users } = await import("@/db/schema");
+  const { eq } = await import("drizzle-orm");
+  try {
+    const d = db();
+    const [hod] = await d.select().from(users).where(eq(users.role, "head_of_department" as any)).limit(1);
+    return hod ? (hod.email || hod.name || "Head of Department") : "Head of Department (unassigned)";
+  } catch {
+    return "Head of Department (unassigned)";
+  }
+}
+
+/**
  * Inserts a model-proposed task list into kanban_tasks, running each task
  * through the approval-rules engine to decide pending_approval vs.
  * auto-approved. Shared by the orchestrator (whole-output JSON) and any
@@ -70,6 +90,7 @@ async function insertProposedTasks(tasks: any[], siteId: string | undefined, sou
     enabled: r.enabled,
   }));
 
+  const hodLabel = await resolveHeadOfDepartment();
   const now = new Date();
   let inserted = 0;
   for (const t of tasks) {
@@ -88,6 +109,11 @@ async function insertProposedTasks(tasks: any[], siteId: string | undefined, sou
       status: decision.requiresApproval ? "pending_approval" : "todo",
       templateId: t.category || null,
       outputMarkdown: null,
+      // Auto-approved (rule says requiresApproval: false) is attributed to
+      // the real Head of Department account, not left silent; a task still
+      // pending gets no approver until a human acts on it in /approvals.
+      approvedBy: decision.requiresApproval ? null : hodLabel,
+      approvedAt: decision.requiresApproval ? null : now,
       createdAt: now,
       updatedAt: now,
     });

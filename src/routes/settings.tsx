@@ -494,6 +494,7 @@ type MemberRow = { id: string; email: string; name: string | null; role: string;
 const ROLE_TONE: Record<string, string> = {
   owner: "text-cyan-200 border-cyan-400/30 bg-cyan-400/10",
   admin: "text-violet-200 border-violet-400/30 bg-violet-400/10",
+  head_of_department: "text-amber-200 border-amber-400/30 bg-amber-400/10",
   editor: "text-emerald-200 border-emerald-400/30 bg-emerald-400/10",
   viewer: "text-slate-300 border-slate-700 bg-slate-900",
 };
@@ -605,6 +606,7 @@ function RolesPanel() {
                   >
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
+                    <option value="head_of_department">Head of Department</option>
                     <option value="editor">Editor</option>
                     <option value="viewer">Viewer</option>
                   </select>
@@ -626,6 +628,7 @@ function RolesPanel() {
             <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none">
               <option value="viewer">Viewer</option>
               <option value="editor">Editor</option>
+              <option value="head_of_department">Head of Department</option>
               <option value="admin">Admin</option>
               <option value="owner">Owner</option>
             </select>
