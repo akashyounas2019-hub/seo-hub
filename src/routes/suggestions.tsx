@@ -151,10 +151,15 @@ function SuggestionsPage() {
     }
   };
 
-  const filtered = useMemo(
-    () => (impactFilter === "all" ? tasks : tasks.filter((t) => priorityToImpact(t.priority) === impactFilter)),
-    [tasks, impactFilter],
-  );
+  const [viewFilter, setViewFilter] = useState<"all" | "awaiting" | "highImpact" | "inMotion">("all");
+
+  const filtered = useMemo(() => {
+    let list = impactFilter === "all" ? tasks : tasks.filter((t) => priorityToImpact(t.priority) === impactFilter);
+    if (viewFilter === "awaiting") list = list.filter((t) => t.status === "pending_approval");
+    else if (viewFilter === "highImpact") list = list.filter((t) => t.priority === "critical" || t.priority === "high");
+    else if (viewFilter === "inMotion") list = list.filter((t) => ["todo", "inprogress", "review"].includes(t.status));
+    return list;
+  }, [tasks, impactFilter, viewFilter]);
 
   const byCategory = useMemo(() => {
     const groups: Record<string, SuggestionTask[]> = {};
@@ -252,13 +257,59 @@ function SuggestionsPage() {
           </div>
         </div>
 
-        {/* KPIs */}
+        {/* KPIs — click any card to filter the suggestions below to that view */}
         <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KpiCard label="Total suggestions" value={total} sub="Across all categories" icon={ListChecks} from="#22d3ee" to="#0ea5e9" />
-          <KpiCard label="Awaiting approval" value={awaitingApproval} sub="Sitting in /approvals" icon={Clock} from="#fbbf24" to="#f59e0b" />
-          <KpiCard label="High / critical" value={highImpact} sub="Ship these first" icon={TrendingUp} from="#fb7185" to="#e11d48" />
-          <KpiCard label="In motion" value={inMotion} sub="Approved, on the board" icon={Zap} from="#34d399" to="#14b8a6" />
+          <KpiCard
+            label="Total suggestions"
+            value={total}
+            sub="Across all categories"
+            icon={ListChecks}
+            from="#22d3ee"
+            to="#0ea5e9"
+            active={viewFilter === "all"}
+            onClick={() => setViewFilter("all")}
+          />
+          <KpiCard
+            label="Awaiting approval"
+            value={awaitingApproval}
+            sub="Sitting in /approvals"
+            icon={Clock}
+            from="#fbbf24"
+            to="#f59e0b"
+            active={viewFilter === "awaiting"}
+            onClick={() => setViewFilter("awaiting")}
+          />
+          <KpiCard
+            label="High / critical"
+            value={highImpact}
+            sub="Ship these first"
+            icon={TrendingUp}
+            from="#fb7185"
+            to="#e11d48"
+            active={viewFilter === "highImpact"}
+            onClick={() => setViewFilter("highImpact")}
+          />
+          <KpiCard
+            label="In motion"
+            value={inMotion}
+            sub="Approved, on the board"
+            icon={Zap}
+            from="#34d399"
+            to="#14b8a6"
+            active={viewFilter === "inMotion"}
+            onClick={() => setViewFilter("inMotion")}
+          />
         </section>
+        {viewFilter !== "all" && (
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
+            Showing: <span className="font-semibold text-cyan-300">
+              {viewFilter === "awaiting" ? "Awaiting approval" : viewFilter === "highImpact" ? "High / critical" : "In motion"}
+            </span>
+            <button onClick={() => setViewFilter("all")} className="text-slate-500 underline hover:text-slate-300">
+              Clear
+            </button>
+          </div>
+        )}
 
         {/* Categories */}
         <div className="mt-8 space-y-6">
@@ -270,6 +321,13 @@ function SuggestionsPage() {
             <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center text-sm text-slate-500">
               No suggestions yet for {currentSite.label}. Click "Generate new" to run the Head of SEO orchestrator
               against live GSC/GA4 data and your Knowledge Base.
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center text-sm text-slate-500">
+              No suggestions match this filter.{" "}
+              <button onClick={() => { setViewFilter("all"); setImpactFilter("all"); }} className="text-cyan-300 underline hover:text-cyan-200">
+                Clear filters
+              </button>
             </div>
           ) : (
             CATEGORY_ORDER.filter((cat) => byCategory[cat]?.length).map((cat) => (
@@ -445,6 +503,8 @@ function KpiCard({
   icon: Icon,
   from,
   to,
+  active,
+  onClick,
 }: {
   label: string;
   value: number;
@@ -452,19 +512,33 @@ function KpiCard({
   icon: typeof Zap;
   from: string;
   to: string;
+  active?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-4 transition hover:-translate-y-0.5 hover:border-slate-600 hover:bg-slate-900/70">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`group relative overflow-hidden rounded-xl border p-4 text-left transition hover:-translate-y-0.5 ${
+        active
+          ? "border-cyan-400/50 bg-slate-900/80 shadow-[0_0_16px_rgba(34,211,238,0.15)]"
+          : "border-slate-800 bg-slate-900/40 hover:border-slate-600 hover:bg-slate-900/70"
+      }`}
+    >
       <div
         aria-hidden
         className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-20"
         style={{ background: `radial-gradient(circle, ${from}, transparent 70%)` }}
       />
+      {active && (
+        <div aria-hidden className="absolute inset-x-0 top-0 h-0.5" style={{ background: `linear-gradient(to right, ${from}, ${to})` }} />
+      )}
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-500">
         <Icon className="h-3 w-3" style={{ color: from }} /> {label}
       </div>
       <div className="mt-1.5 text-2xl font-semibold tracking-tight text-white tabular-nums">{value}</div>
       <div className="mt-0.5 text-[10px] text-slate-500">{sub}</div>
-    </div>
+    </button>
   );
 }

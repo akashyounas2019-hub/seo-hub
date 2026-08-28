@@ -44,7 +44,7 @@ export const Route = createFileRoute("/knowledge-base")({
 });
 
 function KnowledgeBasePage() {
-  const { currentSite, allSites, setCurrentSiteId } = useSite();
+  const { currentSite } = useSite();
   const [activeTab, setActiveTab] = useState<
     "services" | "brand" | "faqs" | "policies" | "network" | "pages" | "preview"
   >("services");
@@ -381,6 +381,27 @@ function KnowledgeBasePage() {
           </div>
         </header>
 
+        {/* Business Category (steers SEO Suite tool prompts for this site) */}
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+          <div className="mb-2 text-[10px] uppercase tracking-wider text-slate-500">Business Category</div>
+          <p className="mb-3 text-xs text-slate-500">
+            Set the business vertical for {currentSite.label}. SEO Suite tools use this to steer recommendations
+            (e.g. licensing/insurance for trades, E-E-A-T for medical/legal) instead of generic advice.
+          </p>
+          <select
+            value={businessCategory}
+            onChange={(e) => saveBusinessCategory(e.target.value)}
+            className="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
+          >
+            <option value="">Not set</option>
+            {BUSINESS_CATEGORIES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* 1-Click URL Autonomous Setup Banner */}
         <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/60 via-slate-900/80 to-slate-950 p-5 shadow-[0_0_30px_rgba(34,211,238,0.15)]">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -461,52 +482,6 @@ function KnowledgeBasePage() {
             </div>
             <div className="mt-0.5 text-[10px] text-slate-400">All 12 agents synced</div>
           </div>
-        </div>
-
-        {/* Site Selector Bar */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <div className="mb-2 text-[10px] uppercase tracking-wider text-slate-500">Select Website Project to Edit</div>
-          <div className="flex flex-wrap gap-2">
-            {allSites.map((s) => {
-              const active = s.id === currentSite.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setCurrentSiteId(s.id)}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition ${
-                    active
-                      ? "border-cyan-400 bg-cyan-500/20 text-white font-semibold shadow-[0_0_12px_rgba(34,211,238,0.25)]"
-                      : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700 hover:text-white"
-                  }`}
-                >
-                  <Globe className="h-3.5 w-3.5 text-cyan-300" />
-                  <span>{s.label}</span>
-                  <span className="text-[10px] text-slate-500">({s.domain})</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Business Category (steers SEO Suite tool prompts for this site) */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <div className="mb-2 text-[10px] uppercase tracking-wider text-slate-500">Business Category</div>
-          <p className="mb-3 text-xs text-slate-500">
-            Set the business vertical for {currentSite.label}. SEO Suite tools use this to steer recommendations
-            (e.g. licensing/insurance for trades, E-E-A-T for medical/legal) instead of generic advice.
-          </p>
-          <select
-            value={businessCategory}
-            onChange={(e) => saveBusinessCategory(e.target.value)}
-            className="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 focus:border-cyan-400 focus:outline-none"
-          >
-            <option value="">Not set</option>
-            {BUSINESS_CATEGORIES.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Google Business Profile sync — manual trigger, no scheduler in this app */}
