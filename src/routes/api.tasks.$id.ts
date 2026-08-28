@@ -82,13 +82,25 @@ export const Route = createFileRoute("/api/tasks/$id")({
           // gets real attribution -- who approved/rejected it, not silence.
           const wasPendingApproval = task.status === "pending_approval";
           const leavingPendingApproval = wasPendingApproval && body.status !== undefined && body.status !== "pending_approval";
+          const actor = actorEmailFromRequest(request);
           if (leavingPendingApproval) {
-            const actor = actorEmailFromRequest(request);
             updates.approvedBy = actor;
             updates.approvedAt = new Date();
             await logAudit(actor, body.status === "rejected" ? "task.rejected" : "task.approved", {
               taskId: params.id,
               title: task.title,
+              newStatus: body.status,
+            });
+          } else if (body.status !== undefined && body.status !== task.status) {
+            // Every other status change (drag-and-drop on the Kanban board,
+            // manual stage edits in the task detail modal) is logged too --
+            // previously only the approval-flow branch above wrote to
+            // audit_log, so a plain "In Progress" -> "Review" drag left no
+            // record at all.
+            await logAudit(actor, "task.status_changed", {
+              taskId: params.id,
+              title: task.title,
+              previousStatus: task.status,
               newStatus: body.status,
             });
           }
@@ -99,7 +111,7 @@ export const Route = createFileRoute("/api/tasks/$id")({
           return Response.json({ error: err.message || "Failed to process task request" }, { status: 500 });
         }
       },
-      DELETE: async ({ params }) => {
+      DELETE: async ({ params, request }) => {
         try {
           const { db, ensureSchema } = await import("@/db/client");
           const { kanbanTasks } = await import("@/db/schema");
@@ -107,7 +119,13 @@ export const Route = createFileRoute("/api/tasks/$id")({
 
           await ensureSchema();
           const d = db();
+          const [task] = await d.select().from(kanbanTasks).where(eq(kanbanTasks.id, params.id)).limit(1);
           await d.delete(kanbanTasks).where(eq(kanbanTasks.id, params.id));
+          await logAudit(actorEmailFromRequest(request), "task.deleted", {
+            taskId: params.id,
+            title: task?.title,
+            statusAtDeletion: task?.status,
+          });
           return Response.json({ success: true, taskId: params.id });
         } catch (err: any) {
           return Response.json({ error: err.message || "Failed to process task request" }, { status: 500 });

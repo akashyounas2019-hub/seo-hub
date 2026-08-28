@@ -71,6 +71,7 @@ import { Route as ApiSitesIdRouteImport } from './routes/api.sites.$id'
 import { Route as ApiSocialScrapeRouteImport } from './routes/api.social.scrape'
 import { Route as ApiTasksIndexRouteImport } from './routes/api.tasks.index'
 import { Route as ApiTasksIdRouteImport } from './routes/api.tasks.$id'
+import { Route as ApiTasksHistoryRouteImport } from './routes/api.tasks.history'
 import { Route as ApiTasksPendingApprovalRouteImport } from './routes/api.tasks.pending-approval'
 import { Route as ApiAutomationFlowsIdRouteImport } from './routes/api.automation.flows.$id'
 import { Route as ApiJobsIdCompleteRouteImport } from './routes/api.jobs.$id.complete'
@@ -404,6 +405,11 @@ const ApiTasksIdRoute = ApiTasksIdRouteImport.update({
   path: '/api/tasks/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksHistoryRoute = ApiTasksHistoryRouteImport.update({
+  id: '/api/tasks/history',
+  path: '/api/tasks/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTasksPendingApprovalRoute = ApiTasksPendingApprovalRouteImport.update({
   id: '/api/tasks/pending-approval',
   path: '/api/tasks/pending-approval',
@@ -556,6 +562,7 @@ export interface FileRoutesByFullPath {
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
+  '/api/tasks/history': typeof ApiTasksHistoryRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
@@ -638,6 +645,7 @@ export interface FileRoutesByTo {
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
+  '/api/tasks/history': typeof ApiTasksHistoryRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts': typeof ApiAlertsIndexRoute
   '/api/jobs': typeof ApiJobsIndexRoute
@@ -721,6 +729,7 @@ export interface FileRoutesById {
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
+  '/api/tasks/history': typeof ApiTasksHistoryRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
@@ -805,6 +814,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id'
     | '/api/social/scrape'
     | '/api/tasks/$id'
+    | '/api/tasks/history'
     | '/api/tasks/pending-approval'
     | '/api/alerts/'
     | '/api/jobs/'
@@ -887,6 +897,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id'
     | '/api/social/scrape'
     | '/api/tasks/$id'
+    | '/api/tasks/history'
     | '/api/tasks/pending-approval'
     | '/api/alerts'
     | '/api/jobs'
@@ -969,6 +980,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id'
     | '/api/social/scrape'
     | '/api/tasks/$id'
+    | '/api/tasks/history'
     | '/api/tasks/pending-approval'
     | '/api/alerts/'
     | '/api/jobs/'
@@ -1051,6 +1063,7 @@ export interface RootRouteChildren {
   ApiSitesIdRoute: typeof ApiSitesIdRouteWithChildren
   ApiSocialScrapeRoute: typeof ApiSocialScrapeRoute
   ApiTasksIdRoute: typeof ApiTasksIdRouteWithChildren
+  ApiTasksHistoryRoute: typeof ApiTasksHistoryRoute
   ApiTasksPendingApprovalRoute: typeof ApiTasksPendingApprovalRoute
   ApiAlertsIndexRoute: typeof ApiAlertsIndexRoute
   ApiJobsIndexRoute: typeof ApiJobsIndexRoute
@@ -1494,6 +1507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tasks/history': {
+      id: '/api/tasks/history'
+      path: '/api/tasks/history'
+      fullPath: '/api/tasks/history'
+      preLoaderRoute: typeof ApiTasksHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tasks/pending-approval': {
       id: '/api/tasks/pending-approval'
       path: '/api/tasks/pending-approval'
@@ -1826,6 +1846,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSitesIdRoute: ApiSitesIdRouteWithChildren,
   ApiSocialScrapeRoute: ApiSocialScrapeRoute,
   ApiTasksIdRoute: ApiTasksIdRouteWithChildren,
+  ApiTasksHistoryRoute: ApiTasksHistoryRoute,
   ApiTasksPendingApprovalRoute: ApiTasksPendingApprovalRoute,
   ApiAlertsIndexRoute: ApiAlertsIndexRoute,
   ApiJobsIndexRoute: ApiJobsIndexRoute,

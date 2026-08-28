@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { actorEmailFromRequest, logAudit } from "@/lib/audit";
 
 export const Route = createFileRoute("/api/tasks/")({
   server: {
@@ -70,6 +71,13 @@ export const Route = createFileRoute("/api/tasks/")({
           };
 
           await d.insert(kanbanTasks).values(newTask);
+          await logAudit(actorEmailFromRequest(request), "task.created", {
+            taskId: id,
+            title: newTask.title,
+            assignee: newTask.assignee,
+            priority: newTask.priority,
+            status: newTask.status,
+          });
           return Response.json({ success: true, task: newTask, jobId });
         } catch (err: any) {
           return Response.json({ error: err.message || "Failed to process tasks request" }, { status: 500 });

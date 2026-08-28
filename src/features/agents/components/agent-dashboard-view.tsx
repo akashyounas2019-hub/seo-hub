@@ -6,6 +6,7 @@ import {
   Cpu,
   Filter,
   Flag,
+  History,
   LayoutDashboard,
   ListTodo,
   Plus,
@@ -24,10 +25,14 @@ import { SelectPill } from "@/features/tasks/components/select-pill";
 import { TaskModal } from "@/features/tasks/components/task-modal";
 import { TaskItemDetailModal } from "@/features/tasks/components/task-item-detail-modal";
 import { WorkloadTasksModal } from "@/features/tasks/components/workload-tasks-modal";
+import { TaskHistoryModal } from "@/features/tasks/components/task-history-modal";
+import { LiveProgressModal } from "@/features/tasks/components/live-progress-modal";
 
 export function AgentDashboardView() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedWorkloadAgent, setSelectedWorkloadAgent] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showLiveProgress, setShowLiveProgress] = useState(false);
 
   const {
     tasks,
@@ -91,13 +96,25 @@ export function AgentDashboardView() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowLiveProgress(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-violet-400/30 bg-violet-400/10 px-3.5 py-2 text-[12px] font-semibold text-violet-200 transition hover:border-violet-400/50 hover:bg-violet-400/20"
+            >
+              <Zap className="h-3.5 w-3.5" /> Live Progress
+            </button>
+            <button
+              onClick={() => setShowHistory(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-800 bg-slate-900/60 px-3.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:border-cyan-400/40 hover:text-cyan-200"
+            >
+              <History className="h-3.5 w-3.5" /> History
+            </button>
+            <button
               onClick={() => {
                 setPrefill(null);
                 setShowCreate(true);
               }}
               className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3.5 py-2 text-[12px] font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.35)] transition hover:brightness-110"
             >
-              <Plus className="h-3.5 w-3.5" /> Dispatch Task
+              <Plus className="h-3.5 w-3.5" /> New Task
             </button>
           </div>
         </header>
@@ -344,6 +361,12 @@ export function AgentDashboardView() {
           onOpenTaskDetail={(t) => setSelectedTask(t)}
           onFilterKanban={(name) => setAssigneeFilter(name)}
         />
+      )}
+
+      {showHistory && <TaskHistoryModal onClose={() => setShowHistory(false)} />}
+
+      {showLiveProgress && (
+        <LiveProgressModal tasks={tasks} onClose={() => setShowLiveProgress(false)} />
       )}
     </div>
   );

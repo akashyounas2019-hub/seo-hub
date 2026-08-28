@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  History,
   Loader2,
   RefreshCw,
   X,
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import type { Priority, Status, Task } from "../types";
 import { EXPERTS } from "@/lib/agents";
 import { MarkdownReport } from "@/components/markdown-report";
+import { TaskHistoryModal } from "./task-history-modal";
 
 type JobStatus = "pending" | "claimed" | "running" | "done" | "failed" | "cancelled";
 
@@ -98,6 +100,7 @@ export function TaskItemDetailModal({
   const [currentJobId, setCurrentJobId] = useState<string | undefined>(task.jobId);
   const [generation, setGeneration] = useState(0);
   const [regenerating, setRegenerating] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const { job, loading } = useJobStatus(currentJobId, generation);
 
   const handleSave = () => {
@@ -176,12 +179,21 @@ export function TaskItemDetailModal({
             )}
           </div>
 
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-slate-400 hover:border-slate-700 hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => setShowHistory(true)}
+              title="View this task's full history"
+              className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-slate-400 hover:border-cyan-400/40 hover:text-cyan-200"
+            >
+              <History className="h-4 w-4" />
+            </button>
+            <button
+              onClick={onClose}
+              className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-slate-400 hover:border-slate-700 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -330,6 +342,8 @@ export function TaskItemDetailModal({
           </div>
         </div>
       </div>
+
+      {showHistory && <TaskHistoryModal taskId={task.id} onClose={() => setShowHistory(false)} />}
     </div>
   );
 }
