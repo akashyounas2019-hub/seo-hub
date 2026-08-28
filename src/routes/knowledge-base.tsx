@@ -306,7 +306,7 @@ function KnowledgeBasePage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
-      <div className="mx-auto max-w-6xl px-6 py-8 space-y-6">
+      <div className="mx-auto max-w-[1600px] px-3 sm:px-4 py-8 space-y-6">
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -492,7 +492,7 @@ function KnowledgeBasePage() {
         </div>
 
         {/* Knowledge Studio Component Card */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5">
+        <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 lg:p-8">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-slate-800/80 pb-4">
             <div>
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
