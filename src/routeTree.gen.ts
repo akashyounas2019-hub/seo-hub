@@ -67,6 +67,7 @@ import { Route as ApiSettingsRolesRouteImport } from './routes/api.settings.role
 import { Route as ApiSettingsWebhooksRouteImport } from './routes/api.settings.webhooks'
 import { Route as ApiSitesIndexRouteImport } from './routes/api.sites.index'
 import { Route as ApiSitesIdRouteImport } from './routes/api.sites.$id'
+import { Route as ApiSocialScrapeRouteImport } from './routes/api.social.scrape'
 import { Route as ApiTasksIndexRouteImport } from './routes/api.tasks.index'
 import { Route as ApiTasksIdRouteImport } from './routes/api.tasks.$id'
 import { Route as ApiTasksPendingApprovalRouteImport } from './routes/api.tasks.pending-approval'
@@ -380,6 +381,11 @@ const ApiSitesIdRoute = ApiSitesIdRouteImport.update({
   path: '/api/sites/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSocialScrapeRoute = ApiSocialScrapeRouteImport.update({
+  id: '/api/social/scrape',
+  path: '/api/social/scrape',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTasksIndexRoute = ApiTasksIndexRouteImport.update({
   id: '/api/tasks/',
   path: '/api/tasks/',
@@ -529,6 +535,7 @@ export interface FileRoutesByFullPath {
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
+  '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
@@ -607,6 +614,7 @@ export interface FileRoutesByTo {
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
+  '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts': typeof ApiAlertsIndexRoute
@@ -686,6 +694,7 @@ export interface FileRoutesById {
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
+  '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
@@ -766,6 +775,7 @@ export interface FileRouteTypes {
     | '/api/settings/roles'
     | '/api/settings/webhooks'
     | '/api/sites/$id'
+    | '/api/social/scrape'
     | '/api/tasks/$id'
     | '/api/tasks/pending-approval'
     | '/api/alerts/'
@@ -844,6 +854,7 @@ export interface FileRouteTypes {
     | '/api/settings/roles'
     | '/api/settings/webhooks'
     | '/api/sites/$id'
+    | '/api/social/scrape'
     | '/api/tasks/$id'
     | '/api/tasks/pending-approval'
     | '/api/alerts'
@@ -922,6 +933,7 @@ export interface FileRouteTypes {
     | '/api/settings/roles'
     | '/api/settings/webhooks'
     | '/api/sites/$id'
+    | '/api/social/scrape'
     | '/api/tasks/$id'
     | '/api/tasks/pending-approval'
     | '/api/alerts/'
@@ -1000,6 +1012,7 @@ export interface RootRouteChildren {
   ApiSettingsRolesRoute: typeof ApiSettingsRolesRouteWithChildren
   ApiSettingsWebhooksRoute: typeof ApiSettingsWebhooksRouteWithChildren
   ApiSitesIdRoute: typeof ApiSitesIdRouteWithChildren
+  ApiSocialScrapeRoute: typeof ApiSocialScrapeRoute
   ApiTasksIdRoute: typeof ApiTasksIdRouteWithChildren
   ApiTasksPendingApprovalRoute: typeof ApiTasksPendingApprovalRoute
   ApiAlertsIndexRoute: typeof ApiAlertsIndexRoute
@@ -1416,6 +1429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSitesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/social/scrape': {
+      id: '/api/social/scrape'
+      path: '/api/social/scrape'
+      fullPath: '/api/social/scrape'
+      preLoaderRoute: typeof ApiSocialScrapeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tasks/': {
       id: '/api/tasks/'
       path: '/api/tasks'
@@ -1741,6 +1761,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSettingsRolesRoute: ApiSettingsRolesRouteWithChildren,
   ApiSettingsWebhooksRoute: ApiSettingsWebhooksRouteWithChildren,
   ApiSitesIdRoute: ApiSitesIdRouteWithChildren,
+  ApiSocialScrapeRoute: ApiSocialScrapeRoute,
   ApiTasksIdRoute: ApiTasksIdRouteWithChildren,
   ApiTasksPendingApprovalRoute: ApiTasksPendingApprovalRoute,
   ApiAlertsIndexRoute: ApiAlertsIndexRoute,

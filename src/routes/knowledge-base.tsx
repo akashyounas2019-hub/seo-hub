@@ -20,7 +20,6 @@ import {
   RefreshCw,
   Pencil,
   Trash2,
-  Check,
   X,
 } from "lucide-react";
 import { useSite } from "@/lib/site-context";
@@ -29,6 +28,7 @@ import type { StructuredKnowledgeBase, KbServiceItem, KbFaqItem } from "@/db/sch
 import { BUSINESS_CATEGORIES } from "@/lib/business-categories";
 import { SitePagesPanel } from "@/components/site-pages-panel";
 import { WordPressConnectionPanel } from "@/components/wordpress-connection-panel";
+import { SocialLinksPanel } from "@/components/social-links-panel";
 
 export const Route = createFileRoute("/knowledge-base")({
   head: () => ({
@@ -143,6 +143,13 @@ function KnowledgeBasePage() {
     }
   };
 
+  const refetchStructuredKb = async () => {
+    if (!currentSite.id) return;
+    const res = await fetch(`/api/sites/${currentSite.id}`);
+    const json = await res.json();
+    if (json?.ok && json.site) setStructured(json.site.structuredKb || {});
+  };
+
   const saveKnowledgeBase = async () => {
     if (!currentSite.id) return;
     setKbSaving(true);
@@ -177,6 +184,8 @@ function KnowledgeBasePage() {
   const [editServicePrice, setEditServicePrice] = useState("");
   const [editServiceTurnaround, setEditServiceTurnaround] = useState("");
   const [editServiceDesc, setEditServiceDesc] = useState("");
+  const [editServiceKeywords, setEditServiceKeywords] = useState("");
+  const [editServiceFeatures, setEditServiceFeatures] = useState("");
 
   // 1-Click URL Autonomy state: crawl → enqueue a claude_jobs row → poll it →
   // once the AKS worker completes it, re-fetch the site's real structuredKb.
@@ -271,6 +280,8 @@ function KnowledgeBasePage() {
     setEditServicePrice(s.priceAed || "");
     setEditServiceTurnaround(s.turnaround || "");
     setEditServiceDesc(s.description || "");
+    setEditServiceKeywords((s.keywords || []).join(", "));
+    setEditServiceFeatures((s.features || []).join(", "));
   };
 
   const saveEditService = (id: string) => {
@@ -289,17 +300,30 @@ function KnowledgeBasePage() {
               priceAed: editServicePrice.trim() || undefined,
               turnaround: editServiceTurnaround.trim() || undefined,
               description: editServiceDesc.trim() || undefined,
+              keywords: editServiceKeywords.trim() ? editServiceKeywords.split(",").map((k) => k.trim()).filter(Boolean) : undefined,
+              features: editServiceFeatures.trim() ? editServiceFeatures.split(",").map((k) => k.trim()).filter(Boolean) : undefined,
             }
           : item,
       ),
     }));
     setEditingServiceId(null);
-    toast.success("Service updated");
+    toast.success("Service updated — click Save Catalog to persist to PostgreSQL");
   };
 
   const cancelEditService = () => {
     setEditingServiceId(null);
   };
+
+  const deleteService = (id: string, name: string) => {
+    setStructured((prev) => ({
+      ...prev,
+      services: (prev.services || []).filter((item) => item.id !== id),
+    }));
+    if (editingServiceId === id) setEditingServiceId(null);
+    toast.info(`Removed service: ${name}`);
+  };
+
+  const editingService = editingServiceId ? (structured.services || []).find((s) => s.id === editingServiceId) || null : null;
 
   const addFaq = () => {
     if (!newFaqQ.trim() || !newFaqA.trim()) return;
@@ -621,111 +645,37 @@ function KnowledgeBasePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(structured.services || []).map((s) => {
-                      const isEditing = editingServiceId === s.id;
-                      if (isEditing) {
-                        return (
-                          <tr key={s.id} className="border-t border-cyan-500/40 bg-cyan-950/20">
-                            <td className="px-4 py-2.5">
-                              <input
-                                value={editServiceName}
-                                onChange={(e) => setEditServiceName(e.target.value)}
-                                placeholder="Service Name"
-                                className="w-full rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-white focus:border-cyan-400 focus:outline-none"
-                              />
-                              <input
-                                value={editServiceDesc}
-                                onChange={(e) => setEditServiceDesc(e.target.value)}
-                                placeholder="Optional description"
-                                className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/80 px-2.5 py-0.5 text-[11px] text-slate-300 focus:border-cyan-400 focus:outline-none"
-                              />
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <input
-                                value={editServiceCat}
-                                onChange={(e) => setEditServiceCat(e.target.value)}
-                                placeholder="Category"
-                                className="w-full rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-white focus:border-cyan-400 focus:outline-none"
-                              />
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <input
-                                value={editServicePrice}
-                                onChange={(e) => setEditServicePrice(e.target.value)}
-                                placeholder="Price AED"
-                                className="w-24 rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-white font-mono focus:border-cyan-400 focus:outline-none"
-                              />
-                            </td>
-                            <td className="px-4 py-2.5">
-                              <input
-                                value={editServiceTurnaround}
-                                onChange={(e) => setEditServiceTurnaround(e.target.value)}
-                                placeholder="e.g. Same Day"
-                                className="w-28 rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-white focus:border-cyan-400 focus:outline-none"
-                              />
-                            </td>
-                            <td className="px-4 py-2.5 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => saveEditService(s.id)}
-                                  title="Save changes"
-                                  className="inline-flex items-center justify-center rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-1.5 text-emerald-300 hover:bg-emerald-500/20 transition cursor-pointer"
-                                >
-                                  <Check className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={cancelEditService}
-                                  title="Cancel"
-                                  className="inline-flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800 p-1.5 text-slate-400 hover:text-slate-200 transition cursor-pointer"
-                                >
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      }
-
-                      return (
-                        <tr key={s.id} className="border-t border-slate-800/70 hover:bg-slate-900/40">
-                          <td className="px-4 py-2.5 font-medium text-white">
-                            {s.name}
-                            {s.description && <div className="text-[11px] text-slate-400">{s.description}</div>}
-                          </td>
-                          <td className="px-4 py-2.5 text-slate-300">{s.category || "General"}</td>
-                          <td className="px-4 py-2.5 font-mono text-cyan-300">{s.priceAed ? `${s.priceAed} AED` : "Quote"}</td>
-                          <td className="px-4 py-2.5 text-slate-400">{s.turnaround || "Same Day"}</td>
-                          <td className="px-4 py-2.5 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => startEditService(s)}
-                                title="Edit service"
-                                className="inline-flex items-center justify-center rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-1.5 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 transition cursor-pointer"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setStructured((prev) => ({
-                                    ...prev,
-                                    services: prev.services?.filter((item) => item.id !== s.id),
-                                  }));
-                                  toast.info("Service removed");
-                                }}
-                                title="Delete service"
-                                className="inline-flex items-center justify-center rounded-lg border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition cursor-pointer"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {(structured.services || []).map((s) => (
+                      <tr key={s.id} className="border-t border-slate-800/70 hover:bg-slate-900/40">
+                        <td className="px-4 py-2.5 font-medium text-white">
+                          {s.name}
+                          {s.description && <div className="text-[11px] text-slate-400">{s.description}</div>}
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-300">{s.category || "General"}</td>
+                        <td className="px-4 py-2.5 font-mono text-cyan-300">{s.priceAed ? `${s.priceAed} AED` : "Quote"}</td>
+                        <td className="px-4 py-2.5 text-slate-400">{s.turnaround || "Same Day"}</td>
+                        <td className="px-4 py-2.5 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => startEditService(s)}
+                              title="Edit service"
+                              className="inline-flex items-center justify-center rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-1.5 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 transition cursor-pointer"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteService(s.id, s.name)}
+                              title="Delete service"
+                              className="inline-flex items-center justify-center rounded-lg border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition cursor-pointer"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                     {(!structured.services || structured.services.length === 0) && (
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-slate-500">
@@ -791,6 +741,8 @@ function KnowledgeBasePage() {
                   />
                 </div>
               </div>
+
+              <SocialLinksPanel siteId={currentSite.id} socialLinks={structured.socialLinks} onScraped={refetchStructuredKb} />
             </div>
           )}
 
@@ -884,6 +836,169 @@ POLICIES: Free cancellation up to 24h prior. Insured & background-checked staff.
               </pre>
             </div>
           )}
+        </div>
+      </div>
+
+      {editingService && (
+        <ServiceEditDialog
+          service={editingService}
+          name={editServiceName}
+          setName={setEditServiceName}
+          category={editServiceCat}
+          setCategory={setEditServiceCat}
+          price={editServicePrice}
+          setPrice={setEditServicePrice}
+          turnaround={editServiceTurnaround}
+          setTurnaround={setEditServiceTurnaround}
+          description={editServiceDesc}
+          setDescription={setEditServiceDesc}
+          keywords={editServiceKeywords}
+          setKeywords={setEditServiceKeywords}
+          features={editServiceFeatures}
+          setFeatures={setEditServiceFeatures}
+          onSave={() => saveEditService(editingService.id)}
+          onCancel={cancelEditService}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Popup dialog for editing one service catalog item -- replaces the old
+ * inline-editable table row (cramped, hard to read every field at once) so
+ * every field is visible and editable in one clear view. Backed by the same
+ * editService* state / saveEditService() this file already had; this is a
+ * presentation change, not a new data path.
+ */
+function ServiceEditDialog({
+  service,
+  name, setName,
+  category, setCategory,
+  price, setPrice,
+  turnaround, setTurnaround,
+  description, setDescription,
+  keywords, setKeywords,
+  features, setFeatures,
+  onSave,
+  onCancel,
+}: {
+  service: KbServiceItem;
+  name: string; setName: (v: string) => void;
+  category: string; setCategory: (v: string) => void;
+  price: string; setPrice: (v: string) => void;
+  turnaround: string; setTurnaround: (v: string) => void;
+  description: string; setDescription: (v: string) => void;
+  keywords: string; setKeywords: (v: string) => void;
+  features: string; setFeatures: (v: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md" onClick={onCancel}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl"
+      >
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-400 to-blue-500" />
+        <div className="flex items-start justify-between border-b border-slate-800 p-5">
+          <div>
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+              Services & Pricing Catalog
+            </div>
+            <h2 className="mt-1 text-lg font-bold text-white">Edit Service</h2>
+            <p className="mt-0.5 text-[11px] text-slate-500">ID: {service.id}</p>
+          </div>
+          <button onClick={onCancel} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-slate-400 hover:border-slate-700 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Service Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Sofa Steam Clean"
+              className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="What's included in this service — used to ground AI agent prompts, so keep it accurate"
+              className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Category</label>
+              <input
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="e.g. Deep Clean"
+                className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Price (AED)</label>
+              <input
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="e.g. 299"
+                className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white font-mono focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Turnaround</label>
+              <input
+                value={turnaround}
+                onChange={(e) => setTurnaround(e.target.value)}
+                placeholder="e.g. Same Day"
+                className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+              Target Keywords <span className="normal-case text-slate-600">(comma separated)</span>
+            </label>
+            <input
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+              placeholder="e.g. sofa cleaning dubai, upholstery steam clean"
+              className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+              Key Features <span className="normal-case text-slate-600">(comma separated)</span>
+            </label>
+            <input
+              value={features}
+              onChange={(e) => setFeatures(e.target.value)}
+              placeholder="e.g. Eco-friendly products, Same-day booking"
+              className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-slate-800 p-4">
+          <button onClick={onCancel} className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800">
+            Cancel
+          </button>
+          <button onClick={onSave} className="rounded-lg bg-cyan-500 px-5 py-2 text-xs font-bold text-slate-950 shadow-md transition hover:bg-cyan-400">
+            Save Changes
+          </button>
         </div>
       </div>
     </div>

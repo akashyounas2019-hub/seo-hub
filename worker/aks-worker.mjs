@@ -17,6 +17,7 @@ import { writeFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir, hostname, userInfo } from "node:os";
 import { join } from "node:path";
 import { runQaSuite } from "./qa-engine.mjs";
+import { scrapeSocialLinks } from "./social-scraper.mjs";
 
 const PORTAL = process.env.AKS_WORKER_PORTAL_URL || "http://localhost:3333";
 const POLL_INTERVAL_MS = Number(process.env.AKS_WORKER_POLL_INTERVAL_MS ?? 15_000);
@@ -203,6 +204,45 @@ async function workQaJob(job) {
   }
 }
 
+/**
+ * Social profile scraping doesn't go through the claude CLI either -- it's
+ * a real Playwright navigation + link extraction, no LLM involved. Result
+ * is PATCHed straight into the site's structuredKb.socialLinks, merged with
+ * whatever the site already had rather than overwriting fields this scrape
+ * didn't find.
+ */
+async function workSocialScrapeJob(job) {
+  const input = job.input || {};
+  const { siteId, targetUrl } = input;
+  if (!siteId || !targetUrl) throw new Error("social:scrape job is missing input.siteId or input.targetUrl");
+
+  const started = Date.now();
+  const { socialLinks, scrapedFrom } = await scrapeSocialLinks(targetUrl);
+  const durationMs = Date.now() - started;
+
+  const siteRes = await api(`/api/sites/${siteId}`);
+  const existingKb = siteRes?.site?.structuredKb || {};
+  const mergedSocial = {
+    ...(existingKb.socialLinks || {}),
+    ...socialLinks,
+    scrapedFrom,
+    scrapedAt: new Date().toISOString(),
+  };
+
+  await api(`/api/sites/${siteId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ structuredKb: { ...existingKb, socialLinks: mergedSocial } }),
+  });
+
+  const found = Object.keys(socialLinks).filter((k) => k !== "scrapedFrom" && k !== "scrapedAt");
+  return {
+    output: found.length
+      ? `Found ${found.length} social profile(s): ${found.join(", ")}`
+      : "No social profile links found on this page.",
+    durationMs,
+  };
+}
+
 async function workOne(job) {
   console.log(`[worker] claimed ${job.id} — ${job.title} (${job.kind})`);
   const hb = setInterval(() => heartbeat(job.id), 60_000);
@@ -212,6 +252,8 @@ async function workOne(job) {
 
     if (job.kind === "qa:run") {
       ({ output, durationMs } = await workQaJob(job));
+    } else if (job.kind === "social:scrape") {
+      ({ output, durationMs } = await workSocialScrapeJob(job));
     } else {
       ({ output, durationMs } = await runClaude(job.prompt || job.title));
 

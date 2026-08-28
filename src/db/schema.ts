@@ -85,6 +85,22 @@ export interface KbBrandTone {
   targetPersonas?: string[];
 }
 
+// Real social profile URLs discovered by scraping the business's GBP
+// listing page or website (src/lib/social-scraper.ts) -- never guessed or
+// synthesized from the business name.
+export interface KbSocialLinks {
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
+  snapchat?: string;
+  x?: string;
+  pinterest?: string;
+  linkedin?: string;
+  youtube?: string;
+  scrapedFrom?: string; // the GBP or website URL this was extracted from
+  scrapedAt?: string; // ISO timestamp
+}
+
 export interface StructuredKnowledgeBase {
   businessProfile?: KbBusinessProfile;
   services?: KbServiceItem[];
@@ -92,6 +108,7 @@ export interface StructuredKnowledgeBase {
   faqs?: KbFaqItem[];
   policies?: KbPolicyItem[];
   competitors?: KbCompetitorItem[];
+  socialLinks?: KbSocialLinks;
 }
 
 export const siteHealthEnum = pgEnum("site_health", ["healthy", "attention", "onboarding"]);
