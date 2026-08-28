@@ -76,11 +76,38 @@ function metricMs(v: unknown): number | null {
   return Number.isFinite(n) ? Math.round(n) : null;
 }
 
+/**
+ * Resolves the PageSpeed API key from, in order: the env var, then the
+ * encrypted key stored in Settings > API Keys (org_settings.pagespeed_api_key_ciphertext)
+ * -- that field existed and was settable from the UI but nothing actually
+ * read it for PSI calls before this. Returns undefined (keyless, quota-
+ * limited) if neither is set.
+ */
+async function resolvePageSpeedApiKey(): Promise<string | undefined> {
+  if (process.env.GOOGLE_PAGESPEED_API_KEY) return process.env.GOOGLE_PAGESPEED_API_KEY;
+  try {
+    const { db, ensureSchema } = await import("../../db/client");
+    const { orgSettings } = await import("../../db/schema");
+    const { eq } = await import("drizzle-orm");
+    const { decrypt } = await import("../crypto");
+
+    await ensureSchema();
+    const d = db();
+    const [row] = await d.select().from(orgSettings).where(eq(orgSettings.id, "singleton")).limit(1);
+    if (row?.pagespeedApiKeyCiphertext) {
+      return decrypt(row.pagespeedApiKeyCiphertext);
+    }
+  } catch {
+    /* no stored key, or decryption unavailable -- fall through to keyless */
+  }
+  return undefined;
+}
+
 export async function fetchPageSpeedInsights(
   url: string,
   strategy: "mobile" | "desktop" = "mobile",
 ): Promise<PageSpeedResult> {
-  const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
+  const apiKey = await resolvePageSpeedApiKey();
   const params = new URLSearchParams({
     url,
     strategy,
