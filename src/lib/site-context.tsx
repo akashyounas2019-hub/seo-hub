@@ -29,6 +29,7 @@ export type ConnectedSite = {
   openFixes: number;
   gaConnected: boolean;
   gaProperty: string;
+  gaPropertyId?: string | null;
   gscConnected: boolean;
   gscDomain: string;
   gbpConnected: boolean;
@@ -85,6 +86,7 @@ function toConnectedSite(row: any): ConnectedSite {
     openFixes: row.openFixes ?? 0,
     gaConnected: !!row.gaConnected,
     gaProperty: row.gaConnected ? row.gaPropertyLabel || row.gaPropertyId || "Connected" : "Not Connected",
+    gaPropertyId: row.gaPropertyId ?? null,
     gscConnected: !!row.gscConnected,
     gscDomain: row.gscConnected ? row.gscPropertyUrl || row.domain : "Not Connected",
     gbpConnected: !!row.gbpConnected,

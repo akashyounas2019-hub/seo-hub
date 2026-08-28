@@ -10,6 +10,9 @@ import {
   Copy,
   ChevronDown,
   Trash2,
+  Pencil,
+  Check,
+  X,
   Plus,
   Layers,
   Sparkles,
@@ -703,6 +706,13 @@ function KnowledgeStudio({ site }: { site: SiteDetail }) {
   const [newFaqA, setNewFaqA] = useState("");
   const [kbSaving, setKbSaving] = useState(false);
 
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [editServiceName, setEditServiceName] = useState("");
+  const [editServiceCat, setEditServiceCat] = useState("");
+  const [editServicePrice, setEditServicePrice] = useState("");
+  const [editServiceTurnaround, setEditServiceTurnaround] = useState("");
+  const [editServiceDesc, setEditServiceDesc] = useState("");
+
   // Hydrate from the real Postgres row if this site.id is a real UUID
   // (the surrounding page's fixture SITES lookup is separate/unfixed).
   useEffect(() => {
@@ -761,6 +771,43 @@ function KnowledgeStudio({ site }: { site: SiteDetail }) {
     setNewServicePrice("");
     setNewServiceCat("");
     toast.success(`Added service: ${item.name}`);
+  };
+
+  const startEditService = (s: KbServiceItem) => {
+    setEditingServiceId(s.id);
+    setEditServiceName(s.name);
+    setEditServiceCat(s.category || "");
+    setEditServicePrice(s.priceAed || "");
+    setEditServiceTurnaround(s.turnaround || "");
+    setEditServiceDesc(s.description || "");
+  };
+
+  const saveEditService = (id: string) => {
+    if (!editServiceName.trim()) {
+      toast.error("Service name is required");
+      return;
+    }
+    setStructured((prev) => ({
+      ...prev,
+      services: (prev.services || []).map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              name: editServiceName.trim(),
+              category: editServiceCat.trim() || "General",
+              priceAed: editServicePrice.trim() || undefined,
+              turnaround: editServiceTurnaround.trim() || undefined,
+              description: editServiceDesc.trim() || undefined,
+            }
+          : item,
+      ),
+    }));
+    setEditingServiceId(null);
+    toast.success("Service updated");
+  };
+
+  const cancelEditService = () => {
+    setEditingServiceId(null);
   };
 
   const addFaq = () => {
@@ -876,31 +923,111 @@ function KnowledgeStudio({ site }: { site: SiteDetail }) {
                 </tr>
               </thead>
               <tbody>
-                {(structured.services || []).map((s) => (
-                  <tr key={s.id} className="border-t border-slate-800/60 hover:bg-slate-900/30">
-                    <td className="px-3 py-2 font-medium text-white">
-                      {s.name}
-                      {s.description && <div className="text-[10px] text-slate-400">{s.description}</div>}
-                    </td>
-                    <td className="px-3 py-2 text-slate-300">{s.category || "General"}</td>
-                    <td className="px-3 py-2 font-mono text-cyan-300">{s.priceAed ? `${s.priceAed} AED` : "Quote"}</td>
-                    <td className="px-3 py-2 text-slate-400">{s.turnaround || "Same Day"}</td>
-                    <td className="px-3 py-2 text-right">
-                      <button
-                        onClick={() => {
-                          setStructured((prev) => ({
-                            ...prev,
-                            services: prev.services?.filter((item) => item.id !== s.id),
-                          }));
-                          toast.info("Service removed");
-                        }}
-                        className="text-[11px] text-rose-400 hover:underline"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {(structured.services || []).map((s) => {
+                  const isEditing = editingServiceId === s.id;
+                  if (isEditing) {
+                    return (
+                      <tr key={s.id} className="border-t border-cyan-500/40 bg-cyan-950/20">
+                        <td className="px-3 py-2">
+                          <input
+                            value={editServiceName}
+                            onChange={(e) => setEditServiceName(e.target.value)}
+                            placeholder="Service Name"
+                            className="w-full rounded border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-white focus:border-cyan-400 focus:outline-none"
+                          />
+                          <input
+                            value={editServiceDesc}
+                            onChange={(e) => setEditServiceDesc(e.target.value)}
+                            placeholder="Optional description"
+                            className="mt-1 w-full rounded border border-slate-800 bg-slate-900/80 px-2 py-0.5 text-[10px] text-slate-300 focus:border-cyan-400 focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            value={editServiceCat}
+                            onChange={(e) => setEditServiceCat(e.target.value)}
+                            placeholder="Category"
+                            className="w-full rounded border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-white focus:border-cyan-400 focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            value={editServicePrice}
+                            onChange={(e) => setEditServicePrice(e.target.value)}
+                            placeholder="Price AED"
+                            className="w-20 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-white font-mono focus:border-cyan-400 focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            value={editServiceTurnaround}
+                            onChange={(e) => setEditServiceTurnaround(e.target.value)}
+                            placeholder="e.g. Same Day"
+                            className="w-24 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-white focus:border-cyan-400 focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => saveEditService(s.id)}
+                              title="Save changes"
+                              className="inline-flex items-center justify-center rounded-md border border-emerald-500/40 bg-emerald-500/10 p-1 text-emerald-300 hover:bg-emerald-500/20 transition cursor-pointer"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={cancelEditService}
+                              title="Cancel"
+                              className="inline-flex items-center justify-center rounded-md border border-slate-700 bg-slate-800 p-1 text-slate-400 hover:text-slate-200 transition cursor-pointer"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return (
+                    <tr key={s.id} className="border-t border-slate-800/60 hover:bg-slate-900/30">
+                      <td className="px-3 py-2 font-medium text-white">
+                        {s.name}
+                        {s.description && <div className="text-[10px] text-slate-400">{s.description}</div>}
+                      </td>
+                      <td className="px-3 py-2 text-slate-300">{s.category || "General"}</td>
+                      <td className="px-3 py-2 font-mono text-cyan-300">{s.priceAed ? `${s.priceAed} AED` : "Quote"}</td>
+                      <td className="px-3 py-2 text-slate-400">{s.turnaround || "Same Day"}</td>
+                      <td className="px-3 py-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => startEditService(s)}
+                            title="Edit service"
+                            className="inline-flex items-center justify-center rounded-md border border-cyan-500/20 bg-cyan-500/10 p-1 text-cyan-300 hover:bg-cyan-500/20 hover:text-cyan-200 transition cursor-pointer"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStructured((prev) => ({
+                                ...prev,
+                                services: prev.services?.filter((item) => item.id !== s.id),
+                              }));
+                              toast.info("Service removed");
+                            }}
+                            title="Delete service"
+                            className="inline-flex items-center justify-center rounded-md border border-rose-500/20 bg-rose-500/10 p-1 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition cursor-pointer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {(!structured.services || structured.services.length === 0) && (
                   <tr>
                     <td colSpan={5} className="py-6 text-center text-slate-500">

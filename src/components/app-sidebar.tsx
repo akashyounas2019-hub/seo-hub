@@ -37,7 +37,6 @@ import {
   Plus,
   LayoutDashboard,
   Database,
-  Share2,
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
@@ -71,9 +70,9 @@ type NavItem = {
 // Command — daily "what's happening" surfaces
 const workspaceItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: Activity },
-  { title: "Visuals Engine", url: "/dashboard?tab=visuals", icon: Share2, badge: "Live" },
   { title: "Agency Health", url: "/agency-health", icon: ShieldCheck, badge: "8" },
   { title: "Alert Manager", url: "/alerts", icon: Bell, badge: "3" },
+  { title: "Approvals", url: "/approvals", icon: CheckSquare },
   { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
 ];
 
@@ -83,7 +82,6 @@ const agentItems: NavItem[] = [
   { title: "Knowledge Base", url: "/knowledge-base", icon: Database, badge: "RAG" },
   { title: "Agents", url: "/", icon: Zap, badge: "12" },
   { title: "Assistant", url: "/assistant", icon: Bot },
-  { title: "Approvals", url: "/approvals", icon: CheckSquare },
   { title: "Assign Tasks", url: "/assign-tasks", icon: ClipboardList },
   { title: "Automation", url: "/automation", icon: Workflow },
 ];

@@ -34,7 +34,6 @@ import {
   ShieldCheck,
   Check,
   Bot,
-  Share2,
 } from "lucide-react";
 import { useSite } from "@/lib/site-context";
 import { toast } from "sonner";
@@ -43,7 +42,6 @@ import { GoogleAnalyticsDrilldown } from "@/components/analytics-google-analytic
 import { SearchConsoleDrilldown } from "@/components/analytics-search-console";
 import { BusinessProfileDrilldown } from "@/components/analytics-business-profile";
 import { CloudflareAiOverview } from "@/components/analytics-ai-overview";
-import { VisualsEcosystemPipeline } from "@/components/visuals-ecosystem-pipeline";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -55,7 +53,7 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type TabType = "overview" | "ga" | "gsc" | "gbp" | "ai-overview" | "visuals";
+type TabType = "overview" | "ga" | "gsc" | "gbp" | "ai-overview";
 
 type OverviewKpi = {
   k: string;
@@ -166,9 +164,15 @@ function DashboardPage() {
           : Promise.resolve(null),
       );
 
+      const gaPropId =
+        site.gaPropertyId ||
+        site.gaProperty?.match(/\((\d+)\)/)?.[1] ||
+        (site.gaProperty?.match(/^\d+$/) ? site.gaProperty : "") ||
+        "";
+
       requests.push(
-        site.gaConnected
-          ? fetch(`/api/google/ga4?propertyId=${encodeURIComponent(site.gaProperty.match(/\((\d+)\)/)?.[1] || "")}&startDate=28daysAgo&endDate=today`)
+        site.gaConnected && gaPropId
+          ? fetch(`/api/google/ga4?propertyId=${encodeURIComponent(gaPropId)}&startDate=28daysAgo&endDate=today`)
               .then((r) => r.json())
               .catch(() => null)
           : Promise.resolve(null),
@@ -256,6 +260,46 @@ function DashboardPage() {
       delta: 0,
     }));
   }, [gscSummary]);
+
+  const topLandingPages = useMemo(() => {
+    const gaRows = gaOverview?.pages?.rows as Array<{ dimensionValues?: { value: string }[]; metricValues?: { value: string }[] }> | undefined;
+    if (gaRows?.length) {
+      const totalViews = gaRows.reduce((sum, r) => sum + parseInt(r.metricValues?.[0]?.value || "0", 10), 0) || 1;
+      return gaRows.slice(0, 7).map((r) => {
+        const url = r.dimensionValues?.[0]?.value || "/";
+        const views = parseInt(r.metricValues?.[0]?.value || "0", 10);
+        const avgSecs = parseFloat(r.metricValues?.[1]?.value || "0");
+        const conv = parseInt(r.metricValues?.[2]?.value || "0", 10);
+        const share = Math.min(100, Math.round((views / totalViews) * 100));
+        return { url, views, avgSecs, conv, share, source: "ga" as const };
+      });
+    }
+
+    const gscRows = gscSummary?.pageRows as Array<{ keys: string[]; clicks: number; impressions: number; ctr: number; position: number }> | undefined;
+    if (gscRows?.length) {
+      const totalClicks = gscRows.reduce((sum, r) => sum + (r.clicks || 0), 0) || 1;
+      return gscRows.slice(0, 7).map((r) => {
+        let path = r.keys?.[0] || "/";
+        try {
+          if (path.startsWith("http")) {
+            path = new URL(path).pathname;
+          }
+        } catch {}
+        const clicks = r.clicks || 0;
+        const share = Math.min(100, Math.round((clicks / totalClicks) * 100));
+        return {
+          url: path || "/",
+          views: clicks,
+          avgSecs: 0,
+          conv: r.impressions || 0,
+          share,
+          source: "gsc" as const,
+        };
+      });
+    }
+
+    return [];
+  }, [gaOverview, gscSummary]);
   const lastSyncTime = sitesLoading || overviewLoading ? "Refreshing…" : lastRefreshedAt || "—";
 
   return (
@@ -343,7 +387,6 @@ function DashboardPage() {
               { id: "gsc", label: "Search Console", icon: Search, desc: "Queries & Rankings", badge: "GSC", accent: "text-cyan-400" },
               { id: "gbp", label: "Business Profile", icon: MapPin, desc: "Local Maps & Calls", badge: "GBP", accent: "text-violet-400" },
               { id: "ai-overview", label: "AI Crawl Control", icon: Bot, desc: "Cloudflare AI Shield", badge: "Cloudflare", accent: "text-orange-400" },
-              { id: "visuals", label: "Visuals Engine", icon: Share2, desc: "Topology & Data Flow", badge: "Live Map", accent: "text-emerald-400" },
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               const Icon = tab.icon;
@@ -497,21 +540,86 @@ function DashboardPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-amber-500 text-slate-950">
-                      <BarChart3 className="h-4 w-4" />
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20">
+                        <BarChart3 className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-semibold text-white">Top Landing Pages</h2>
+                        <p className="text-[11px] text-slate-500">
+                          {topLandingPages[0]?.source === "gsc" ? "Google Search Console" : "Google Analytics"} ({currentSite.domain})
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-sm font-semibold text-white">Top Landing Pages</h2>
-                      <p className="text-[11px] text-slate-500">Google Analytics ({currentSite.domain})</p>
-                    </div>
+                    <button
+                      onClick={() => setActiveTab(topLandingPages[0]?.source === "gsc" ? "gsc" : "ga")}
+                      className="text-[11px] font-medium text-amber-300 hover:text-amber-200 inline-flex items-center gap-1 transition cursor-pointer"
+                    >
+                      {topLandingPages[0]?.source === "gsc" ? "GSC Tab" : "GA Tab"} <ArrowUpRight className="h-3 w-3" />
+                    </button>
                   </div>
-                  <button onClick={() => setActiveTab("ga")} className="text-[11px] font-medium text-amber-300 hover:text-amber-200 inline-flex items-center gap-1">
-                    GA Tab <ArrowUpRight className="h-3 w-3" />
-                  </button>
+
+                  {overviewLoading ? (
+                    <div className="space-y-3 py-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="animate-pulse space-y-1.5">
+                          <div className="flex justify-between">
+                            <div className="h-3 w-32 rounded bg-slate-800" />
+                            <div className="h-3 w-12 rounded bg-slate-800" />
+                          </div>
+                          <div className="h-1.5 w-full rounded bg-slate-800/60" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : topLandingPages.length > 0 ? (
+                    <div className="space-y-3">
+                      {topLandingPages.map((p) => (
+                        <div key={p.url} className="group">
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="font-mono text-slate-200 truncate max-w-[170px] sm:max-w-[210px]" title={p.url}>
+                              {p.url}
+                            </span>
+                            <div className="flex items-center gap-2 tabular-nums">
+                              <span className="font-semibold text-white">{p.views.toLocaleString()}</span>
+                              <span className="text-[10px] text-slate-500">
+                                {p.source === "gsc" ? "clicks" : "views"}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800/80">
+                            <div
+                              className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-amber-400 to-orange-500"
+                              style={{ width: `${Math.max(p.share, 5)}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-xs text-slate-500">
+                      {site.gaConnected || site.gscConnected ? (
+                        <p>No landing page data recorded for this range.</p>
+                      ) : (
+                        <p>Google Analytics is not connected.</p>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {topLandingPages.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>Top {topLandingPages.length} active paths</span>
+                    <button
+                      onClick={() => setActiveTab("ga")}
+                      className="text-amber-400 hover:text-amber-300 transition font-medium cursor-pointer"
+                    >
+                      View in GA Drilldown →
+                    </button>
+                  </div>
+                )}
               </div>
             </section>
           </div>
@@ -596,13 +704,6 @@ function DashboardPage() {
         {activeTab === "ai-overview" && (
           <div className="mt-6 animate-in fade-in duration-200">
             <CloudflareAiOverview site={currentSite} />
-          </div>
-        )}
-
-        {/* TAB 6: VISUALS ECOSYSTEM MAP */}
-        {activeTab === "visuals" && (
-          <div className="mt-6 animate-in fade-in duration-200">
-            <VisualsEcosystemPipeline />
           </div>
         )}
 
