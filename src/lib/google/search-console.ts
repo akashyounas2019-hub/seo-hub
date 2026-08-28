@@ -40,7 +40,10 @@ export interface GSCSitemapEntry {
   isPending?: boolean;
   warnings?: string;
   errors?: string;
-  contents: Array<{ type: string; submitted: number; indexed: number }>;
+  // Google's sitemaps.get endpoint returns these as strings, not JSON
+  // numbers (unlike searchAnalytics.query's clicks/impressions) -- callers
+  // must Number() coerce before arithmetic.
+  contents: Array<{ type: string; submitted: string; indexed: string }>;
 }
 
 /**

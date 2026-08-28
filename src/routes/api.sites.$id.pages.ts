@@ -35,7 +35,9 @@ export const Route = createFileRoute("/api/sites/$id/pages")({
               const sitemaps = await fetchGSCSitemaps(site.gscPropertyUrl);
               indexedCount = sitemaps.reduce((sum, sm) => {
                 const webContent = sm.contents?.find((c) => c.type === "web") || sm.contents?.[0];
-                return sum + (webContent?.indexed || 0);
+                // The sitemaps.get endpoint (unlike searchAnalytics.query)
+                // returns submitted/indexed as strings, not JSON numbers.
+                return sum + (Number(webContent?.indexed) || 0);
               }, 0);
             } catch (err: any) {
               indexedError = err.message;
