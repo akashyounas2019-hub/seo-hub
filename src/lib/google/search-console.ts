@@ -33,6 +33,40 @@ export async function fetchGSCSites() {
   return data.siteEntry || [];
 }
 
+export interface GSCSitemapEntry {
+  path: string;
+  lastSubmitted?: string;
+  lastDownloaded?: string;
+  isPending?: boolean;
+  warnings?: string;
+  errors?: string;
+  contents: Array<{ type: string; submitted: number; indexed: number }>;
+}
+
+/**
+ * Real Search Console index-coverage data for a site's submitted sitemaps
+ * -- the `contents[].indexed` count is Google's own indexation figure, not
+ * derived or estimated locally. Requires the sitemap to actually be
+ * submitted in Search Console; returns an empty list otherwise (never a
+ * fabricated count).
+ */
+export async function fetchGSCSitemaps(siteUrl: string): Promise<GSCSitemapEntry[]> {
+  const token = await getGoogleAccessToken(GSC_SCOPE);
+  const resolvedUrl = await resolveAuthorizedSiteUrl(siteUrl);
+  const encodedUrl = encodeURIComponent(resolvedUrl);
+
+  const res = await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodedUrl}/sitemaps`, {
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`GSC sitemaps query failed (${res.status}): ${err}`);
+  }
+  const data = await res.json();
+  return data.sitemap || [];
+}
+
 export async function resolveAuthorizedSiteUrl(requestedUrl: string): Promise<string> {
   // If requestedUrl starts with sc-domain or URL, verify against site list or clean up
   let target = requestedUrl;

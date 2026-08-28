@@ -42,6 +42,7 @@ import { GoogleAnalyticsDrilldown } from "@/components/analytics-google-analytic
 import { SearchConsoleDrilldown } from "@/components/analytics-search-console";
 import { BusinessProfileDrilldown } from "@/components/analytics-business-profile";
 import { CloudflareAiOverview } from "@/components/analytics-ai-overview";
+import { IssuesDrilldown } from "@/components/analytics-issues";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type TabType = "overview" | "ga" | "gsc" | "gbp" | "ai-overview";
+type TabType = "overview" | "ga" | "gsc" | "gbp" | "ai-overview" | "issues";
 
 type OverviewKpi = {
   k: string;
@@ -72,7 +73,7 @@ function DashboardPage() {
   const [activeTab, setActiveTabState] = useState<TabType>(() => {
     if (typeof window === "undefined") return "overview";
     const p = new URLSearchParams(window.location.search).get("tab") as TabType | null;
-    return p && ["overview", "ga", "gsc", "gbp", "ai-overview"].includes(p) ? p : "overview";
+    return p && ["overview", "ga", "gsc", "gbp", "ai-overview", "issues"].includes(p) ? p : "overview";
   });
 
   const setActiveTab = (tab: TabType) => {
@@ -387,6 +388,7 @@ function DashboardPage() {
               { id: "gsc", label: "Search Console", icon: Search, desc: "Queries & Rankings", badge: "GSC", accent: "text-cyan-400" },
               { id: "gbp", label: "Business Profile", icon: MapPin, desc: "Local Maps & Calls", badge: "GBP", accent: "text-violet-400" },
               { id: "ai-overview", label: "AI Crawl Control", icon: Bot, desc: "Cloudflare AI Shield", badge: "Cloudflare", accent: "text-orange-400" },
+              { id: "issues", label: "Issues", icon: AlertTriangle, desc: "PageSpeed & Technical", badge: "Live", accent: "text-rose-400" },
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               const Icon = tab.icon;
@@ -704,6 +706,12 @@ function DashboardPage() {
         {activeTab === "ai-overview" && (
           <div className="mt-6 animate-in fade-in duration-200">
             <CloudflareAiOverview site={currentSite} />
+          </div>
+        )}
+
+        {activeTab === "issues" && (
+          <div className="mt-6 animate-in fade-in duration-200">
+            <IssuesDrilldown site={currentSite} />
           </div>
         )}
 

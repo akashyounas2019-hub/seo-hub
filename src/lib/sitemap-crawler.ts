@@ -80,16 +80,22 @@ function parseSitemapXml(xml: string): { urls: SitemapUrlEntry[]; childSitemaps:
 }
 
 /**
- * Crawls a site's real sitemap.xml (recursing into sitemap indexes up to
- * MAX_SITEMAPS files) and returns every declared URL. Tries /sitemap.xml
- * first, falls back to reading the Sitemap: directive in /robots.txt.
- * Returns an error string (never fabricated data) if nothing could be
- * found or fetched.
+ * Crawls a site's sitemap (recursing into sitemap indexes up to
+ * MAX_SITEMAPS files) and returns every declared URL. If `explicitSitemapUrl`
+ * is given (a user-entered sitemap URL -- e.g. when it isn't at the default
+ * /sitemap.xml location, or the user wants a specific sub-sitemap), that URL
+ * is tried first; otherwise falls back to /sitemap.xml, then the Sitemap:
+ * directive in /robots.txt. Returns an error string (never fabricated data)
+ * if nothing could be found or fetched.
  */
-export async function crawlSitemap(domain: string): Promise<SitemapCrawlResult> {
+export async function crawlSitemap(domain: string, explicitSitemapUrl?: string): Promise<SitemapCrawlResult> {
   const origin = (domain.startsWith("http") ? domain : `https://${domain}`).replace(/\/$/, "");
 
-  const candidateRoots: string[] = [`${origin}/sitemap.xml`];
+  const candidateRoots: string[] = [];
+  if (explicitSitemapUrl?.trim()) {
+    candidateRoots.push(explicitSitemapUrl.trim());
+  }
+  candidateRoots.push(`${origin}/sitemap.xml`);
 
   const robotsTxt = await fetchText(`${origin}/robots.txt`);
   if (robotsTxt) {
@@ -116,11 +122,12 @@ export async function crawlSitemap(domain: string): Promise<SitemapCrawlResult> 
   }
 
   if (!foundAny) {
+    const triedList = candidateRoots.join(", ");
     return {
       sitemapsFound: [],
       urls: [],
       truncated: false,
-      error: `No sitemap found at ${origin}/sitemap.xml or via robots.txt Sitemap: directive.`,
+      error: `No sitemap found. Tried: ${triedList}.`,
     };
   }
 

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crawlSitemap } from "@/lib/sitemap-crawler";
+import { fetchGSCSitemaps } from "@/lib/google/search-console";
 import { actorEmailFromRequest, logAudit } from "@/lib/audit";
 
 export const Route = createFileRoute("/api/sites/$id/pages")({
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/api/sites/$id/pages")({
       GET: async ({ params }) => {
         try {
           const { db, ensureSchema } = await import("@/db/client");
-          const { sitePages } = await import("@/db/schema");
+          const { sitePages, sites } = await import("@/db/schema");
           const { eq, asc } = await import("drizzle-orm");
 
           await ensureSchema();
@@ -21,19 +22,45 @@ export const Route = createFileRoute("/api/sites/$id/pages")({
             .where(eq(sitePages.siteId, params.id))
             .orderBy(asc(sitePages.url));
 
+          // Real indexed count from Search Console, when connected --
+          // Google's own figure for pages actually indexed from this site's
+          // submitted sitemaps, not derived from the sitemap crawl itself
+          // (a sitemap listing a URL says nothing about whether Google has
+          // actually indexed it).
+          let indexedCount: number | null = null;
+          let indexedError: string | null = null;
+          const [site] = await d.select().from(sites).where(eq(sites.id, params.id)).limit(1);
+          if (site?.gscConnected && site.gscPropertyUrl) {
+            try {
+              const sitemaps = await fetchGSCSitemaps(site.gscPropertyUrl);
+              indexedCount = sitemaps.reduce((sum, sm) => {
+                const webContent = sm.contents?.find((c) => c.type === "web") || sm.contents?.[0];
+                return sum + (webContent?.indexed || 0);
+              }, 0);
+            } catch (err: any) {
+              indexedError = err.message;
+            }
+          }
+
           return Response.json({
             ok: true,
             pages,
             count: pages.length,
             lastCrawledAt: pages[0]?.lastCrawledAt || null,
+            indexedCount,
+            indexedError,
+            gscConnected: !!site?.gscConnected,
           });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message || "Failed to load site pages" }, { status: 500 });
         }
       },
-      // Re-crawls the site's real sitemap.xml (recursing sitemap indexes) and
+      // Re-crawls the site's sitemap (recursing sitemap indexes) and
       // replaces the stored inventory. Manual-trigger only, same as the
-      // orchestrator and autocrawl -- no scheduler in this app.
+      // orchestrator and autocrawl -- no scheduler in this app. Accepts an
+      // optional real sitemapUrl in the body (a user-entered URL, e.g. when
+      // it isn't at the default /sitemap.xml location); falls back to the
+      // site's own domain-derived default otherwise.
       POST: async ({ params, request }) => {
         try {
           const { db, ensureSchema } = await import("@/db/client");
@@ -48,7 +75,15 @@ export const Route = createFileRoute("/api/sites/$id/pages")({
             return Response.json({ ok: false, error: "Site not found" }, { status: 404 });
           }
 
-          const result = await crawlSitemap(site.domain);
+          let sitemapUrl: string | undefined;
+          try {
+            const body = await request.json();
+            sitemapUrl = body?.sitemapUrl?.trim() || undefined;
+          } catch {
+            /* no body / not JSON -- fine, use the default */
+          }
+
+          const result = await crawlSitemap(site.domain, sitemapUrl);
           if (result.error) {
             return Response.json({ ok: false, error: result.error }, { status: 502 });
           }
@@ -77,6 +112,7 @@ export const Route = createFileRoute("/api/sites/$id/pages")({
             urlCount: result.urls.length,
             sitemapsFound: result.sitemapsFound.length,
             truncated: result.truncated,
+            sitemapUrl: sitemapUrl || null,
           });
 
           return Response.json({
