@@ -466,6 +466,24 @@ export async function ensureSchema(): Promise<void> {
         created_at timestamptz NOT NULL DEFAULT now()
       );
       CREATE INDEX IF NOT EXISTS qa_findings_run_idx ON qa_findings(run_id);
+
+      -- Was defined in schema.ts but had no matching DDL here at all, so
+      -- every insert from api.analytics.sync.ts (the real endpoint an
+      -- external pipeline like n8n posts metrics to) silently failed with
+      -- "relation does not exist", caught by an empty catch block -- the
+      -- same dual-definition gap already found and fixed once this session
+      -- for the sessions table.
+      CREATE TABLE IF NOT EXISTS traffic_snapshots (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+        source text NOT NULL,
+        snapshot_date text NOT NULL,
+        metrics jsonb NOT NULL,
+        detail jsonb NOT NULL DEFAULT '{}'::jsonb,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS traffic_snapshots_uq ON traffic_snapshots(site_id, source, snapshot_date);
+      CREATE INDEX IF NOT EXISTS traffic_snapshots_date_idx ON traffic_snapshots(snapshot_date);
     `);
 
     // One-time cleanup: task_comments/tasks/task_templates/site_users were
