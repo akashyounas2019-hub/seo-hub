@@ -392,6 +392,9 @@ export function DashboardView() {
               <span>Custom Agents</span>
               <span className="h-px flex-1 bg-slate-800" />
             </div>
+            <p className="mb-3 text-[11px] text-slate-500">
+              Stored for this browser session only — not saved to the server, and not counted in "Total Agents" above. Refreshing clears this list.
+            </p>
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {customAgents.map((a) => {
                 const Icon = ICON_CHOICES.find((c) => c.id === a.iconId)?.icon ?? Bot;

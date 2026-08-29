@@ -13,8 +13,10 @@ import {
   type Sub,
   type Task,
 } from "@/lib/agents";
+import { useSite } from "@/lib/site-context";
 
 export function useAgentDetail(id: string) {
+  const { currentSite } = useSite();
   const { parentId, subSlug } = useMemo(() => parseAgentId(id), [id]);
   const expert = useMemo(() => EXPERTS.find((e) => e.id === parentId)!, [parentId]);
   const isSub = !!subSlug;
@@ -103,6 +105,7 @@ export function useAgentDetail(id: string) {
           assignee: taskAssignee,
           priority,
           status: "todo",
+          siteId: currentSite?.id,
         }),
       });
       const json = await res.json();

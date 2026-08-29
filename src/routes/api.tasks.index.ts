@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/tasks/")({
       POST: async ({ request }) => {
         try {
           const { db, ensureSchema } = await import("@/db/client");
-          const { kanbanTasks, claudeJobs } = await import("@/db/schema");
+          const { kanbanTasks, claudeJobs, sites } = await import("@/db/schema");
 
           await ensureSchema();
           const d = db();
@@ -34,6 +34,18 @@ export const Route = createFileRoute("/api/tasks/")({
             body = await request.json();
           } catch {
             /* fallback */
+          }
+
+          // A caller omitting siteId used to fall back to a hardcoded
+          // "safaeewala" string -- silently wrong the moment a second real
+          // site exists. Resolve the real first site instead; still just a
+          // best-effort default for a caller that didn't specify one, but
+          // now grounded in what's actually connected rather than a
+          // hardcoded slug from this app's original single-tenant setup.
+          let resolvedSiteId = body.siteId;
+          if (!resolvedSiteId) {
+            const [firstSite] = await d.select({ id: sites.id }).from(sites).limit(1);
+            resolvedSiteId = firstSite?.id;
           }
 
           const id = body.id || `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -56,7 +68,7 @@ export const Route = createFileRoute("/api/tasks/")({
 
           const newTask = {
             id,
-            siteId: body.siteId || "safaeewala",
+            siteId: resolvedSiteId || "safaeewala",
             title: body.title,
             desc: body.desc || null,
             assignee: body.assignee || "Technical SEO Expert",

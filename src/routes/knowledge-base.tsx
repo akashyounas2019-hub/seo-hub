@@ -27,6 +27,7 @@ import type { StructuredKnowledgeBase, KbServiceItem, KbFaqItem, KbPolicyItem } 
 import { BUSINESS_CATEGORIES } from "@/lib/business-categories";
 import { SitePagesPanel } from "@/components/site-pages-panel";
 import { WordPressConnectionPanel } from "@/components/wordpress-connection-panel";
+import { WebhookKeyPanel } from "@/components/webhook-key-panel";
 import { SocialLinksPanel } from "@/components/social-links-panel";
 
 export const Route = createFileRoute("/knowledge-base")({
@@ -606,6 +607,10 @@ function KnowledgeBasePage() {
           wpUsername={wpUsername}
           onConnected={refetchSite}
         />
+
+        {/* Inbound webhook key — the other direction: a connected site's own
+            lead-form plugin authenticating INTO this app via /api/events/ingest */}
+        <WebhookKeyPanel siteId={currentSite.id} />
 
         {/* Knowledge Studio Component Card */}
         <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 lg:p-8">

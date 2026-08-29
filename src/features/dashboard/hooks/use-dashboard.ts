@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { EXPERTS } from "@/lib/agents";
+import { getCoreAgentCount } from "@/lib/agents";
 
 export type CustomAgent = { id: string; name: string; iconId: string; accent: string; role: string };
 
@@ -42,10 +42,13 @@ export function useDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // EXPERTS now includes the Team Leader as a real entry (id "leader"),
-  // so it's already counted once by EXPERTS.length -- no separate +1.
-  const totalSubs = EXPERTS.reduce((a, e) => a + e.subs.length, 0);
-  const totalAgents = EXPERTS.length + totalSubs + customAgents.length;
+  // Real, persistent roster count -- shared with the sidebar's "Agents"
+  // badge via the same getCoreAgentCount() function so the two can never
+  // silently disagree. Deliberately excludes customAgents: those are
+  // session-only (plain useState, no backend), so counting them in the
+  // headline "Total Agents" KPI would make it drift the instant one is
+  // added, then silently revert on refresh -- not an honest "total."
+  const totalAgents = getCoreAgentCount();
   const offline = Math.max(totalAgents - working, 0);
 
   return {

@@ -88,6 +88,7 @@ import { Route as ApiSettingsWebhooksIdRouteImport } from './routes/api.settings
 import { Route as ApiSitesIdGbpSyncRouteImport } from './routes/api.sites.$id.gbp-sync'
 import { Route as ApiSitesIdIssuesRouteImport } from './routes/api.sites.$id.issues'
 import { Route as ApiSitesIdPagesRouteImport } from './routes/api.sites.$id.pages'
+import { Route as ApiSitesIdWebhookKeyRouteImport } from './routes/api.sites.$id.webhook-key'
 import { Route as ApiSitesIdWpVerifyRouteImport } from './routes/api.sites.$id.wp-verify'
 import { Route as ApiTasksIdPublishRouteImport } from './routes/api.tasks.$id.publish'
 import { Route as ApiTasksIdRegenerateRouteImport } from './routes/api.tasks.$id.regenerate'
@@ -495,6 +496,11 @@ const ApiSitesIdPagesRoute = ApiSitesIdPagesRouteImport.update({
   path: '/pages',
   getParentRoute: () => ApiSitesIdRoute,
 } as any)
+const ApiSitesIdWebhookKeyRoute = ApiSitesIdWebhookKeyRouteImport.update({
+  id: '/webhook-key',
+  path: '/webhook-key',
+  getParentRoute: () => ApiSitesIdRoute,
+} as any)
 const ApiSitesIdWpVerifyRoute = ApiSitesIdWpVerifyRouteImport.update({
   id: '/wp-verify',
   path: '/wp-verify',
@@ -607,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/issues': typeof ApiSitesIdIssuesRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/sites/$id/webhook-key': typeof ApiSitesIdWebhookKeyRoute
   '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
   '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
   '/api/tasks/$id/regenerate': typeof ApiTasksIdRegenerateRoute
@@ -694,6 +701,7 @@ export interface FileRoutesByTo {
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/issues': typeof ApiSitesIdIssuesRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/sites/$id/webhook-key': typeof ApiSitesIdWebhookKeyRoute
   '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
   '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
   '/api/tasks/$id/regenerate': typeof ApiTasksIdRegenerateRoute
@@ -782,6 +790,7 @@ export interface FileRoutesById {
   '/api/sites/$id/gbp-sync': typeof ApiSitesIdGbpSyncRoute
   '/api/sites/$id/issues': typeof ApiSitesIdIssuesRoute
   '/api/sites/$id/pages': typeof ApiSitesIdPagesRoute
+  '/api/sites/$id/webhook-key': typeof ApiSitesIdWebhookKeyRoute
   '/api/sites/$id/wp-verify': typeof ApiSitesIdWpVerifyRoute
   '/api/tasks/$id/publish': typeof ApiTasksIdPublishRoute
   '/api/tasks/$id/regenerate': typeof ApiTasksIdRegenerateRoute
@@ -871,6 +880,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/issues'
     | '/api/sites/$id/pages'
+    | '/api/sites/$id/webhook-key'
     | '/api/sites/$id/wp-verify'
     | '/api/tasks/$id/publish'
     | '/api/tasks/$id/regenerate'
@@ -958,6 +968,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/issues'
     | '/api/sites/$id/pages'
+    | '/api/sites/$id/webhook-key'
     | '/api/sites/$id/wp-verify'
     | '/api/tasks/$id/publish'
     | '/api/tasks/$id/regenerate'
@@ -1045,6 +1056,7 @@ export interface FileRouteTypes {
     | '/api/sites/$id/gbp-sync'
     | '/api/sites/$id/issues'
     | '/api/sites/$id/pages'
+    | '/api/sites/$id/webhook-key'
     | '/api/sites/$id/wp-verify'
     | '/api/tasks/$id/publish'
     | '/api/tasks/$id/regenerate'
@@ -1678,6 +1690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSitesIdPagesRouteImport
       parentRoute: typeof ApiSitesIdRoute
     }
+    '/api/sites/$id/webhook-key': {
+      id: '/api/sites/$id/webhook-key'
+      path: '/webhook-key'
+      fullPath: '/api/sites/$id/webhook-key'
+      preLoaderRoute: typeof ApiSitesIdWebhookKeyRouteImport
+      parentRoute: typeof ApiSitesIdRoute
+    }
     '/api/sites/$id/wp-verify': {
       id: '/api/sites/$id/wp-verify'
       path: '/wp-verify'
@@ -1840,6 +1859,7 @@ interface ApiSitesIdRouteChildren {
   ApiSitesIdGbpSyncRoute: typeof ApiSitesIdGbpSyncRoute
   ApiSitesIdIssuesRoute: typeof ApiSitesIdIssuesRoute
   ApiSitesIdPagesRoute: typeof ApiSitesIdPagesRoute
+  ApiSitesIdWebhookKeyRoute: typeof ApiSitesIdWebhookKeyRoute
   ApiSitesIdWpVerifyRoute: typeof ApiSitesIdWpVerifyRoute
 }
 
@@ -1847,6 +1867,7 @@ const ApiSitesIdRouteChildren: ApiSitesIdRouteChildren = {
   ApiSitesIdGbpSyncRoute: ApiSitesIdGbpSyncRoute,
   ApiSitesIdIssuesRoute: ApiSitesIdIssuesRoute,
   ApiSitesIdPagesRoute: ApiSitesIdPagesRoute,
+  ApiSitesIdWebhookKeyRoute: ApiSitesIdWebhookKeyRoute,
   ApiSitesIdWpVerifyRoute: ApiSitesIdWpVerifyRoute,
 }
 

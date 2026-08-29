@@ -36,7 +36,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
-import { EXPERTS } from "@/lib/agents";
+import { getCoreAgentCount } from "@/lib/agents";
 import agentBot from "@/assets/agent-bot.png";
 
 import {
@@ -67,8 +67,8 @@ type NavItem = {
 // Command — daily "what's happening" surfaces
 const workspaceItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: Activity },
-  { title: "Agency Health", url: "/agency-health", icon: ShieldCheck, badge: "8" },
-  { title: "Alert Manager", url: "/alerts", icon: Bell, badge: "3" },
+  { title: "Agency Health", url: "/agency-health", icon: ShieldCheck },
+  { title: "Alert Manager", url: "/alerts", icon: Bell },
   { title: "Approvals", url: "/approvals", icon: CheckSquare },
   { title: "Suggestions", url: "/suggestions", icon: Lightbulb },
 ];
@@ -454,10 +454,12 @@ export function AppSidebar() {
                   const badge = item.url === "/approvals"
                     ? (pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined)
                     : item.url === "/"
-                    // Real count from EXPERTS (the actual roster rendered
-                    // on the Agents page), not a hardcoded number that
-                    // drifts every time an agent is added/removed.
-                    ? String(EXPERTS.length + EXPERTS.reduce((sum, e) => sum + e.subs.length, 0))
+                    // Same getCoreAgentCount() the Agents dashboard's own
+                    // "Total Agents" KPI uses -- previously this badge and
+                    // that KPI computed the count two different ways
+                    // (this one omitted session-only Custom Agents, that
+                    // one included them), so they could silently disagree.
+                    ? String(getCoreAgentCount())
                     : item.badge;
                   return (
                     <SidebarMenuItem key={item.title}>

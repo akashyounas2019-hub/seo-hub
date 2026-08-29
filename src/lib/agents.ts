@@ -121,6 +121,18 @@ export const EXPERTS: Expert[] = [
   },
 ];
 
+// Single source of truth for "how many real agents exist" -- the persistent
+// roster only (top-level experts + their sub-agents), deliberately
+// excluding session-only "Custom Agents" added via the Agents dashboard's
+// "Add Agent" modal (those live in a plain useState with no backend, so
+// they vanish on refresh and were never a real, durable part of the fleet).
+// Both the sidebar's "Agents" nav badge and the Agents dashboard's "Total
+// Agents" KPI call this exact function so the two numbers can never
+// silently disagree again.
+export function getCoreAgentCount(): number {
+  return EXPERTS.length + EXPERTS.reduce((sum, e) => sum + e.subs.length, 0);
+}
+
 export const DEFAULT_SKILLS: Record<string, string> = {
   leader: "Live GSC/GA4 + Knowledge Base review, task prioritization, delegation across the 7 specialist experts, approval-gated recommendations",
   onpage: "SEO copywriting & meta optimization, topical content structuring, internal linking architecture, JSON-LD schema authoring",
