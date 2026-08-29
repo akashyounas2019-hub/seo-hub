@@ -35,6 +35,11 @@ export const Route = createFileRoute("/api/automation/flows")({
           const id = body.id || `flow_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
           const now = new Date();
 
+          // Honest baseline for a brand-new flow: it has never actually
+          // run, so successRate is 0 and lastRun says so plainly -- this
+          // used to hardcode successRate: 100 regardless of reality,
+          // fabricating a perfect track record for something with zero
+          // executions.
           const newFlow = {
             id,
             name: body.name || "Custom Automation Flow",
@@ -44,8 +49,8 @@ export const Route = createFileRoute("/api/automation/flows")({
             status: body.status || "running",
             icon: body.icon || "Zap",
             accent: body.accent || "from-cyan-400 to-sky-500",
-            lastRun: "Just created",
-            successRate: 100,
+            lastRun: "Never run",
+            successRate: 0,
             assignedAgents: body.assignedAgents || [],
             createdAt: now,
             updatedAt: now,

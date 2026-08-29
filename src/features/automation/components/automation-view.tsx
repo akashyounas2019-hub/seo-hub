@@ -1,11 +1,14 @@
 import {
+  AlertTriangle,
   Bell,
   Bot,
   Filter,
+  Loader2,
   Pause,
   Pencil,
   Play,
   Plus,
+  RefreshCw,
   Search,
   Sparkles,
   Trash2,
@@ -21,6 +24,9 @@ import { TemplatesModal } from "./templates-modal";
 export function AutomationView() {
   const {
     flows,
+    loading,
+    loadError,
+    refetch,
     category,
     setCategory,
     statusFilter,
@@ -42,7 +48,7 @@ export function AutomationView() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
-      <div className="mx-auto max-w-7xl px-6 py-10">
+      <div className="mx-auto max-w-[1600px] px-3 sm:px-4 py-10">
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -176,7 +182,41 @@ export function AutomationView() {
           })}
         </div>
 
+        {/* Real load state -- no fabricated fallback list */}
+        {loading && (
+          <div className="mt-10 flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-sm text-slate-500">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading real automation flows…
+          </div>
+        )}
+
+        {!loading && loadError && (
+          <div className="mt-10 flex flex-col items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-10 text-center">
+            <AlertTriangle className="h-5 w-5 text-rose-300" />
+            <p className="text-sm text-rose-200">{loadError}</p>
+            <button
+              onClick={refetch}
+              className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+          </div>
+        )}
+
+        {!loading && !loadError && flows.length === 0 && (
+          <div className="mt-10 flex flex-col items-center gap-3 rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center">
+            <Bot className="h-6 w-6 text-slate-600" />
+            <p className="text-sm text-slate-400">No automation flows yet. Create one to get started.</p>
+            <button
+              onClick={() => setEditor({ mode: "create" })}
+              className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-medium text-cyan-200 hover:bg-cyan-400/20"
+            >
+              <Plus className="h-3.5 w-3.5" /> New flow
+            </button>
+          </div>
+        )}
+
         {/* Flow cards */}
+        {!loading && !loadError && flows.length > 0 && (
         <ul className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((f) => {
             const Icon = f.icon;
@@ -284,12 +324,12 @@ export function AutomationView() {
               </li>
             );
           })}
+          {filtered.length === 0 && (
+            <li className="col-span-full rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center text-sm text-slate-400">
+              No automations match these filters.
+            </li>
+          )}
         </ul>
-
-        {filtered.length === 0 && (
-          <div className="mt-10 rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center text-sm text-slate-400">
-            No automations match these filters.
-          </div>
         )}
 
         <div aria-hidden className="h-16" />
