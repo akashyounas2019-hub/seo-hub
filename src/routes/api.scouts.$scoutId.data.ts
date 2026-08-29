@@ -47,9 +47,24 @@ async function keywordScoutData(site: any) {
   }
   const { fetchGSCSearchAnalytics } = await import("@/lib/google/search-console");
   const { startDate, endDate } = dateRange(30);
-  const [queryRows, pageRows] = await Promise.all([
+  // Ranker's own comparison window -- previously Researcher and Ranker
+  // pulled the identical 30-day query snapshot and just relabeled the same
+  // numbers under different headings. Ranker now shows real day-over-day
+  // movement (recent 14d vs. the 14d before that) so the two tabs actually
+  // answer different questions: "what's worth targeting" (Researcher) vs.
+  // "what's moving, up or down, right now" (Ranker).
+  const recentRange = dateRange(16);
+  const priorStart = new Date();
+  priorStart.setDate(priorStart.getDate() - 30);
+  const priorEnd = new Date();
+  priorEnd.setDate(priorEnd.getDate() - 17);
+  const fmt = (d: Date) => d.toISOString().split("T")[0];
+
+  const [queryRows, pageRows, recentRankRows, priorRankRows] = await Promise.all([
     fetchGSCSearchAnalytics(site.gscPropertyUrl, { startDate, endDate, dimensions: ["query"], rowLimit: 500 }).catch(() => []),
     fetchGSCSearchAnalytics(site.gscPropertyUrl, { startDate, endDate, dimensions: ["page", "query"], rowLimit: 1000 }).catch(() => []),
+    fetchGSCSearchAnalytics(site.gscPropertyUrl, { startDate: recentRange.startDate, endDate: recentRange.endDate, dimensions: ["query"], rowLimit: 250 }).catch(() => []),
+    fetchGSCSearchAnalytics(site.gscPropertyUrl, { startDate: fmt(priorStart), endDate: fmt(priorEnd), dimensions: ["query"], rowLimit: 250 }).catch(() => []),
   ]);
 
   const totalQueries = queryRows.length;
@@ -58,6 +73,22 @@ async function keywordScoutData(site: any) {
   const avgPosition = queryRows.length
     ? (queryRows.reduce((s: number, r: any) => s + (r.position || 0), 0) / queryRows.length).toFixed(1)
     : "0";
+
+  // Real position deltas for Ranker -- same methodology as the SEO Suite's
+  // "SERP Drift" tool (api.seo-suite.run.ts), applied here to power the
+  // dashboard tab's live view instead of a one-off report.
+  const priorByQuery = new Map(priorRankRows.map((r: any) => [r.keys?.[0], r.position]));
+  const movedQueries = recentRankRows
+    .map((r: any) => {
+      const query = r.keys?.[0];
+      const priorPosition = priorByQuery.get(query);
+      if (priorPosition == null) return null;
+      return { query, recentPosition: r.position, priorPosition, delta: parseFloat((priorPosition - r.position).toFixed(1)) };
+    })
+    .filter((x: any): x is NonNullable<typeof x> => !!x)
+    .sort((a: any, b: any) => Math.abs(b.delta) - Math.abs(a.delta));
+  const improved = movedQueries.filter((q: any) => q.delta > 0.5).length;
+  const declined = movedQueries.filter((q: any) => q.delta < -0.5).length;
 
   // Real "mapping": which page each top query currently ranks on
   const byPage = new Map<string, { query: string; position: number }[]>();
@@ -82,11 +113,17 @@ async function keywordScoutData(site: any) {
     ranker: {
       available: true,
       metrics: [
-        { label: "Tracked queries", value: String(totalQueries) },
-        { label: "In top 10", value: String(topTen) },
-        { label: "Avg. position", value: avgPosition },
+        { label: "Improved (14d vs prior 14d)", value: String(improved) },
+        { label: "Declined (14d vs prior 14d)", value: String(declined) },
+        { label: "Unchanged / new", value: String(movedQueries.length - improved - declined) },
       ],
-      topQueries: queryRows.slice(0, 15).map((r: any) => ({ query: r.keys?.[0], clicks: r.clicks, impressions: r.impressions, position: r.position })),
+      items: movedQueries.slice(0, 15).map((q: any) => ({
+        query: q.query,
+        position: q.recentPosition,
+        // Rendered by TabContent's generic item view -- "clicks"/"createdAt"
+        // style fields double as free-text detail here to show the delta.
+        status: q.delta > 0 ? `▲ up ${q.delta}` : q.delta < 0 ? `▼ down ${Math.abs(q.delta)}` : "no change",
+      })),
     },
     "competitor-kw": NEEDS_PROVIDER("Competitor keyword comparison"),
     mapping: {
@@ -156,7 +193,6 @@ async function contentScoutData(siteId: string) {
       available: false,
       reason: "Automated content quality scoring (E-E-A-T, freshness, thin-content detection) isn't wired yet -- the real QA Suite audits technical/on-page checks, not content quality specifically.",
     },
-    gmb: NEEDS_PROVIDER("(handled under Local Business Scout's GBP tab instead)"),
   };
 }
 
@@ -250,13 +286,43 @@ async function localScoutData(site: any) {
 }
 
 // ---------- Competitor Scout: only sitemap-diff is real without a paid API ----------
-async function competitorScoutData() {
+async function competitorScoutData(competitorDomain: string | null) {
+  // Sitemap Diff used to claim `available: true` with a note telling the
+  // user to "enter a competitor domain in the field below" -- but no such
+  // field existed anywhere in the UI, so this was a real capability
+  // (crawlSitemap already works, proven out by Technical Scout's own Crawl
+  // Report tab) presented as available while being genuinely unreachable.
+  // Now it actually runs a real crawl once a domain is supplied via
+  // ?competitorDomain=, and honestly asks for one when it isn't.
+  let sitemap: any;
+  if (!competitorDomain?.trim()) {
+    sitemap = {
+      available: false,
+      reason: "Enter a competitor domain above to run a real sitemap.xml crawl (the same crawler Site Pages and Technical Scout's Crawl Report use).",
+    };
+  } else {
+    try {
+      const { crawlSitemap } = await import("@/lib/sitemap-crawler");
+      const url = competitorDomain.startsWith("http") ? competitorDomain : `https://${competitorDomain}`;
+      const result = await crawlSitemap(url);
+      sitemap = result.error
+        ? { available: false, reason: `Crawl failed for ${competitorDomain}: ${result.error}` }
+        : {
+            available: true,
+            metrics: [
+              { label: `URLs on ${competitorDomain}`, value: String(result.urls.length) },
+              { label: "Sitemaps found", value: String(result.sitemapsFound.length) },
+            ],
+            items: result.urls.slice(0, 20).map((u) => ({ page: u.loc })),
+          };
+    } catch (err: any) {
+      sitemap = { available: false, reason: err.message || "Crawl failed" };
+    }
+  }
+
   return {
     serp: NEEDS_PROVIDER("Daily SERP volatility tracking"),
-    sitemap: {
-      available: true,
-      note: "Enter a competitor domain in the field below to run a real sitemap.xml crawl (uses the same crawler as Site Pages).",
-    },
+    sitemap,
     backlinks: NEEDS_PROVIDER("Backlink / referring-domain monitoring"),
     gap: NEEDS_PROVIDER("Content gap analysis against named competitors"),
     sov: NEEDS_PROVIDER("Share-of-voice tracking"),
@@ -406,7 +472,7 @@ export const Route = createFileRoute("/api/scouts/$scoutId/data")({
               data = await localScoutData(site);
               break;
             case "competitor":
-              data = await competitorScoutData();
+              data = await competitorScoutData(url.searchParams.get("competitorDomain"));
               break;
             case "audit":
               data = await auditScoutData(site);

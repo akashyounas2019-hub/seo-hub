@@ -291,6 +291,28 @@ function buildSeoSuitePrompt(toolId: string, input: Record<string, any>): string
   } else if (input.gbpError) {
     dataBlocks.push(`GOOGLE BUSINESS PROFILE: fetch failed (${input.gbpError}) — do not fabricate GBP data; note it's not connected instead.`);
   }
+  if (input.sitemapCrawl) {
+    const s = input.sitemapCrawl;
+    dataBlocks.push(
+      `SITEMAP CRAWL (real, live -- recursed into sitemap index files):\n` +
+        `- Total URLs discovered: ${s.urlCount}${s.truncated ? " (truncated at 5,000)" : ""}\n` +
+        `- Sitemap files found: ${JSON.stringify(s.sitemapsFound)}\n` +
+        (s.error ? `- Crawl error: ${s.error}\n` : "") +
+        `- Sample of discovered URLs (first ${s.sampleUrls?.length ?? 0}): ${JSON.stringify(s.sampleUrls || [])}`,
+    );
+  } else if (input.sitemapCrawlError) {
+    dataBlocks.push(`SITEMAP CRAWL: fetch failed (${input.sitemapCrawlError}) — do not fabricate sitemap contents; note the crawl failed instead.`);
+  }
+  if (input.rankDrift) {
+    const rd = input.rankDrift;
+    dataBlocks.push(
+      `RANKING DRIFT (real, live Search Console -- comparing ${rd.recentRange?.join(" to ")} vs. the prior period ${rd.priorRange?.join(" to ")}):\n` +
+        `Positive delta = improved position (moved up); negative = declined. Sorted by magnitude of change:\n` +
+        JSON.stringify(rd.drifted || []),
+    );
+  } else if (input.rankDriftError) {
+    dataBlocks.push(`RANKING DRIFT: fetch failed (${input.rankDriftError}) — do not fabricate ranking movement; note Search Console data wasn't available instead.`);
+  }
 
   const dataSection = dataBlocks.length
     ? `\nLIVE DATA (source of truth — ground your analysis in this, never invent numbers or content that isn't here or in the Knowledge Base):\n${dataBlocks.join("\n\n")}\n`

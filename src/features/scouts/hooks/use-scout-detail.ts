@@ -18,6 +18,11 @@ export function useScoutDetail(scoutId: string) {
   const [data, setData] = useState<Record<string, ScoutTabData> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Real input for Competitor Scout's "Sitemap Diff" tab -- the crawl only
+  // runs for a domain the user actually supplies (see
+  // api.scouts.$scoutId.data.ts's competitorScoutData); previously that tab
+  // claimed to be usable with no field anywhere to enter one.
+  const [competitorDomain, setCompetitorDomain] = useState("");
 
   useEffect(() => {
     if (scout?.tabs[0]) {
@@ -29,7 +34,11 @@ export function useScoutDetail(scoutId: string) {
     if (!scout?.id || !currentSite?.id) return;
     setLoading(true);
     setError(null);
-    fetch(`/api/scouts/${scout.id}/data?siteId=${currentSite.id}`)
+    const params = new URLSearchParams({ siteId: currentSite.id });
+    if (scout.id === "competitor" && competitorDomain.trim()) {
+      params.set("competitorDomain", competitorDomain.trim());
+    }
+    fetch(`/api/scouts/${scout.id}/data?${params.toString()}`)
       .then((res) => res.json())
       .then((json) => {
         if (json?.ok) setData(json.data);
@@ -62,5 +71,7 @@ export function useScoutDetail(scoutId: string) {
     TabIcon,
     ScoutIcon,
     peers,
+    competitorDomain,
+    setCompetitorDomain,
   };
 }

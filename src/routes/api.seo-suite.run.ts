@@ -5,6 +5,7 @@ import { fetchGSCSearchAnalytics } from "@/lib/google/search-console";
 import { fetchGA4Report } from "@/lib/google/analytics-ga4";
 import { fetchPageSpeedInsights } from "@/lib/google/pagespeed";
 import { fetchGBPAccounts, fetchGBPLocations } from "@/lib/google/business-profile";
+import { crawlSitemap } from "@/lib/sitemap-crawler";
 
 function formatOffsetDate(daysAgo: number) {
   const d = new Date();
@@ -32,12 +33,20 @@ async function fetchRobotsAndSitemap(domain: string) {
 /**
  * Enqueues real claude_jobs execution for any of the 17 SEO Suite tools.
  * All 17 get real job-queue execution with a business-category-aware
- * prompt (job-templates.ts, "seo-suite:<toolId>"). Four get a deep build
+ * prompt (job-templates.ts, "seo-suite:<toolId>"). Six get a deep build
  * layering real free-API data on top before the model runs:
  *   - full-audit: PageSpeed Insights + live GSC + live GA4
  *   - technical-seo: PageSpeed Insights + robots.txt/sitemap.xml fetch
  *   - local-seo: real Google Business Profile accounts/locations
  *   - schema: grounded in the site's real structuredKb (no external API)
+ *   - sitemap: real sitemap.xml crawl (crawlSitemap, the same function
+ *     Technical Scout's Crawl Report and Site Pages already use) --
+ *     previously this tool's tagline promised "compare sitemap.xml against
+ *     the live crawl graph" but never actually crawled anything.
+ *   - drift: real day-over-day GSC position deltas for tracked queries --
+ *     previously this tool's tagline promised "detect keyword drift" with
+ *     no real position data behind it, despite GSC being wired for
+ *     full-audit and Keyword Scout already.
  */
 export const Route = createFileRoute("/api/seo-suite/run")({
   server: {
@@ -154,6 +163,58 @@ export const Route = createFileRoute("/api/seo-suite/run")({
               }
             } catch (e: any) {
               jobInput.gbpError = e.message;
+            }
+          }
+
+          if (toolId === "sitemap") {
+            const domainForCrawl = targetUrl || (site?.domain ? `https://${site.domain}` : undefined);
+            if (domainForCrawl) {
+              try {
+                const result = await crawlSitemap(domainForCrawl);
+                jobInput.sitemapCrawl = {
+                  urlCount: result.urls.length,
+                  sitemapsFound: result.sitemapsFound,
+                  truncated: result.truncated,
+                  error: result.error,
+                  // Cap what's sent to the LLM -- a full 5,000-URL dump
+                  // would blow the prompt budget for no analytical benefit.
+                  sampleUrls: result.urls.slice(0, 200).map((u) => ({ loc: u.loc, lastmod: u.lastmod, priority: u.priority })),
+                };
+              } catch (e: any) {
+                jobInput.sitemapCrawlError = e.message;
+              }
+            }
+          }
+
+          if (toolId === "drift") {
+            if (site?.gscConnected && site.gscPropertyUrl) {
+              try {
+                // Real day-over-day drift: the same query set's position in
+                // the most recent 14 days vs. the 14 days before that --
+                // an honest delta, not an invented "drift score."
+                const recentStart = formatOffsetDate(16);
+                const recentEnd = formatOffsetDate(2);
+                const priorStart = formatOffsetDate(30);
+                const priorEnd = formatOffsetDate(17);
+                const [recentRows, priorRows] = await Promise.all([
+                  fetchGSCSearchAnalytics(site.gscPropertyUrl, { startDate: recentStart, endDate: recentEnd, dimensions: ["query"], rowLimit: 250 }),
+                  fetchGSCSearchAnalytics(site.gscPropertyUrl, { startDate: priorStart, endDate: priorEnd, dimensions: ["query"], rowLimit: 250 }),
+                ]);
+                const priorByQuery = new Map(priorRows.map((r: any) => [r.keys?.[0], r.position]));
+                const drifted = recentRows
+                  .map((r: any) => {
+                    const query = r.keys?.[0];
+                    const priorPosition = priorByQuery.get(query);
+                    if (priorPosition == null) return null;
+                    return { query, recentPosition: r.position, priorPosition, delta: parseFloat((priorPosition - r.position).toFixed(1)) };
+                  })
+                  .filter((x): x is NonNullable<typeof x> => !!x)
+                  .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+                  .slice(0, 40);
+                jobInput.rankDrift = { recentRange: [recentStart, recentEnd], priorRange: [priorStart, priorEnd], drifted };
+              } catch (e: any) {
+                jobInput.rankDriftError = e.message;
+              }
             }
           }
 

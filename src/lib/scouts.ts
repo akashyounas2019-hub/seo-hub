@@ -69,8 +69,8 @@ export const SCOUTS: Scout[] = [
     angle: 0,
     mission: "Uncover high-intent queries, monitor rankings, and shape a keyword universe the whole team can build on.",
     tabs: [
-      { id: "researcher", label: "Keyword Researcher", icon: Search, summary: "Discover new query opportunities from real Search Console impressions and positions." },
-      { id: "ranker", label: "Keyword Ranker", icon: TrendingUp, summary: "Track real daily positions and click/impression data across tracked queries." },
+      { id: "researcher", label: "Keyword Researcher", icon: Search, summary: "Discover new query opportunities — winnable and top-10 queries from real Search Console data." },
+      { id: "ranker", label: "Keyword Ranker", icon: TrendingUp, summary: "Real day-over-day position movement — which tracked queries improved or declined in the last 14 days." },
       { id: "competitor-kw", label: "Competitor Keywords", icon: Radar, summary: "Compare rival keyword footprints and surface the gaps worth chasing." },
       { id: "mapping", label: "Keyword Mapping", icon: Network, summary: "See which real page each top query currently ranks on." },
       { id: "clustering", label: "Keyword Clustering", icon: Layers, summary: "Group semantically related queries into topic hubs and pillar pages." },
@@ -89,7 +89,10 @@ export const SCOUTS: Scout[] = [
       { id: "writing", label: "Content Writing", icon: PenSquare, summary: "Tasks genuinely awaiting your approval before an agent writes them." },
       { id: "pipeline", label: "Content Pipeline", icon: ListOrdered, summary: "Every real content task's current stage, from the actual Kanban board." },
       { id: "quality", label: "Quality & Audit", icon: ShieldCheck, summary: "Content quality checks." },
-      { id: "gmb", label: "GMB Post Writer", icon: MapPin, summary: "See Local Business Scout's GBP tab for real Google Business Profile data." },
+      // GMB Post Writer tab removed -- it was a dead end that only said
+      // "see Local Business Scout's GBP tab instead," adding a tab with no
+      // capability of its own. Real GBP data now lives solely under Local
+      // Business Scout, where it belongs.
     ],
   },
   {
@@ -106,7 +109,7 @@ export const SCOUTS: Scout[] = [
       { id: "system", label: "Visual System", icon: Palette, summary: "Design token and component governance." },
       { id: "assets", label: "Asset Library", icon: BookOpen, summary: "Illustration, icon, and photography asset management." },
       { id: "variants", label: "A/B Variants", icon: GitCompare, summary: "Visual A/B test results." },
-      { id: "a11y", label: "Accessibility", icon: ShieldCheck, summary: "Real accessibility score from a live PageSpeed Insights run against this site's homepage." },
+      { id: "a11y", label: "Accessibility", icon: ShieldCheck, summary: "Real accessibility score from a live PageSpeed Insights run against this site's homepage — a live snapshot; for a full written report see SEO Suite's Technical SEO tool." },
     ],
   },
   {
@@ -118,7 +121,7 @@ export const SCOUTS: Scout[] = [
     angle: 154.3,
     mission: "Keep the Google Business Profile, citations, and local rankings pristine across every service area.",
     tabs: [
-      { id: "gbp", label: "GBP Manager", icon: Building2, summary: "Real Google Business Profile performance metrics for this site's connected location." },
+      { id: "gbp", label: "GBP Manager", icon: Building2, summary: "Real Google Business Profile performance metrics for this site's connected location — a live dashboard; for a full written local SEO report see SEO Suite's Local SEO tool." },
       { id: "citations", label: "Citations", icon: Globe, summary: "Directory listing consistency with the master NAP." },
       { id: "reviews", label: "Reviews", icon: Star, summary: "Real customer reviews from this site's connected Google Business Profile." },
       { id: "local-rank", label: "Local Rankings", icon: MapPinned, summary: "Local pack grid rank tracking." },
@@ -150,7 +153,7 @@ export const SCOUTS: Scout[] = [
     angle: 257.1,
     mission: "Convert raw signals into audits, dashboards, and exec-ready narratives.",
     tabs: [
-      { id: "site-audit", label: "Site Audit", icon: FileSearch, summary: "Real PageSpeed Insights performance/SEO audit for this site's homepage." },
+      { id: "site-audit", label: "Site Audit", icon: FileSearch, summary: "Real PageSpeed Insights performance/SEO audit for this site's homepage — a live snapshot; for a full written report see SEO Suite's Full SEO Audit tool." },
       { id: "weekly", label: "Weekly Report", icon: ScrollText, summary: "Auto-composed weekly narrative." },
       { id: "kpi", label: "KPI Dashboard", icon: BarChart3, summary: "Real job-completion and alert counts from this app's own database." },
       { id: "issues", label: "Issue Tracker", icon: AlertTriangle, summary: "Real open alerts from the Alert Manager." },
@@ -167,7 +170,7 @@ export const SCOUTS: Scout[] = [
     mission: "Keep the crawl clean, the Core Web Vitals green, and the schema valid on every deployed URL.",
     tabs: [
       { id: "crawl", label: "Crawl Report", icon: Cpu, summary: "Real sitemap.xml crawl results for this site." },
-      { id: "cwv", label: "Core Web Vitals", icon: Gauge, summary: "Real field/lab Core Web Vitals from a live PageSpeed Insights run." },
+      { id: "cwv", label: "Core Web Vitals", icon: Gauge, summary: "Real field/lab Core Web Vitals from a live PageSpeed Insights run — a live snapshot; for a full written report see SEO Suite's Technical SEO tool." },
       { id: "schema", label: "Schema Validator", icon: Braces, summary: "Structured data coverage validation." },
       { id: "logs", label: "Log Analyzer", icon: Bug, summary: "Server log crawl-budget analysis." },
       { id: "redirects", label: "Redirects", icon: RouteIcon, summary: "Redirect chain/loop auditing." },

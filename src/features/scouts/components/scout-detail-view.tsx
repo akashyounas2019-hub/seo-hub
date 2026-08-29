@@ -12,7 +12,7 @@ import { useScoutDetail } from "../hooks/use-scout-detail";
 
 export function ScoutDetailView({ scoutId }: { scoutId: string }) {
   const navigate = useNavigate();
-  const { scout, activeTab, setActiveTab, tab, tabData, loading, error, refetch, TabIcon, ScoutIcon, peers } = useScoutDetail(scoutId);
+  const { scout, activeTab, setActiveTab, tab, tabData, loading, error, refetch, TabIcon, ScoutIcon, peers, competitorDomain, setCompetitorDomain } = useScoutDetail(scoutId);
 
   if (!scout) return null;
 
@@ -129,6 +129,26 @@ export function ScoutDetailView({ scoutId }: { scoutId: string }) {
                   <p className="mt-2 max-w-2xl text-sm text-slate-400">{tab?.summary}</p>
                 </div>
               </div>
+
+              {scout.id === "competitor" && tab?.id === "sitemap" && (
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    value={competitorDomain}
+                    onChange={(e) => setCompetitorDomain(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && refetch()}
+                    placeholder="competitor-domain.com"
+                    className="flex-1 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-xs text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-400/40"
+                  />
+                  <button
+                    onClick={refetch}
+                    disabled={loading || !competitorDomain.trim()}
+                    className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r ${scout.accent} px-3 py-2 text-xs font-bold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                    {loading ? "Crawling…" : "Crawl competitor sitemap"}
+                  </button>
+                </div>
+              )}
 
               <div className="mt-5">
                 {loading ? (
