@@ -484,6 +484,12 @@ export const kanbanTasks = pgTable(
     // successful publish, never synthesized.
     publishedUrl: text("published_url"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    // Real operator comment/instruction added from the Approvals "View"
+    // modal -- genuinely used, not just stored: when the task is approved
+    // and a claude_jobs row is created (api.tasks.$id.ts), this text is
+    // appended to the job's input so the AI agent actually sees it, not a
+    // silent annotation nobody reads.
+    operatorNotes: text("operator_notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

@@ -11,6 +11,9 @@ import {
   RefreshCw,
   Trash2,
   Zap,
+  Eye,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { useSite } from "@/lib/site-context";
 
@@ -36,6 +39,7 @@ type PendingTask = {
   priority: string;
   status: string;
   templateId: string | null;
+  operatorNotes?: string | null;
   createdAt: string;
 };
 
@@ -73,6 +77,7 @@ function ApprovalsPage() {
   const [loading, setLoading] = useState(true);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [reevaluating, setReevaluating] = useState(false);
+  const [viewTask, setViewTask] = useState<PendingTask | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -101,7 +106,7 @@ function ApprovalsPage() {
 
   const siteLabel = (siteId: string | null) => allSites.find((s) => s.id === siteId)?.label || siteId || "Unknown site";
 
-  async function decide(id: string, approve: boolean, immediate?: boolean) {
+  async function decide(id: string, approve: boolean, immediate?: boolean, operatorNotes?: string) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     try {
       // Approving sends the task straight to "inprogress" rather than
@@ -110,11 +115,17 @@ function ApprovalsPage() {
       // execution instead of just moving it to a backlog someone has to
       // separately notice and drag over. `immediate` forces the job to
       // "critical" priority, which api.jobs.claim.ts now actually honors --
-      // it claims ahead of everything else already queued.
+      // it claims ahead of everything else already queued. Any comment left
+      // in the View modal rides along and is read by the AI agent itself
+      // (job-templates.ts's kanban_task_execution template).
       const res = await fetch(`/api/tasks/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: approve ? "inprogress" : "rejected", immediate: approve ? !!immediate : undefined }),
+        body: JSON.stringify({
+          status: approve ? "inprogress" : "rejected",
+          immediate: approve ? !!immediate : undefined,
+          operatorNotes: operatorNotes?.trim() ? operatorNotes.trim() : undefined,
+        }),
       });
       const json = await res.json();
       if (json?.error) throw new Error(json.error);
@@ -125,9 +136,26 @@ function ApprovalsPage() {
             : "Task approved — real execution started"
           : "Task rejected",
       );
+      setViewTask(null);
     } catch (err: any) {
       toast.error(err?.message || "Failed to update task");
       load();
+    }
+  }
+
+  async function saveComment(id: string, operatorNotes: string) {
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ operatorNotes }),
+      });
+      const json = await res.json();
+      if (json?.error) throw new Error(json.error);
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, operatorNotes } : t)));
+      toast.success("Comment saved");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save comment");
     }
   }
 
@@ -225,6 +253,11 @@ function ApprovalsPage() {
                         <span className="rounded-full border border-slate-700 bg-slate-800/50 px-1.5 py-0.5 text-[10px] text-slate-400">{t.templateId}</span>
                       )}
                       <span className="text-[11px] text-slate-500">{siteLabel(t.siteId)}</span>
+                      {t.operatorNotes && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-indigo-400/30 bg-indigo-400/10 px-1.5 py-0.5 text-[10px] text-indigo-300">
+                          <MessageSquare className="h-2.5 w-2.5" /> Comment added
+                        </span>
+                      )}
                     </div>
                     <h3 className="mt-2 text-sm font-semibold text-white">{t.title}</h3>
                     {t.desc && <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-slate-400">{t.desc}</p>}
@@ -235,6 +268,12 @@ function ApprovalsPage() {
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-2">
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setViewTask(t)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                      >
+                        <Eye className="h-3.5 w-3.5" /> View
+                      </button>
                       <button
                         onClick={() => decide(t.id, false)}
                         className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
@@ -266,6 +305,146 @@ function ApprovalsPage() {
       </div>
 
       {rulesOpen && <ApprovalRulesModal onClose={() => setRulesOpen(false)} sites={allSites} />}
+
+      {viewTask && (
+        <ApprovalViewModal
+          task={viewTask}
+          siteLabel={siteLabel(viewTask.siteId)}
+          onClose={() => setViewTask(null)}
+          onApprove={(notes, immediate) => decide(viewTask.id, true, immediate, notes)}
+          onReject={(notes) => decide(viewTask.id, false, false, notes)}
+          onSaveComment={(notes) => saveComment(viewTask.id, notes)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ApprovalViewModal({
+  task,
+  siteLabel,
+  onClose,
+  onApprove,
+  onReject,
+  onSaveComment,
+}: {
+  task: PendingTask;
+  siteLabel: string;
+  onClose: () => void;
+  onApprove: (notes: string, immediate: boolean) => void;
+  onReject: (notes: string) => void;
+  onSaveComment: (notes: string) => void;
+}) {
+  const [notes, setNotes] = useState(task.operatorNotes || "");
+  const [immediate, setImmediate] = useState(false);
+  const [savingComment, setSavingComment] = useState(false);
+
+  const handleSaveComment = async () => {
+    setSavingComment(true);
+    try {
+      await onSaveComment(notes.trim());
+    } finally {
+      setSavingComment(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-800 bg-[#0a0d16] shadow-2xl"
+      >
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-400 to-blue-500" />
+
+        <div className="flex items-start justify-between border-b border-slate-800 p-5">
+          <div className="min-w-0 flex-1 pr-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${PRIORITY_META[task.priority] || PRIORITY_META.medium}`}>
+                {task.priority}
+              </span>
+              {task.templateId && (
+                <span className="rounded-full border border-slate-700 bg-slate-800/50 px-1.5 py-0.5 text-[10px] text-slate-400">{task.templateId}</span>
+              )}
+              <span className="text-[11px] text-slate-500">{siteLabel}</span>
+            </div>
+            <h2 className="mt-2 text-base font-semibold text-white leading-snug">{task.title}</h2>
+            <div className="mt-1.5 flex items-center gap-3 text-[11px] text-slate-500">
+              <span>Suggested: {task.assignee}</span>
+              <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {timeAgo(task.createdAt)}</span>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          {/* Full details / reasoning -- this is the task's real desc field,
+              which for orchestrator-generated tasks already includes a
+              "Why:" reasoning section grounded in live GSC/GA4 data. */}
+          <div>
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">Details &amp; Reasoning</div>
+            <div className="mt-2 whitespace-pre-line rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-sm leading-relaxed text-slate-300">
+              {task.desc || "No additional details provided for this task."}
+            </div>
+          </div>
+
+          {/* Comment / instructions -- persisted to kanban_tasks.operatorNotes
+              and, on approval, read by the AI agent itself (see
+              job-templates.ts's kanban_task_execution template). */}
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">
+                Comments &amp; Instructions
+              </div>
+              <button
+                onClick={handleSaveComment}
+                disabled={savingComment || notes.trim() === (task.operatorNotes || "")}
+                className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] font-medium text-slate-300 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Send className="h-3 w-3" /> {savingComment ? "Saving…" : "Save comment"}
+              </button>
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add instructions or context for the assigned agent — e.g. 'Prioritize the Marina and JVC pages first' or 'Hold off on pricing changes until Q3'. Saved comments are read by the AI agent when this task runs."
+              rows={4}
+              className="mt-2 w-full resize-none rounded-xl border border-slate-800 bg-slate-900/40 p-3 text-sm text-slate-200 placeholder:text-slate-600 focus:border-cyan-400/50 focus:outline-none"
+            />
+          </div>
+
+          <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200">
+            <input
+              type="checkbox"
+              checked={immediate}
+              onChange={() => setImmediate((v) => !v)}
+              className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-amber-400 accent-amber-400 focus:ring-amber-400/40"
+            />
+            <Zap className="h-3 w-3 text-amber-300" /> Immediate — bypass queue on approve
+          </label>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 border-t border-slate-800 p-4">
+          <button onClick={onClose} className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800">
+            Close
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onReject(notes)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
+            >
+              <XCircle className="h-3.5 w-3.5" /> Reject
+            </button>
+            <button
+              onClick={() => onApprove(notes, immediate)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" /> Approve
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

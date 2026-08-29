@@ -11,6 +11,7 @@ const TASK_ACTIONS = [
   "task.published",
   "task.regenerated",
   "task.deleted",
+  "task.commented",
   "approvals.reevaluated",
 ];
 

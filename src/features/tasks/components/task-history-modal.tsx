@@ -4,6 +4,7 @@ import {
   Clock,
   History,
   Loader2,
+  MessageSquare,
   PlusCircle,
   RefreshCw,
   Send,
@@ -28,6 +29,7 @@ const ACTION_META: Record<string, { label: string; icon: typeof History; cls: st
   "task.published": { label: "Published", icon: Send, cls: "border-violet-400/30 bg-violet-400/10 text-violet-300" },
   "task.regenerated": { label: "Regenerated", icon: RefreshCw, cls: "border-amber-400/30 bg-amber-400/10 text-amber-300" },
   "task.deleted": { label: "Deleted", icon: Trash2, cls: "border-slate-600/40 bg-slate-800/60 text-slate-300" },
+  "task.commented": { label: "Comment added", icon: MessageSquare, cls: "border-indigo-400/30 bg-indigo-400/10 text-indigo-300" },
   "approvals.reevaluated": { label: "Rules re-evaluated", icon: RefreshCw, cls: "border-slate-600/40 bg-slate-800/60 text-slate-300" },
 };
 
@@ -39,7 +41,7 @@ function describeEntry(e: HistoryEntry): string {
     case "task.status_changed":
       return `Moved "${title}" from ${(e.detail?.previousStatus as string) || "?"} → ${(e.detail?.newStatus as string) || "?"}`;
     case "task.approved":
-      return `Approved "${title}" → ${(e.detail?.newStatus as string) || "in progress"}`;
+      return `Approved "${title}" → ${(e.detail?.newStatus as string) || "in progress"}${e.detail?.operatorNotes ? ` — note: "${e.detail.operatorNotes}"` : ""}`;
     case "task.rejected":
       return `Rejected "${title}"`;
     case "task.published":
@@ -48,6 +50,8 @@ function describeEntry(e: HistoryEntry): string {
       return `Regenerated output for "${title}"`;
     case "task.deleted":
       return `Deleted "${title}"${e.detail?.statusAtDeletion ? ` (was in ${e.detail.statusAtDeletion})` : ""}`;
+    case "task.commented":
+      return `Comment on "${title}": "${(e.detail?.operatorNotes as string) || ""}"`;
     case "approvals.reevaluated":
       return `Re-evaluated approval rules against pending tasks`;
     default:

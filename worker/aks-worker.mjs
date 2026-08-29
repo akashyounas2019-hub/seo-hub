@@ -25,6 +25,11 @@ const WORKER_ID = process.env.AKS_WORKER_ID ?? `${userInfo().username}@${hostnam
 const CLAUDE_BIN = process.env.AKS_WORKER_CLAUDE_BIN ?? "claude";
 const TIMEOUT_MS = Number(process.env.AKS_WORKER_CLAUDE_TIMEOUT_MS ?? 20 * 60_000);
 const MODEL = process.env.AKS_WORKER_CLAUDE_MODEL ?? "sonnet";
+// How often the worker checks whether any site is due for its real 24h
+// "Head of SEO" orchestrator review -- checking this every 15s poll cycle
+// would be pointless DB load since the due-check granularity is 24h itself;
+// once an hour is plenty responsive without hammering Postgres.
+const ORCHESTRATOR_CHECK_INTERVAL_MS = Number(process.env.AKS_WORKER_ORCHESTRATOR_CHECK_INTERVAL_MS ?? 60 * 60_000);
 
 async function api(path, init = {}) {
   const res = await fetch(`${PORTAL}${path}`, {
@@ -272,11 +277,46 @@ async function workOne(job) {
   }
 }
 
+/**
+ * Real 24h auto-trigger for the Head of SEO orchestrator -- no separate
+ * scheduler/cron process; this worker is already running 24/7 under pm2,
+ * so it's the natural place for a time-based check. Calls the exact same
+ * /api/orchestrator/run endpoint the manual "Run SEO Review" button hits,
+ * so there is exactly one orchestrator code path, not a duplicated one.
+ */
+async function checkAndRunDueOrchestratorReviews() {
+  try {
+    const { due } = await api(`/api/orchestrator/due-sites`);
+    for (const site of due || []) {
+      try {
+        console.log(`[worker] auto-triggering Head of SEO review for ${site.siteName} (last run: ${site.lastRunAt || "never"})`);
+        await api(`/api/orchestrator/run`, {
+          method: "POST",
+          body: JSON.stringify({ siteId: site.siteId }),
+        });
+      } catch (err) {
+        console.warn(`[worker] auto-orchestrator trigger failed for ${site.siteId}:`, err.message);
+      }
+    }
+  } catch (err) {
+    console.warn("[worker] due-sites check failed:", err.message);
+  }
+}
+
 async function main() {
   console.log(`[worker] starting · workerId=${WORKER_ID} · portal=${PORTAL} · model=${MODEL}`);
   console.log(`[worker] polling every ${POLL_INTERVAL_MS / 1000}s`);
+  console.log(`[worker] checking for due Head of SEO reviews every ${ORCHESTRATOR_CHECK_INTERVAL_MS / 60_000}min`);
+
+  let lastOrchestratorCheck = 0;
+
   while (true) {
     try {
+      if (Date.now() - lastOrchestratorCheck >= ORCHESTRATOR_CHECK_INTERVAL_MS) {
+        lastOrchestratorCheck = Date.now();
+        await checkAndRunDueOrchestratorReviews();
+      }
+
       const job = await claimOnce();
       if (job) {
         await workOne(job);

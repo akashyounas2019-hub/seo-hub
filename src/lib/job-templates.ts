@@ -101,6 +101,23 @@ Answer helpfully and specifically. Ground any GA4/GSC/GBP/Cloudflare/alert numbe
     },
   },
 
+  "kanban_task_execution": {
+    kind: "kanban_task_execution",
+    label: "Kanban Task Execution",
+    description: "Executes an approved SEO task from the Kanban board",
+    buildPrompt(input) {
+      const notesBlock = input.operatorNotes
+        ? `\n\nOPERATOR INSTRUCTIONS (added when this task was approved -- follow these explicitly, they override generic assumptions below):\n${input.operatorNotes}`
+        : "";
+      return `You are ${input.assignee || "an SEO specialist"} on an SEO agency's agent fleet, executing an approved task.
+
+TASK: ${input.desc || input.title || "See task details"}
+PRIORITY: ${input.priority || "medium"}${input.immediate ? " (marked Immediate by the approver -- treat as urgent)" : ""}${notesBlock}
+
+Produce a thorough, execution-ready Markdown deliverable for this task. Ground every specific claim in the Knowledge Base context provided above (if any) -- if a needed data source isn't available, say so explicitly rather than inventing facts. Structure the output with clear headings and concrete, actionable content a reviewer could approve and publish as-is.`;
+    },
+  },
+
   "knowledge:structure-from-crawl": {
     kind: "knowledge:structure-from-crawl",
     label: "Structure Knowledge Base from Crawled Pages",

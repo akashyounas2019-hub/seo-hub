@@ -341,6 +341,7 @@ export async function ensureSchema(): Promise<void> {
       ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS approved_at timestamptz;
       ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS published_url text;
       ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS published_at timestamptz;
+      ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS operator_notes text;
 
       CREATE TABLE IF NOT EXISTS kanban_task_templates (
         id text PRIMARY KEY,

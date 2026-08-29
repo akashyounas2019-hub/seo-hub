@@ -49,6 +49,11 @@ export const Route = createFileRoute("/api/tasks/$id")({
           // which api.jobs.claim.ts now actually honors -- the job jumps to
           // the front of the real claim queue instead of waiting FIFO
           // behind whatever else is pending.
+          // Operator comment/instruction added from the Approvals "View"
+          // modal rides along into the job's real input so the AI agent
+          // actually reads it at execution time -- not a silent annotation.
+          const operatorNotes = body.operatorNotes !== undefined ? body.operatorNotes : task.operatorNotes;
+
           if (body.status === "inprogress" && !jobId) {
             const jobPriority = body.immediate
               ? "critical"
@@ -58,7 +63,14 @@ export const Route = createFileRoute("/api/tasks/$id")({
             const [job] = await d.insert(claudeJobs).values({
               kind: "kanban_task_execution",
               title: `Execute SEO Task: ${task.title}`,
-              input: { taskId: params.id, assignee: body.assignee || task.assignee, desc: task.desc || task.title, priority: body.priority || task.priority, immediate: !!body.immediate },
+              input: {
+                taskId: params.id,
+                assignee: body.assignee || task.assignee,
+                desc: task.desc || task.title,
+                priority: body.priority || task.priority,
+                immediate: !!body.immediate,
+                operatorNotes: operatorNotes || undefined,
+              },
               status: "pending",
               priority: jobPriority,
               preferWorker: "mac",
@@ -76,6 +88,7 @@ export const Route = createFileRoute("/api/tasks/$id")({
           if (body.assignee !== undefined) updates.assignee = body.assignee;
           if (body.title !== undefined) updates.title = body.title;
           if (body.desc !== undefined) updates.desc = body.desc;
+          if (body.operatorNotes !== undefined) updates.operatorNotes = body.operatorNotes;
           if (jobId) updates.jobId = jobId;
 
           // A task leaving pending_approval via a human action in /approvals
@@ -90,6 +103,7 @@ export const Route = createFileRoute("/api/tasks/$id")({
               taskId: params.id,
               title: task.title,
               newStatus: body.status,
+              operatorNotes: body.operatorNotes || undefined,
             });
           } else if (body.status !== undefined && body.status !== task.status) {
             // Every other status change (drag-and-drop on the Kanban board,
@@ -102,6 +116,15 @@ export const Route = createFileRoute("/api/tasks/$id")({
               title: task.title,
               previousStatus: task.status,
               newStatus: body.status,
+            });
+          } else if (body.operatorNotes !== undefined && body.operatorNotes !== task.operatorNotes) {
+            // A comment added without a status change alongside it (e.g. the
+            // approver just leaves a note first) still gets a real history
+            // entry -- otherwise adding-a-note-only would be invisible.
+            await logAudit(actor, "task.commented", {
+              taskId: params.id,
+              title: task.title,
+              operatorNotes: body.operatorNotes,
             });
           }
 

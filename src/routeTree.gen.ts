@@ -31,9 +31,6 @@ import { Route as AnalyticsBusinessProfileRouteImport } from './routes/analytics
 import { Route as AnalyticsGoogleAnalyticsRouteImport } from './routes/analytics.google-analytics'
 import { Route as AnalyticsSearchConsoleRouteImport } from './routes/analytics.search-console'
 import { Route as ApiApprovalRulesRouteImport } from './routes/api.approval-rules'
-import { Route as ResourcesPromptsRouteImport } from './routes/resources.prompts'
-import { Route as ResourcesSopsRouteImport } from './routes/resources.sops'
-import { Route as ResourcesTemplatesRouteImport } from './routes/resources.templates'
 import { Route as ScoutTeamIndexRouteImport } from './routes/scout-team.index'
 import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scoutId'
 import { Route as SeoSuiteIndexRouteImport } from './routes/seo-suite.index'
@@ -58,6 +55,7 @@ import { Route as ApiJobsIndexRouteImport } from './routes/api.jobs.index'
 import { Route as ApiJobsIdRouteImport } from './routes/api.jobs.$id'
 import { Route as ApiJobsClaimRouteImport } from './routes/api.jobs.claim'
 import { Route as ApiKnowledgeAutocrawlRouteImport } from './routes/api.knowledge.autocrawl'
+import { Route as ApiOrchestratorDueSitesRouteImport } from './routes/api.orchestrator.due-sites'
 import { Route as ApiOrchestratorRunRouteImport } from './routes/api.orchestrator.run'
 import { Route as ApiQaRunRouteImport } from './routes/api.qa.run'
 import { Route as ApiQaRunsRouteImport } from './routes/api.qa.runs'
@@ -207,21 +205,6 @@ const ApiApprovalRulesRoute = ApiApprovalRulesRouteImport.update({
   path: '/api/approval-rules',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResourcesPromptsRoute = ResourcesPromptsRouteImport.update({
-  id: '/resources/prompts',
-  path: '/resources/prompts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResourcesSopsRoute = ResourcesSopsRouteImport.update({
-  id: '/resources/sops',
-  path: '/resources/sops',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResourcesTemplatesRoute = ResourcesTemplatesRouteImport.update({
-  id: '/resources/templates',
-  path: '/resources/templates',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ScoutTeamIndexRoute = ScoutTeamIndexRouteImport.update({
   id: '/scout-team/',
   path: '/scout-team/',
@@ -340,6 +323,11 @@ const ApiJobsClaimRoute = ApiJobsClaimRouteImport.update({
 const ApiKnowledgeAutocrawlRoute = ApiKnowledgeAutocrawlRouteImport.update({
   id: '/api/knowledge/autocrawl',
   path: '/api/knowledge/autocrawl',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOrchestratorDueSitesRoute = ApiOrchestratorDueSitesRouteImport.update({
+  id: '/api/orchestrator/due-sites',
+  path: '/api/orchestrator/due-sites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOrchestratorRunRoute = ApiOrchestratorRunRouteImport.update({
@@ -548,9 +536,6 @@ export interface FileRoutesByFullPath {
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
-  '/resources/prompts': typeof ResourcesPromptsRoute
-  '/resources/sops': typeof ResourcesSopsRoute
-  '/resources/templates': typeof ResourcesTemplatesRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
   '/sites/$siteId': typeof SitesSiteIdRoute
@@ -575,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
+  '/api/orchestrator/due-sites': typeof ApiOrchestratorDueSitesRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
   '/api/qa/run': typeof ApiQaRunRoute
   '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
@@ -635,9 +621,6 @@ export interface FileRoutesByTo {
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
-  '/resources/prompts': typeof ResourcesPromptsRoute
-  '/resources/sops': typeof ResourcesSopsRoute
-  '/resources/templates': typeof ResourcesTemplatesRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
   '/sites/$siteId': typeof SitesSiteIdRoute
@@ -662,6 +645,7 @@ export interface FileRoutesByTo {
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
+  '/api/orchestrator/due-sites': typeof ApiOrchestratorDueSitesRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
   '/api/qa/run': typeof ApiQaRunRoute
   '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
@@ -723,9 +707,6 @@ export interface FileRoutesById {
   '/analytics/google-analytics': typeof AnalyticsGoogleAnalyticsRoute
   '/analytics/search-console': typeof AnalyticsSearchConsoleRoute
   '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
-  '/resources/prompts': typeof ResourcesPromptsRoute
-  '/resources/sops': typeof ResourcesSopsRoute
-  '/resources/templates': typeof ResourcesTemplatesRoute
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
   '/sites/$siteId': typeof SitesSiteIdRoute
@@ -750,6 +731,7 @@ export interface FileRoutesById {
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
   '/api/knowledge/autocrawl': typeof ApiKnowledgeAutocrawlRoute
+  '/api/orchestrator/due-sites': typeof ApiOrchestratorDueSitesRoute
   '/api/orchestrator/run': typeof ApiOrchestratorRunRoute
   '/api/qa/run': typeof ApiQaRunRoute
   '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
@@ -812,9 +794,6 @@ export interface FileRouteTypes {
     | '/analytics/google-analytics'
     | '/analytics/search-console'
     | '/api/approval-rules'
-    | '/resources/prompts'
-    | '/resources/sops'
-    | '/resources/templates'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
     | '/sites/$siteId'
@@ -839,6 +818,7 @@ export interface FileRouteTypes {
     | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
+    | '/api/orchestrator/due-sites'
     | '/api/orchestrator/run'
     | '/api/qa/run'
     | '/api/qa/runs'
@@ -899,9 +879,6 @@ export interface FileRouteTypes {
     | '/analytics/google-analytics'
     | '/analytics/search-console'
     | '/api/approval-rules'
-    | '/resources/prompts'
-    | '/resources/sops'
-    | '/resources/templates'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
     | '/sites/$siteId'
@@ -926,6 +903,7 @@ export interface FileRouteTypes {
     | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
+    | '/api/orchestrator/due-sites'
     | '/api/orchestrator/run'
     | '/api/qa/run'
     | '/api/qa/runs'
@@ -986,9 +964,6 @@ export interface FileRouteTypes {
     | '/analytics/google-analytics'
     | '/analytics/search-console'
     | '/api/approval-rules'
-    | '/resources/prompts'
-    | '/resources/sops'
-    | '/resources/templates'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
     | '/sites/$siteId'
@@ -1013,6 +988,7 @@ export interface FileRouteTypes {
     | '/api/jobs/$id'
     | '/api/jobs/claim'
     | '/api/knowledge/autocrawl'
+    | '/api/orchestrator/due-sites'
     | '/api/orchestrator/run'
     | '/api/qa/run'
     | '/api/qa/runs'
@@ -1074,9 +1050,6 @@ export interface RootRouteChildren {
   AnalyticsGoogleAnalyticsRoute: typeof AnalyticsGoogleAnalyticsRoute
   AnalyticsSearchConsoleRoute: typeof AnalyticsSearchConsoleRoute
   ApiApprovalRulesRoute: typeof ApiApprovalRulesRouteWithChildren
-  ResourcesPromptsRoute: typeof ResourcesPromptsRoute
-  ResourcesSopsRoute: typeof ResourcesSopsRoute
-  ResourcesTemplatesRoute: typeof ResourcesTemplatesRoute
   ScoutTeamScoutIdRoute: typeof ScoutTeamScoutIdRoute
   SeoSuiteToolIdRoute: typeof SeoSuiteToolIdRoute
   SitesSiteIdRoute: typeof SitesSiteIdRoute
@@ -1100,6 +1073,7 @@ export interface RootRouteChildren {
   ApiJobsIdRoute: typeof ApiJobsIdRouteWithChildren
   ApiJobsClaimRoute: typeof ApiJobsClaimRoute
   ApiKnowledgeAutocrawlRoute: typeof ApiKnowledgeAutocrawlRoute
+  ApiOrchestratorDueSitesRoute: typeof ApiOrchestratorDueSitesRoute
   ApiOrchestratorRunRoute: typeof ApiOrchestratorRunRoute
   ApiQaRunRoute: typeof ApiQaRunRoute
   ApiQaRunsRoute: typeof ApiQaRunsRouteWithChildren
@@ -1279,27 +1253,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiApprovalRulesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/resources/prompts': {
-      id: '/resources/prompts'
-      path: '/resources/prompts'
-      fullPath: '/resources/prompts'
-      preLoaderRoute: typeof ResourcesPromptsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resources/sops': {
-      id: '/resources/sops'
-      path: '/resources/sops'
-      fullPath: '/resources/sops'
-      preLoaderRoute: typeof ResourcesSopsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resources/templates': {
-      id: '/resources/templates'
-      path: '/resources/templates'
-      fullPath: '/resources/templates'
-      preLoaderRoute: typeof ResourcesTemplatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/scout-team/': {
       id: '/scout-team/'
       path: '/scout-team'
@@ -1466,6 +1419,13 @@ declare module '@tanstack/react-router' {
       path: '/api/knowledge/autocrawl'
       fullPath: '/api/knowledge/autocrawl'
       preLoaderRoute: typeof ApiKnowledgeAutocrawlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/orchestrator/due-sites': {
+      id: '/api/orchestrator/due-sites'
+      path: '/api/orchestrator/due-sites'
+      fullPath: '/api/orchestrator/due-sites'
+      preLoaderRoute: typeof ApiOrchestratorDueSitesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/orchestrator/run': {
@@ -1889,9 +1849,6 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsGoogleAnalyticsRoute: AnalyticsGoogleAnalyticsRoute,
   AnalyticsSearchConsoleRoute: AnalyticsSearchConsoleRoute,
   ApiApprovalRulesRoute: ApiApprovalRulesRouteWithChildren,
-  ResourcesPromptsRoute: ResourcesPromptsRoute,
-  ResourcesSopsRoute: ResourcesSopsRoute,
-  ResourcesTemplatesRoute: ResourcesTemplatesRoute,
   ScoutTeamScoutIdRoute: ScoutTeamScoutIdRoute,
   SeoSuiteToolIdRoute: SeoSuiteToolIdRoute,
   SitesSiteIdRoute: SitesSiteIdRoute,
@@ -1915,6 +1872,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiJobsIdRoute: ApiJobsIdRouteWithChildren,
   ApiJobsClaimRoute: ApiJobsClaimRoute,
   ApiKnowledgeAutocrawlRoute: ApiKnowledgeAutocrawlRoute,
+  ApiOrchestratorDueSitesRoute: ApiOrchestratorDueSitesRoute,
   ApiOrchestratorRunRoute: ApiOrchestratorRunRoute,
   ApiQaRunRoute: ApiQaRunRoute,
   ApiQaRunsRoute: ApiQaRunsRouteWithChildren,
