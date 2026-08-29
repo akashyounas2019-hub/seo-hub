@@ -52,6 +52,7 @@ import { Route as ApiCloudflareAiShieldRouteImport } from './routes/api.cloudfla
 import { Route as ApiEventsIngestRouteImport } from './routes/api.events.ingest'
 import { Route as ApiGoogleGa4RouteImport } from './routes/api.google.ga4'
 import { Route as ApiGoogleGbpRouteImport } from './routes/api.google.gbp'
+import { Route as ApiGoogleGbpInsightsRouteImport } from './routes/api.google.gbp-insights'
 import { Route as ApiGoogleSearchConsoleRouteImport } from './routes/api.google.search-console'
 import { Route as ApiJobsIndexRouteImport } from './routes/api.jobs.index'
 import { Route as ApiJobsIdRouteImport } from './routes/api.jobs.$id'
@@ -311,6 +312,11 @@ const ApiGoogleGbpRoute = ApiGoogleGbpRouteImport.update({
   path: '/api/google/gbp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGoogleGbpInsightsRoute = ApiGoogleGbpInsightsRouteImport.update({
+  id: '/api/google/gbp-insights',
+  path: '/api/google/gbp-insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGoogleSearchConsoleRoute = ApiGoogleSearchConsoleRouteImport.update({
   id: '/api/google/search-console',
   path: '/api/google/search-console',
@@ -564,6 +570,7 @@ export interface FileRoutesByFullPath {
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
+  '/api/google/gbp-insights': typeof ApiGoogleGbpInsightsRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
@@ -650,6 +657,7 @@ export interface FileRoutesByTo {
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
+  '/api/google/gbp-insights': typeof ApiGoogleGbpInsightsRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
@@ -737,6 +745,7 @@ export interface FileRoutesById {
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
+  '/api/google/gbp-insights': typeof ApiGoogleGbpInsightsRoute
   '/api/google/search-console': typeof ApiGoogleSearchConsoleRoute
   '/api/jobs/$id': typeof ApiJobsIdRouteWithChildren
   '/api/jobs/claim': typeof ApiJobsClaimRoute
@@ -825,6 +834,7 @@ export interface FileRouteTypes {
     | '/api/events/ingest'
     | '/api/google/ga4'
     | '/api/google/gbp'
+    | '/api/google/gbp-insights'
     | '/api/google/search-console'
     | '/api/jobs/$id'
     | '/api/jobs/claim'
@@ -911,6 +921,7 @@ export interface FileRouteTypes {
     | '/api/events/ingest'
     | '/api/google/ga4'
     | '/api/google/gbp'
+    | '/api/google/gbp-insights'
     | '/api/google/search-console'
     | '/api/jobs/$id'
     | '/api/jobs/claim'
@@ -997,6 +1008,7 @@ export interface FileRouteTypes {
     | '/api/events/ingest'
     | '/api/google/ga4'
     | '/api/google/gbp'
+    | '/api/google/gbp-insights'
     | '/api/google/search-console'
     | '/api/jobs/$id'
     | '/api/jobs/claim'
@@ -1083,6 +1095,7 @@ export interface RootRouteChildren {
   ApiEventsIngestRoute: typeof ApiEventsIngestRoute
   ApiGoogleGa4Route: typeof ApiGoogleGa4Route
   ApiGoogleGbpRoute: typeof ApiGoogleGbpRoute
+  ApiGoogleGbpInsightsRoute: typeof ApiGoogleGbpInsightsRoute
   ApiGoogleSearchConsoleRoute: typeof ApiGoogleSearchConsoleRoute
   ApiJobsIdRoute: typeof ApiJobsIdRouteWithChildren
   ApiJobsClaimRoute: typeof ApiJobsClaimRoute
@@ -1411,6 +1424,13 @@ declare module '@tanstack/react-router' {
       path: '/api/google/gbp'
       fullPath: '/api/google/gbp'
       preLoaderRoute: typeof ApiGoogleGbpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google/gbp-insights': {
+      id: '/api/google/gbp-insights'
+      path: '/api/google/gbp-insights'
+      fullPath: '/api/google/gbp-insights'
+      preLoaderRoute: typeof ApiGoogleGbpInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/google/search-console': {
@@ -1890,6 +1910,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEventsIngestRoute: ApiEventsIngestRoute,
   ApiGoogleGa4Route: ApiGoogleGa4Route,
   ApiGoogleGbpRoute: ApiGoogleGbpRoute,
+  ApiGoogleGbpInsightsRoute: ApiGoogleGbpInsightsRoute,
   ApiGoogleSearchConsoleRoute: ApiGoogleSearchConsoleRoute,
   ApiJobsIdRoute: ApiJobsIdRouteWithChildren,
   ApiJobsClaimRoute: ApiJobsClaimRoute,
