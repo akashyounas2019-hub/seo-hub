@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useSite } from "@/lib/site-context";
@@ -57,7 +57,8 @@ function statusMeta(s: IntegrationStatus) {
 }
 
 function ConnectedSitesPage() {
-  const { allSites, deleteSite } = useSite();
+  const { allSites, deleteSite, setCurrentSiteId } = useSite();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "healthy" | "attention" | "onboarding">("all");
   const [query, setQuery] = useState("");
   const [disabled, setDisabled] = useState<Record<string, boolean>>({});
@@ -113,7 +114,10 @@ function ConnectedSitesPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:border-cyan-400/40 hover:text-cyan-100">
+            <button
+              onClick={() => toast.info("Bulk site management — coming soon")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-[12px] font-medium text-slate-200 hover:border-cyan-400/40 hover:text-cyan-100"
+            >
               <Settings2 className="h-3.5 w-3.5" /> Bulk manage
             </button>
             <button
@@ -172,6 +176,10 @@ function ConnectedSitesPage() {
             paused={!!disabled[site.id]}
             onDelete={() => handleDelete(site.id, site.label)}
             onToggle={() => handleToggle(site.id, site.label)}
+            onViewDetails={() => {
+              setCurrentSiteId(site.id);
+              navigate({ to: "/knowledge-base" });
+            }}
           />
         ))}
         {filtered.length === 0 && (
@@ -217,11 +225,13 @@ function SiteCard({
   paused,
   onDelete,
   onToggle,
+  onViewDetails,
 }: {
   site: any;
   paused: boolean;
   onDelete: () => void;
   onToggle: () => void;
+  onViewDetails: () => void;
 }) {
   const healthMeta =
     site.health === "healthy"
@@ -347,13 +357,12 @@ function SiteCard({
         >
           <Activity className="h-3 w-3" /> Open site
         </a>
-        <Link
-          to="/sites/$siteId"
-          params={{ siteId: site.id }}
+        <button
+          onClick={onViewDetails}
           className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-100 hover:bg-cyan-400/20"
         >
           See details <ArrowUpRight className="h-3 w-3" />
-        </Link>
+        </button>
       </footer>
     </article>
   );

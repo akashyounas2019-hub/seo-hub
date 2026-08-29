@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   Cpu,
   Server,
-  ArrowRight,
   MapPin,
   RefreshCw,
   Pencil,
@@ -620,13 +619,6 @@ function KnowledgeBasePage() {
                 All background agents (On-Page, Off-Page, Technical, Auditor, GEO, International) ground their prompts using this catalog.
               </p>
             </div>
-            <Link
-              to="/sites/$siteId"
-              params={{ siteId: currentSite.id }}
-              className="inline-flex items-center gap-1.5 text-xs text-cyan-300 hover:underline"
-            >
-              View full site profile <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
           </div>
 
           {/* Navigation Tabs */}

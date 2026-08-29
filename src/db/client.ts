@@ -161,6 +161,24 @@ export async function ensureSchema(): Promise<void> {
       );
       CREATE UNIQUE INDEX IF NOT EXISTS api_keys_key_id_uq ON api_keys(key_id);
 
+      -- Was defined in schema.ts but had no matching DDL here at all, so
+      -- the real HMAC-verified inbound webhook (api.events.ingest.ts --
+      -- what a connected WordPress site's lead form actually POSTs to)
+      -- 500'd on every real call with "relation does not exist", silently
+      -- breaking lead capture. Same dual-definition gap already found and
+      -- fixed this project for sessions and traffic_snapshots.
+      CREATE TABLE IF NOT EXISTS events (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+        kind text NOT NULL,
+        payload jsonb NOT NULL,
+        signature_valid boolean NOT NULL,
+        idempotency_key text NOT NULL,
+        received_at timestamptz NOT NULL DEFAULT now()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS events_site_idem_uq ON events(site_id, idempotency_key);
+      CREATE INDEX IF NOT EXISTS events_site_received_idx ON events(site_id, received_at);
+
       CREATE TABLE IF NOT EXISTS leads (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,

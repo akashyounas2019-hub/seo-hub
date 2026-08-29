@@ -2,8 +2,8 @@
 // fetches full page text for a capped set of pages to seed the Knowledge
 // Base) -- this only discovers every URL the site declares, recursing into
 // sitemap index files, and never fetches page bodies. Powers the "Site
-// Pages" tab so page counts are real Postgres data instead of the hardcoded
-// numbers that used to live in sites.$siteId.tsx's fake SITES object.
+// Pages" tab so page counts are real Postgres data instead of a hardcoded
+// fixture.
 
 const FETCH_TIMEOUT_MS = 10000;
 const MAX_SITEMAPS = 25; // guard against pathological sitemap-index fan-out

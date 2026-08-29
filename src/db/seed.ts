@@ -1,23 +1,23 @@
 import { randomBytes, scryptSync } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, ensureSchema } from "./client";
-import { apiKeys, sites, users, kanbanTaskTemplates, kanbanTasks, automationFlows } from "./schema";
+import { apiKeys, sites, users, kanbanTaskTemplates } from "./schema";
 
+// Real starter templates a user can pick from when creating a Kanban task
+// (matching TEMPLATES-style static config used elsewhere in this app) --
+// not fabricated activity. Fake demo tasks (DEFAULT_TASKS) and fake
+// automation flows with invented successRate/lastRun values
+// (INITIAL_AUTOMATION_FLOWS) used to be seeded here too; both were removed
+// since they're exactly the kind of dummy data this project's standing rule
+// prohibits. Confirmed via production DB before removal: neither had ever
+// actually been run against the live database (0 rows), so this is a
+// dead-code cleanup, not a data migration.
 const DEFAULT_TEMPLATES = [
   { id: "tpl-audit", name: "Full-site technical audit", title: "Run full-site technical audit", desc: "Crawl the site, flag crawl blockers, canonicals, redirects, and CWV regressions. Export exec-ready report.", defaultAssignee: "Technical SEO Expert", priority: "high", builtIn: true },
   { id: "tpl-brief", name: "Content brief for target keyword", title: "Draft content brief for {{keyword}}", desc: "Search intent, SERP outline, entities, internal-link targets, and word-count guidance.", defaultAssignee: "On-Page Expert", priority: "medium", builtIn: true },
   { id: "tpl-outreach", name: "Link outreach campaign", title: "Launch outreach batch (25 prospects)", desc: "Enrich prospects, generate personalized pitches, queue for approval before send.", defaultAssignee: "Off-Page Expert", priority: "medium", builtIn: true },
   { id: "tpl-refresh", name: "Refresh declining post", title: "Refresh declining post: {{url}}", desc: "Update stats, expand FAQ, add 2026 examples, re-run internal links.", defaultAssignee: "On-Page Expert", priority: "low", builtIn: true },
   { id: "tpl-review", name: "Quarterly QA review", title: "QA review — top 20 landing pages", desc: "E-E-A-T, accuracy, compliance and schema checks. File issues into the fix queue.", defaultAssignee: "Auditor", priority: "high", builtIn: true },
-];
-
-const DEFAULT_TASKS = [
-  { id: "seed-1", title: "Fix 14 canonical mismatches", desc: "Self-referencing canonicals point to trailing-slash variants.", assignee: "Technical SEO Expert", priority: "high", status: "inprogress", due: new Date(Date.now() + 86400000).toISOString() },
-  { id: "seed-2", title: "Add FAQ schema to 12 top service pages", desc: "Service schema markup for Dubai cleaning landing pages.", assignee: "On-Page Expert", priority: "medium", status: "todo", due: new Date(Date.now() + 259200000).toISOString() },
-  { id: "seed-3", title: "Pitch 5 UAE real-estate blogs", desc: "Personalized outreach for guest posts on move-in cleaning.", assignee: "Off-Page Expert", priority: "medium", status: "review", due: new Date(Date.now() + 172800000).toISOString() },
-  { id: "seed-4", title: "Ship XML sitemap v3 to GSC", desc: "Submit sitemap index to Google Search Console.", assignee: "Technical SEO Expert", priority: "low", status: "done", due: new Date(Date.now() - 86400000).toISOString() },
-  { id: "seed-5", title: "Reclaim 8 unlinked brand mentions", desc: "Brand monitoring outreach in UAE directories.", assignee: "Off-Page Expert", priority: "high", status: "todo", due: new Date(Date.now() + 345600000).toISOString() },
-  { id: "seed-6", title: "Improve LCP on /pricing (3.1s → <2.0s)", desc: "Optimize hero images and font preload tags.", assignee: "Technical SEO Expert", priority: "critical", status: "inprogress", due: new Date().toISOString() },
 ];
 
 const SCRYPT_PREFIX = "scrypt$";
@@ -95,56 +95,6 @@ async function main() {
     if (found.length === 0) {
       await d.insert(kanbanTaskTemplates).values(tpl);
       console.log(`✓ task template seeded: ${tpl.name}`);
-    }
-  }
-
-  for (const t of DEFAULT_TASKS) {
-    const found = await d.select().from(kanbanTasks).where(eq(kanbanTasks.id, t.id)).limit(1);
-    if (found.length === 0) {
-      await d.insert(kanbanTasks).values(t);
-      console.log(`✓ kanban task seeded: ${t.title}`);
-    }
-  }
-
-  const INITIAL_AUTOMATION_FLOWS = [
-    { id: "l1", name: "Dubai suburb landing page generator", desc: "Auto-create localized pages for Marina, JLT, Downtown, Business Bay, Deira, JVC, Al Barsha, Palm Jumeirah, Silicon Oasis.", category: "local", cadence: "weekly", status: "running", lastRun: "2h ago", successRate: 96 },
-    { id: "l2", name: "Local schema & NAP sync", desc: "Keep LocalBusiness / CleaningService JSON-LD + NAP consistent across all UAE listings.", category: "local", cadence: "daily", status: "running", lastRun: "6h ago", successRate: 99 },
-    { id: "l3", name: "Arabic / English localization", desc: "Auto-translate meta, headings and service pages with hreflang ar-AE / en-AE tagging.", category: "local", cadence: "weekly", status: "running", lastRun: "1d ago", successRate: 92 },
-    { id: "g1", name: "GBP weekly post publisher", desc: "Publish offers, service highlights and photos on Google Business Profile every Monday.", category: "gbp", cadence: "weekly", status: "running", lastRun: "3d ago", successRate: 100 },
-    { id: "g2", name: "GBP Q&A auto-responder", desc: "Detect new questions on GBP and draft responses using service FAQ knowledge base.", category: "gbp", cadence: "realtime", status: "paused", lastRun: "12h ago", successRate: 88 },
-    { id: "g3", name: "Service area & hours sync", desc: "Update service areas across Dubai zones and public UAE holiday hours automatically.", category: "gbp", cadence: "monthly", status: "running", lastRun: "12d ago", successRate: 100 },
-    { id: "r1", name: "Post-service review request", desc: "Trigger WhatsApp + email review requests 2h after job completion in CRM.", category: "reviews", cadence: "realtime", status: "running", lastRun: "18m ago", successRate: 94 },
-    { id: "r2", name: "Review reply drafter", desc: "Draft polite bilingual replies to new Google & Trustpilot reviews; flag < 4★ for human review.", category: "reviews", cadence: "hourly", status: "running", lastRun: "40m ago", successRate: 97 },
-    { id: "r3", name: "Negative-review alert", desc: "Notify manager on Slack + email within 5 min of any 1–3★ review across UAE platforms.", category: "reviews", cadence: "realtime", status: "running", lastRun: "2h ago", successRate: 100 },
-    { id: "c1", name: "Service page meta refresh", desc: "Rewrite outdated meta titles/descriptions for deep-clean, sofa, carpet, move-in/out pages.", category: "onpage", cadence: "weekly", status: "running", lastRun: "4d ago", successRate: 91 },
-    { id: "c2", name: "Blog brief & draft factory", desc: "Generate briefs for Dubai-intent queries and produce first drafts.", category: "onpage", cadence: "weekly", status: "running", lastRun: "1d ago", successRate: 89 },
-    { id: "c3", name: "Internal linking bot", desc: "Suggest & apply internal links between service, area and blog pages.", category: "onpage", cadence: "daily", status: "running", lastRun: "5h ago", successRate: 95 },
-    { id: "b1", name: "UAE directory submission", desc: "Submit business to Yellow Pages UAE, Dubai Chamber, Connect.ae, Yalla, and 20+ local directories.", category: "offpage", cadence: "monthly", status: "running", lastRun: "9d ago", successRate: 87 },
-    { id: "b2", name: "Guest-post outreach", desc: "Prospect UAE lifestyle / real-estate blogs and send personalized pitches.", category: "offpage", cadence: "weekly", status: "paused", lastRun: "6d ago", successRate: 62 },
-    { id: "b3", name: "Broken-link reclamation", desc: "Find UAE sites linking to dead cleaning-service pages and pitch replacement.", category: "offpage", cadence: "monthly", status: "draft", lastRun: "—", successRate: 0 },
-    { id: "t1", name: "Core Web Vitals monitor", desc: "Alert when LCP > 2.5s or CLS > 0.1 on any tracked Dubai service page.", category: "technical", cadence: "hourly", status: "running", lastRun: "22m ago", successRate: 99 },
-    { id: "t2", name: "Indexation & crawl audit", desc: "Weekly scan of robots.txt, sitemap, indexation and canonical issues.", category: "technical", cadence: "weekly", status: "running", lastRun: "2d ago", successRate: 98 },
-    { id: "t3", name: "Uptime & SSL watcher", desc: "Ping every 5 min from UAE region; alert on downtime or SSL expiry.", category: "technical", cadence: "realtime", status: "running", lastRun: "3m ago", successRate: 100 },
-    { id: "rs1", name: "Dubai keyword miner", desc: "Discover new intent keywords (deep clean, sofa shampoo) with UAE volume.", category: "research", cadence: "weekly", status: "running", lastRun: "3d ago", successRate: 93 },
-    { id: "rs2", name: "Competitor SERP tracker", desc: "Track ServiceMarket, Justmop, Matic positions daily on 200+ UAE queries.", category: "research", cadence: "daily", status: "running", lastRun: "7h ago", successRate: 100 },
-    { id: "rp1", name: "Weekly executive report", desc: "Email PDF report every Sunday: rankings, GBP calls, reviews, traffic.", category: "reporting", cadence: "weekly", status: "running", lastRun: "6d ago", successRate: 100 },
-  ];
-
-  for (const flow of INITIAL_AUTOMATION_FLOWS) {
-    const found = await d.select().from(automationFlows).where(eq(automationFlows.id, flow.id)).limit(1);
-    if (found.length === 0) {
-      await d.insert(automationFlows).values({
-        id: flow.id,
-        name: flow.name,
-        desc: flow.desc,
-        category: flow.category,
-        cadence: flow.cadence,
-        status: flow.status,
-        lastRun: flow.lastRun,
-        successRate: flow.successRate,
-        assignedAgents: [],
-      });
-      console.log(`✓ automation flow seeded: ${flow.name}`);
     }
   }
 

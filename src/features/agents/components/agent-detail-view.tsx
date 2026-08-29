@@ -168,6 +168,9 @@ export function AgentDetailView({ id }: { id: string }) {
               />
             </div>
           </div>
+          <p className="border-t border-slate-800/70 px-6 py-2 text-[10px] text-slate-500">
+            Active/Notify are stored locally in this browser — they don't yet pause real task execution or send real notifications.
+          </p>
         </section>
 
         {/* Main grid */}
@@ -226,6 +229,7 @@ export function AgentDetailView({ id }: { id: string }) {
                         Cancel
                       </Button>
                     </div>
+                    <p className="text-[11px] text-slate-500">Stored locally in this browser only — not saved to the server.</p>
                   </div>
                 )}
                 <ul className="space-y-2">
@@ -393,6 +397,10 @@ export function AgentDetailView({ id }: { id: string }) {
             <PerformanceCard agentName={displayTitle} accent={expert.accent} />
 
             <Card title="Agent settings" icon={<Settings2 className="h-4 w-4" />} accent={expert.accent}>
+              <p className="mb-3 text-[11px] text-slate-500">
+                Stored locally in this browser as your own configuration reference — not yet enforced by real task
+                execution (every real job always runs through the AKS Worker regardless of the Model field above).
+              </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <SettingRow icon={<Gauge className="h-4 w-4" />} label="Default priority">
                   <select
@@ -677,6 +685,9 @@ function MemorySection({
             <Plus className="mr-1 h-3.5 w-3.5" /> Save to memory
           </Button>
         </div>
+        <p className="text-[11px] text-slate-500">
+          Stored locally in this browser as your own reference notes — not yet fed into this agent's real AI prompts.
+        </p>
 
         <div className="max-h-[280px] space-y-2 overflow-auto pr-1">
           {memories.map((m) => (
@@ -709,7 +720,7 @@ function MemorySection({
 function LogsSection({ logs, clearLogs, accent }: { logs: AgentProfile["logs"]; clearLogs: () => void; accent: string }) {
   return (
     <Card
-      title={`Activity & audit log (${logs.length})`}
+      title={`Local activity notes (${logs.length})`}
       icon={<ScrollText className="h-4 w-4" />}
       accent={accent}
       action={
@@ -720,6 +731,9 @@ function LogsSection({ logs, clearLogs, accent }: { logs: AgentProfile["logs"]; 
         ) : undefined
       }
     >
+      <p className="mb-2 text-[11px] text-slate-500">
+        Stored locally in this browser only. For the real, server-wide history of every task action, see the Kanban board's History button.
+      </p>
       <div className="max-h-[240px] space-y-1.5 overflow-auto font-mono text-[11px] pr-1">
         {logs.map((l) => (
           <div key={l.id} className="flex items-start gap-2 rounded border border-slate-900 bg-slate-950/80 p-2">

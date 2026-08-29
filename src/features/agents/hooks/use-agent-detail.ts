@@ -71,20 +71,49 @@ export function useAgentDetail(id: string) {
     }));
   };
 
-  const submitTask = () => {
+  // Real task creation: POSTs a genuine kanban_tasks row (the same real
+  // Kanban board /agent-dashboard reads) rather than only a local-storage
+  // entry -- previously "Schedule task" here looked identical to real task
+  // assignment but never left the browser. The local `tasks` list below is
+  // still kept as this agent profile's own activity view of what it has
+  // been assigned, now mirroring what's genuinely in Postgres instead of
+  // being the only copy that ever existed.
+  const submitTask = async () => {
     if (!taskTitle.trim()) return;
+    const title = taskTitle.trim();
+    const taskAssignee = assignee || assigneeOptions[0] || "Unassigned";
     const task: Task = {
       id: crypto.randomUUID(),
-      title: taskTitle.trim(),
-      assignee: assignee || assigneeOptions[0] || "Unassigned",
+      title,
+      assignee: taskAssignee,
       due: due || new Date().toISOString().slice(0, 16),
       status: "pending",
       priority,
     };
     setProfile((p) => ({ ...p, tasks: [task, ...p.tasks] }));
-    appendLog("assignment", `Scheduled "${task.title}" → ${task.assignee} (${task.priority ?? "medium"})`);
     setTaskTitle("");
     setDue("");
+
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          assignee: taskAssignee,
+          priority,
+          status: "todo",
+        }),
+      });
+      const json = await res.json();
+      if (json?.success) {
+        appendLog("assignment", `Scheduled "${title}" → ${taskAssignee} (${priority ?? "medium"}) — added to the real Kanban board`);
+      } else {
+        appendLog("system", `"${title}" saved here, but failed to reach the Kanban board: ${json?.error || "unknown error"}`);
+      }
+    } catch (err: any) {
+      appendLog("system", `"${title}" saved here, but failed to reach the Kanban board: ${err.message || "network error"}`);
+    }
   };
 
   const toggleTask = (tid: string) => {

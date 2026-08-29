@@ -97,7 +97,23 @@ function AgencyHealthPage() {
               <div>
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider">Data Source Audit &amp; Synchronization</h3>
                 <p className="text-xs text-slate-400">
-                  <span className="text-emerald-300 font-semibold">Safaeewala Cleaning Services</span> is synced with <span className="font-mono text-cyan-300">Live GA4 Data API (Property 377896920)</span>. Remaining sites display connected dashboard context profiles.
+                  {(() => {
+                    const gaConnectedSites = allSites.filter((s) => s.gaConnected);
+                    if (gaConnectedSites.length === 0) {
+                      return "No sites have Google Analytics connected yet.";
+                    }
+                    if (gaConnectedSites.length === 1) {
+                      const s = gaConnectedSites[0];
+                      return (
+                        <>
+                          <span className="text-emerald-300 font-semibold">{s.label}</span> is synced with{" "}
+                          <span className="font-mono text-cyan-300">Live GA4 Data API ({s.gaProperty || "connected property"})</span>.{" "}
+                          {allSites.length > 1 && `${allSites.length - 1} other site(s) display connected dashboard context profiles.`}
+                        </>
+                      );
+                    }
+                    return `${gaConnectedSites.length} of ${allSites.length} sites are synced with the Live GA4 Data API.`;
+                  })()}
                 </p>
               </div>
             </div>

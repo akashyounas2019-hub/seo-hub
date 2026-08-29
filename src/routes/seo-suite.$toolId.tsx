@@ -5,9 +5,7 @@ import {
   ArrowLeft,
   ChevronRight,
   PlayCircle,
-  Download,
   Copy,
-  History,
   Sparkles,
   Zap,
   ShieldCheck,
@@ -191,14 +189,6 @@ function SeoToolPage() {
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">{tool.description}</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 md:justify-end">
-              <button className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
-                <History className="h-4 w-4" /> Runs
-              </button>
-              <button className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
-                <Download className="h-4 w-4" /> Export
-              </button>
-            </div>
           </div>
         </section>
 
@@ -246,55 +236,18 @@ function SeoToolPage() {
                 </div>
               ))}
 
-              <details className="rounded-lg border border-slate-800 bg-slate-950/40 open:bg-slate-950/60">
-                <summary className="cursor-pointer list-none px-3 py-2 text-[12px] text-slate-300 hover:text-cyan-200">
-                  Advanced options
-                </summary>
-                <div className="grid gap-3 px-3 pb-3 pt-1 sm:grid-cols-2">
-                  <label className="text-[11px] uppercase tracking-wider text-slate-500">
-                    Market
-                    <select className="mt-1 w-full rounded-md border border-slate-800 bg-slate-950/60 px-2 py-1.5 text-[12px] normal-case text-slate-200 focus:border-cyan-400/40">
-                      <option>UAE · Dubai</option>
-                      <option>UAE · Abu Dhabi</option>
-                      <option>UAE · Sharjah</option>
-                    </select>
-                  </label>
-                  <label className="text-[11px] uppercase tracking-wider text-slate-500">
-                    Language
-                    <select className="mt-1 w-full rounded-md border border-slate-800 bg-slate-950/60 px-2 py-1.5 text-[12px] normal-case text-slate-200 focus:border-cyan-400/40">
-                      <option>English + Arabic</option>
-                      <option>English</option>
-                      <option>Arabic</option>
-                    </select>
-                  </label>
-                </div>
-              </details>
             </div>
 
-            <div className="mt-5 flex items-center justify-between border-t border-slate-800 pt-4">
+            <div className="mt-5 flex items-center justify-end border-t border-slate-800 pt-4">
               <button
-                type="button"
-                className="text-[11px] text-slate-500 hover:text-cyan-300"
+                type="submit"
+                disabled={running}
+                title={reportMarkdown ? "Runs a real new AI call — not a cached replay" : undefined}
+                className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${tool.accent} px-4 py-2 text-xs font-semibold text-slate-950 shadow hover:brightness-110 disabled:cursor-wait disabled:opacity-70`}
               >
-                Save as preset
+                {reportMarkdown ? <RefreshCw className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+                {running ? (statusLabel || "Running…") : reportMarkdown ? "Regenerate" : "Run analysis"}
               </button>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200"
-                >
-                  Save draft
-                </button>
-                <button
-                  type="submit"
-                  disabled={running}
-                  title={reportMarkdown ? "Runs a real new AI call — not a cached replay" : undefined}
-                  className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${tool.accent} px-4 py-2 text-xs font-semibold text-slate-950 shadow hover:brightness-110 disabled:cursor-wait disabled:opacity-70`}
-                >
-                  {reportMarkdown ? <RefreshCw className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
-                  {running ? (statusLabel || "Running…") : reportMarkdown ? "Regenerate" : "Run analysis"}
-                </button>
-              </div>
             </div>
           </form>
 

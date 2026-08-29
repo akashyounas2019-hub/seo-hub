@@ -35,7 +35,6 @@ import { Route as ScoutTeamIndexRouteImport } from './routes/scout-team.index'
 import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scoutId'
 import { Route as SeoSuiteIndexRouteImport } from './routes/seo-suite.index'
 import { Route as SeoSuiteToolIdRouteImport } from './routes/seo-suite.$toolId'
-import { Route as SitesSiteIdRouteImport } from './routes/sites.$siteId'
 import { Route as ApiAgentsActivityRouteImport } from './routes/api.agents.activity'
 import { Route as ApiAgentsMetricsRouteImport } from './routes/api.agents.metrics'
 import { Route as ApiAlertsIndexRouteImport } from './routes/api.alerts.index'
@@ -226,11 +225,6 @@ const SeoSuiteIndexRoute = SeoSuiteIndexRouteImport.update({
 const SeoSuiteToolIdRoute = SeoSuiteToolIdRouteImport.update({
   id: '/seo-suite/$toolId',
   path: '/seo-suite/$toolId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitesSiteIdRoute = SitesSiteIdRouteImport.update({
-  id: '/sites/$siteId',
-  path: '/sites/$siteId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAgentsActivityRoute = ApiAgentsActivityRouteImport.update({
@@ -556,7 +550,6 @@ export interface FileRoutesByFullPath {
   '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
-  '/sites/$siteId': typeof SitesSiteIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
@@ -644,7 +637,6 @@ export interface FileRoutesByTo {
   '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
-  '/sites/$siteId': typeof SitesSiteIdRoute
   '/agents': typeof AgentsIndexRoute
   '/analytics': typeof AnalyticsIndexRoute
   '/scout-team': typeof ScoutTeamIndexRoute
@@ -733,7 +725,6 @@ export interface FileRoutesById {
   '/api/approval-rules': typeof ApiApprovalRulesRouteWithChildren
   '/scout-team/$scoutId': typeof ScoutTeamScoutIdRoute
   '/seo-suite/$toolId': typeof SeoSuiteToolIdRoute
-  '/sites/$siteId': typeof SitesSiteIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
@@ -823,7 +814,6 @@ export interface FileRouteTypes {
     | '/api/approval-rules'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
-    | '/sites/$siteId'
     | '/agents/'
     | '/analytics/'
     | '/scout-team/'
@@ -911,7 +901,6 @@ export interface FileRouteTypes {
     | '/api/approval-rules'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
-    | '/sites/$siteId'
     | '/agents'
     | '/analytics'
     | '/scout-team'
@@ -999,7 +988,6 @@ export interface FileRouteTypes {
     | '/api/approval-rules'
     | '/scout-team/$scoutId'
     | '/seo-suite/$toolId'
-    | '/sites/$siteId'
     | '/agents/'
     | '/analytics/'
     | '/scout-team/'
@@ -1088,7 +1076,6 @@ export interface RootRouteChildren {
   ApiApprovalRulesRoute: typeof ApiApprovalRulesRouteWithChildren
   ScoutTeamScoutIdRoute: typeof ScoutTeamScoutIdRoute
   SeoSuiteToolIdRoute: typeof SeoSuiteToolIdRoute
-  SitesSiteIdRoute: typeof SitesSiteIdRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
   AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   ScoutTeamIndexRoute: typeof ScoutTeamIndexRoute
@@ -1318,13 +1305,6 @@ declare module '@tanstack/react-router' {
       path: '/seo-suite/$toolId'
       fullPath: '/seo-suite/$toolId'
       preLoaderRoute: typeof SeoSuiteToolIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sites/$siteId': {
-      id: '/sites/$siteId'
-      path: '/sites/$siteId'
-      fullPath: '/sites/$siteId'
-      preLoaderRoute: typeof SitesSiteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/agents/activity': {
@@ -1911,7 +1891,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiApprovalRulesRoute: ApiApprovalRulesRouteWithChildren,
   ScoutTeamScoutIdRoute: ScoutTeamScoutIdRoute,
   SeoSuiteToolIdRoute: SeoSuiteToolIdRoute,
-  SitesSiteIdRoute: SitesSiteIdRoute,
   AgentsIndexRoute: AgentsIndexRoute,
   AnalyticsIndexRoute: AnalyticsIndexRoute,
   ScoutTeamIndexRoute: ScoutTeamIndexRoute,

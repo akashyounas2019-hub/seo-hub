@@ -36,6 +36,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { SEO_TOOLS } from "@/lib/seo-tools";
+import { EXPERTS } from "@/lib/agents";
 import agentBot from "@/assets/agent-bot.png";
 
 import {
@@ -76,7 +77,7 @@ const workspaceItems: NavItem[] = [
 const agentItems: NavItem[] = [
   { title: "Agent Dashboard", url: "/agent-dashboard", icon: LayoutDashboard },
   { title: "Knowledge Base", url: "/knowledge-base", icon: Database, badge: "RAG" },
-  { title: "Agents", url: "/", icon: Zap, badge: "12" },
+  { title: "Agents", url: "/", icon: Zap },
   { title: "Assistant", url: "/assistant", icon: Bot },
   { title: "Assign Tasks", url: "/assign-tasks", icon: ClipboardList },
   { title: "Automation", url: "/automation", icon: Workflow },
@@ -452,6 +453,11 @@ export function AppSidebar() {
                   const active = isActive(item.url);
                   const badge = item.url === "/approvals"
                     ? (pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined)
+                    : item.url === "/"
+                    // Real count from EXPERTS (the actual roster rendered
+                    // on the Agents page), not a hardcoded number that
+                    // drifts every time an agent is added/removed.
+                    ? String(EXPERTS.length + EXPERTS.reduce((sum, e) => sum + e.subs.length, 0))
                     : item.badge;
                   return (
                     <SidebarMenuItem key={item.title}>

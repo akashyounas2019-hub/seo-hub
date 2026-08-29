@@ -541,9 +541,9 @@ export const approvalRules = pgTable(
 
 // Real per-URL inventory from a site's own sitemap.xml (src/lib/sitemap-crawler.ts).
 // Replaces the hardcoded pagesTotal/pagesIndexed numbers that used to live in
-// sites.$siteId.tsx's fake SITES lookup -- refreshed on demand from the
-// Knowledge Base page's "Site Pages" tab, not on a schedule (no cron in this
-// app; matches the orchestrator's manual-trigger-only design).
+// a fake per-site fixture -- refreshed on demand from the Knowledge Base
+// page's "Site Pages" tab, not on a schedule (no cron in this app; matches
+// the orchestrator's manual-trigger-only design).
 export const sitePages = pgTable(
   "site_pages",
   {
