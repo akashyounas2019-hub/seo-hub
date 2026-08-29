@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useSite } from "@/lib/site-context";
 import { compileFullKnowledge } from "@/lib/ai-knowledge";
-import type { StructuredKnowledgeBase, KbServiceItem, KbFaqItem } from "@/db/schema";
+import type { StructuredKnowledgeBase, KbServiceItem, KbFaqItem, KbPolicyItem } from "@/db/schema";
 import { BUSINESS_CATEGORIES } from "@/lib/business-categories";
 import { SitePagesPanel } from "@/components/site-pages-panel";
 import { WordPressConnectionPanel } from "@/components/wordpress-connection-panel";
@@ -341,6 +341,94 @@ function KnowledgeBasePage() {
     toast.success("Added new FAQ item");
   };
 
+  const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
+  const [editFaqQ, setEditFaqQ] = useState("");
+  const [editFaqA, setEditFaqA] = useState("");
+
+  const startEditFaq = (f: KbFaqItem) => {
+    setEditingFaqId(f.id);
+    setEditFaqQ(f.question);
+    setEditFaqA(f.answer);
+  };
+
+  const saveEditFaq = (id: string) => {
+    if (!editFaqQ.trim() || !editFaqA.trim()) {
+      toast.error("Question and answer are both required");
+      return;
+    }
+    setStructured((prev) => ({
+      ...prev,
+      faqs: (prev.faqs || []).map((item) =>
+        item.id === id ? { ...item, question: editFaqQ.trim(), answer: editFaqA.trim() } : item,
+      ),
+    }));
+    setEditingFaqId(null);
+    toast.success("FAQ updated — click Save Knowledge Base to persist");
+  };
+
+  const cancelEditFaq = () => setEditingFaqId(null);
+
+  const editingFaq = editingFaqId ? (structured.faqs || []).find((f) => f.id === editingFaqId) || null : null;
+
+  // Policies & Guarantees — full CRUD, matching the same local-state ->
+  // "Save Knowledge Base" persistence pattern as services/FAQs above.
+  const [newPolicyTitle, setNewPolicyTitle] = useState("");
+  const [newPolicyDesc, setNewPolicyDesc] = useState("");
+
+  const addPolicy = () => {
+    if (!newPolicyTitle.trim() || !newPolicyDesc.trim()) return;
+    const item: KbPolicyItem = {
+      id: `pol_${Date.now()}`,
+      title: newPolicyTitle.trim(),
+      description: newPolicyDesc.trim(),
+    };
+    setStructured((prev) => ({
+      ...prev,
+      policies: [...(prev.policies || []), item],
+    }));
+    setNewPolicyTitle("");
+    setNewPolicyDesc("");
+    toast.success("Added new policy");
+  };
+
+  const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null);
+  const [editPolicyTitle, setEditPolicyTitle] = useState("");
+  const [editPolicyDesc, setEditPolicyDesc] = useState("");
+
+  const startEditPolicy = (p: KbPolicyItem) => {
+    setEditingPolicyId(p.id);
+    setEditPolicyTitle(p.title);
+    setEditPolicyDesc(p.description);
+  };
+
+  const saveEditPolicy = (id: string) => {
+    if (!editPolicyTitle.trim() || !editPolicyDesc.trim()) {
+      toast.error("Title and description are both required");
+      return;
+    }
+    setStructured((prev) => ({
+      ...prev,
+      policies: (prev.policies || []).map((item) =>
+        item.id === id ? { ...item, title: editPolicyTitle.trim(), description: editPolicyDesc.trim() } : item,
+      ),
+    }));
+    setEditingPolicyId(null);
+    toast.success("Policy updated — click Save Knowledge Base to persist");
+  };
+
+  const cancelEditPolicy = () => setEditingPolicyId(null);
+
+  const deletePolicy = (id: string, title: string) => {
+    setStructured((prev) => ({
+      ...prev,
+      policies: (prev.policies || []).filter((item) => item.id !== id),
+    }));
+    if (editingPolicyId === id) setEditingPolicyId(null);
+    toast.info(`Removed policy: ${title}`);
+  };
+
+  const editingPolicy = editingPolicyId ? (structured.policies || []).find((p) => p.id === editingPolicyId) || null : null;
+
   const compiledPrompt = compileFullKnowledge({
     siteName: currentSite.label,
     city: currentSite.location,
@@ -546,7 +634,7 @@ function KnowledgeBasePage() {
             {[
               { id: "services", label: "Services & Pricing Catalog", icon: Layers, count: structured.services?.length },
               { id: "brand", label: "Brand Voice & Personas", icon: Sparkles },
-              { id: "faqs", label: "FAQs & Verified Q&A", icon: HelpCircle, count: structured.faqs?.length },
+              { id: "faqs", label: "FAQs", icon: HelpCircle, count: structured.faqs?.length },
               { id: "policies", label: "Policies & Guarantees", icon: ShieldAlert, count: structured.policies?.length },
               { id: "network", label: "Network-Wide Mandates", icon: ShieldCheck },
               { id: "pages", label: "Site Pages", icon: FileText },
@@ -751,35 +839,93 @@ function KnowledgeBasePage() {
                   <div key={f.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="font-semibold text-cyan-200 text-xs">Q: {f.question}</div>
-                      <button
-                        onClick={() => {
-                          setStructured((prev) => ({
-                            ...prev,
-                            faqs: prev.faqs?.filter((item) => item.id !== f.id),
-                          }));
-                          toast.info("FAQ removed");
-                        }}
-                        className="text-xs text-rose-400 hover:underline"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          onClick={() => startEditFaq(f)}
+                          className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+                        >
+                          <Pencil className="h-3 w-3" /> Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            setStructured((prev) => ({
+                              ...prev,
+                              faqs: prev.faqs?.filter((item) => item.id !== f.id),
+                            }));
+                            toast.info("FAQ removed");
+                          }}
+                          className="inline-flex items-center gap-1 rounded-md border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-500/15"
+                        >
+                          <Trash2 className="h-3 w-3" /> Delete
+                        </button>
+                      </div>
                     </div>
                     <div className="mt-1.5 text-xs text-slate-300">A: {f.answer}</div>
                   </div>
                 ))}
+                {(structured.faqs || []).length === 0 && (
+                  <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-6 text-center text-xs text-slate-500">
+                    No FAQs yet. Add one above.
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {/* 4. Policies Tab */}
           {activeTab === "policies" && (
-            <div className="space-y-3">
-              {(structured.policies || []).map((p) => (
-                <div key={p.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-                  <div className="font-semibold text-white text-xs">{p.title}</div>
-                  <div className="mt-1 text-xs text-slate-400">{p.description}</div>
-                </div>
-              ))}
+            <div className="space-y-4">
+              <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+                <input
+                  placeholder="Policy title (e.g. Free Cancellation)"
+                  value={newPolicyTitle}
+                  onChange={(e) => setNewPolicyTitle(e.target.value)}
+                  className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white focus:border-cyan-400/50 focus:outline-none"
+                />
+                <textarea
+                  placeholder="Description (e.g. Free cancellation or reschedule up to 24 hours prior.)"
+                  rows={2}
+                  value={newPolicyDesc}
+                  onChange={(e) => setNewPolicyDesc(e.target.value)}
+                  className="w-full rounded-lg border border-slate-800 bg-slate-900 p-3 text-xs text-white focus:border-cyan-400/50 focus:outline-none"
+                />
+                <button
+                  onClick={addPolicy}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-300"
+                >
+                  <Plus className="h-4 w-4" /> Add Policy
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {(structured.policies || []).map((p) => (
+                  <div key={p.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-semibold text-white text-xs">{p.title}</div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          onClick={() => startEditPolicy(p)}
+                          className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-[11px] text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+                        >
+                          <Pencil className="h-3 w-3" /> Edit
+                        </button>
+                        <button
+                          onClick={() => deletePolicy(p.id, p.title)}
+                          className="inline-flex items-center gap-1 rounded-md border border-rose-500/30 bg-rose-500/5 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-500/15"
+                        >
+                          <Trash2 className="h-3 w-3" /> Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-1 text-xs text-slate-400">{p.description}</div>
+                  </div>
+                ))}
+                {(structured.policies || []).length === 0 && (
+                  <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-6 text-center text-xs text-slate-500">
+                    No policies yet. Add one above.
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -833,6 +979,28 @@ POLICIES: Free cancellation up to 24h prior. Insured & background-checked staff.
           setFeatures={setEditServiceFeatures}
           onSave={() => saveEditService(editingService.id)}
           onCancel={cancelEditService}
+        />
+      )}
+
+      {editingFaq && (
+        <FaqEditDialog
+          question={editFaqQ}
+          setQuestion={setEditFaqQ}
+          answer={editFaqA}
+          setAnswer={setEditFaqA}
+          onSave={() => saveEditFaq(editingFaq.id)}
+          onCancel={cancelEditFaq}
+        />
+      )}
+
+      {editingPolicy && (
+        <PolicyEditDialog
+          title={editPolicyTitle}
+          setTitle={setEditPolicyTitle}
+          description={editPolicyDesc}
+          setDescription={setEditPolicyDesc}
+          onSave={() => saveEditPolicy(editingPolicy.id)}
+          onCancel={cancelEditPolicy}
         />
       )}
     </div>
@@ -962,6 +1130,136 @@ function ServiceEditDialog({
               value={features}
               onChange={(e) => setFeatures(e.target.value)}
               placeholder="e.g. Eco-friendly products, Same-day booking"
+              className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-slate-800 p-4">
+          <button onClick={onCancel} className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800">
+            Cancel
+          </button>
+          <button onClick={onSave} className="rounded-lg bg-cyan-500 px-5 py-2 text-xs font-bold text-slate-950 shadow-md transition hover:bg-cyan-400">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Popup dialog for editing one FAQ item -- same pattern as ServiceEditDialog. */
+function FaqEditDialog({
+  question, setQuestion,
+  answer, setAnswer,
+  onSave,
+  onCancel,
+}: {
+  question: string; setQuestion: (v: string) => void;
+  answer: string; setAnswer: (v: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md" onClick={onCancel}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl"
+      >
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-400 to-blue-500" />
+        <div className="flex items-start justify-between border-b border-slate-800 p-5">
+          <div>
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">FAQs</div>
+            <h2 className="mt-1 text-lg font-bold text-white">Edit FAQ</h2>
+          </div>
+          <button onClick={onCancel} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-slate-400 hover:border-slate-700 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Question</label>
+            <input
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="e.g. Are eco-friendly cleaning supplies included?"
+              className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Answer</label>
+            <textarea
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              rows={4}
+              placeholder="Verified answer for AI response grounding..."
+              className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-slate-800 p-4">
+          <button onClick={onCancel} className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800">
+            Cancel
+          </button>
+          <button onClick={onSave} className="rounded-lg bg-cyan-500 px-5 py-2 text-xs font-bold text-slate-950 shadow-md transition hover:bg-cyan-400">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Popup dialog for editing one policy/guarantee item -- same pattern as ServiceEditDialog. */
+function PolicyEditDialog({
+  title, setTitle,
+  description, setDescription,
+  onSave,
+  onCancel,
+}: {
+  title: string; setTitle: (v: string) => void;
+  description: string; setDescription: (v: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md" onClick={onCancel}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl"
+      >
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-400 to-blue-500" />
+        <div className="flex items-start justify-between border-b border-slate-800 p-5">
+          <div>
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-300/80">Policies & Guarantees</div>
+            <h2 className="mt-1 text-lg font-bold text-white">Edit Policy</h2>
+          </div>
+          <button onClick={onCancel} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-slate-400 hover:border-slate-700 hover:text-white">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Title</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Free Cancellation"
+              className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              placeholder="e.g. Free cancellation or reschedule up to 24 hours prior."
               className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
             />
           </div>
