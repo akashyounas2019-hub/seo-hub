@@ -97,19 +97,7 @@ export async function ensureSchema(): Promise<void> {
 
     await execDDL(`
       DO $$ BEGIN
-        CREATE TYPE site_user_role AS ENUM ('manager','worker');
-      EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-      DO $$ BEGIN
         CREATE TYPE lead_status AS ENUM ('new','contacted','qualified','won','lost');
-      EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-      DO $$ BEGIN
-        CREATE TYPE task_status AS ENUM ('todo','in_progress','blocked','in_review','done','cancelled');
-      EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-      DO $$ BEGIN
-        CREATE TYPE task_priority AS ENUM ('low','normal','high','urgent');
       EXCEPTION WHEN duplicate_object THEN null; END $$;
 
       DO $$ BEGIN
@@ -204,14 +192,6 @@ export async function ensureSchema(): Promise<void> {
       ALTER TABLE users ALTER COLUMN role SET DEFAULT 'viewer';
       CREATE UNIQUE INDEX IF NOT EXISTS users_email_uq ON users(email);
 
-      CREATE TABLE IF NOT EXISTS site_users (
-        site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
-        user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        role site_user_role NOT NULL,
-        created_at timestamptz NOT NULL DEFAULT now(),
-        PRIMARY KEY (site_id, user_id)
-      );
-
       CREATE TABLE IF NOT EXISTS sessions (
         token_hash text PRIMARY KEY,
         user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -223,22 +203,6 @@ export async function ensureSchema(): Promise<void> {
       );
       CREATE INDEX IF NOT EXISTS sessions_user_idx ON sessions(user_id);
       CREATE INDEX IF NOT EXISTS sessions_expires_idx ON sessions(expires_at);
-
-      CREATE TABLE IF NOT EXISTS tasks (
-        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-        site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
-        title text NOT NULL,
-        description text,
-        status task_status NOT NULL DEFAULT 'todo',
-        priority task_priority NOT NULL DEFAULT 'normal',
-        assignee_id uuid REFERENCES users(id) ON DELETE SET NULL,
-        creator_id uuid REFERENCES users(id) ON DELETE SET NULL,
-        template_id uuid,
-        due_at timestamptz,
-        completed_at timestamptz,
-        created_at timestamptz NOT NULL DEFAULT now(),
-        updated_at timestamptz NOT NULL DEFAULT now()
-      );
 
       CREATE TABLE IF NOT EXISTS org_settings (
         id text PRIMARY KEY DEFAULT 'singleton',
@@ -503,6 +467,26 @@ export async function ensureSchema(): Promise<void> {
       );
       CREATE INDEX IF NOT EXISTS qa_findings_run_idx ON qa_findings(run_id);
     `);
+
+    // One-time cleanup: task_comments/tasks/task_templates/site_users were
+    // an older task-management model fully superseded by kanban_tasks +
+    // kanban_task_templates, with zero application code left reading or
+    // writing any of them (confirmed via full-codebase audit). Drop order
+    // respects the real FK chain (task_comments -> tasks -> task_templates)
+    // that existed for the two of these that ever actually had DDL run
+    // (tasks, site_users); task_templates/task_comments never had CREATE
+    // TABLE statements in this file at all, so IF EXISTS is a no-op for
+    // them, kept here only for safety.
+    await execDDL(`
+      DROP TABLE IF EXISTS task_comments;
+      DROP TABLE IF EXISTS tasks;
+      DROP TABLE IF EXISTS task_templates;
+      DROP TABLE IF EXISTS site_users;
+      DROP TYPE IF EXISTS task_status;
+      DROP TYPE IF EXISTS task_priority;
+      DROP TYPE IF EXISTS site_user_role;
+    `);
+
     _migrated = true;
   } finally {
     if (isPg) {

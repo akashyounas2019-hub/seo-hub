@@ -7,7 +7,6 @@ import {
   boolean,
   jsonb,
   integer,
-  primaryKey,
   uniqueIndex,
   index,
   pgEnum,
@@ -17,7 +16,6 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const userRoleEnum = pgEnum("user_role", ["owner", "admin", "head_of_department", "editor", "viewer"]);
-export const siteUserRoleEnum = pgEnum("site_user_role", ["manager", "worker"]);
 export const leadStatusEnum = pgEnum("lead_status", [
   "new",
   "contacted",
@@ -25,15 +23,6 @@ export const leadStatusEnum = pgEnum("lead_status", [
   "won",
   "lost",
 ]);
-export const taskStatusEnum = pgEnum("task_status", [
-  "todo",
-  "in_progress",
-  "blocked",
-  "in_review",
-  "done",
-  "cancelled",
-]);
-export const taskPriorityEnum = pgEnum("task_priority", ["low", "normal", "high", "urgent"]);
 
 export interface KbServiceItem {
   id: string;
@@ -251,23 +240,6 @@ export const users = pgTable(
   }),
 );
 
-export const siteUsers = pgTable(
-  "site_users",
-  {
-    siteId: uuid("site_id")
-      .notNull()
-      .references(() => sites.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    role: siteUserRoleEnum("role").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.siteId, t.userId] }),
-  }),
-);
-
 export const sessions = pgTable(
   "sessions",
   {
@@ -284,69 +256,6 @@ export const sessions = pgTable(
   (t) => ({
     userIdx: index("sessions_user_idx").on(t.userId),
     expiresIdx: index("sessions_expires_idx").on(t.expiresAt),
-  }),
-);
-
-export const taskTemplates = pgTable(
-  "task_templates",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    siteId: uuid("site_id").references(() => sites.id, { onDelete: "cascade" }),
-    title: text("title").notNull(),
-    description: text("description"),
-    cadence: text("cadence").notNull(),
-    defaultAssigneeId: uuid("default_assignee_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    defaultPriority: taskPriorityEnum("default_priority").notNull().default("normal"),
-    active: boolean("active").notNull().default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    lastRunAt: timestamp("last_run_at", { withTimezone: true }),
-  },
-  (t) => ({
-    siteIdx: index("task_templates_site_idx").on(t.siteId),
-  }),
-);
-
-export const tasks = pgTable(
-  "tasks",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    siteId: uuid("site_id")
-      .notNull()
-      .references(() => sites.id, { onDelete: "cascade" }),
-    title: text("title").notNull(),
-    description: text("description"),
-    status: taskStatusEnum("status").notNull().default("todo"),
-    priority: taskPriorityEnum("priority").notNull().default("normal"),
-    assigneeId: uuid("assignee_id").references(() => users.id, { onDelete: "set null" }),
-    creatorId: uuid("creator_id").references(() => users.id, { onDelete: "set null" }),
-    templateId: uuid("template_id").references(() => taskTemplates.id, { onDelete: "set null" }),
-    dueAt: timestamp("due_at", { withTimezone: true }),
-    completedAt: timestamp("completed_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => ({
-    siteIdx: index("tasks_site_idx").on(t.siteId),
-    assigneeIdx: index("tasks_assignee_idx").on(t.assigneeId),
-    statusDueIdx: index("tasks_status_due_idx").on(t.status, t.dueAt),
-  }),
-);
-
-export const taskComments = pgTable(
-  "task_comments",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    taskId: uuid("task_id")
-      .notNull()
-      .references(() => tasks.id, { onDelete: "cascade" }),
-    authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
-    body: text("body").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => ({
-    taskIdx: index("task_comments_task_idx").on(t.taskId, t.createdAt),
   }),
 );
 
@@ -712,7 +621,6 @@ export const qaFindings = pgTable(
 export type Site = typeof sites.$inferSelect;
 export type NewSite = typeof sites.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
-export type Task = typeof tasks.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type ClaudeJob = typeof claudeJobs.$inferSelect;
 export type KanbanTask = typeof kanbanTasks.$inferSelect;

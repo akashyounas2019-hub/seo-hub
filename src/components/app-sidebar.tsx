@@ -28,7 +28,6 @@ import {
   TestTube2,
   ScrollText,
   SlidersHorizontal,
-  Sparkles,
   Globe,
   Check,
   Plus,
@@ -102,7 +101,6 @@ const intelligenceItems: NavItem[] = [
 // Integrations — external systems this console plugs into
 const integrationItems: (NavItem & { soon?: boolean })[] = [
   { title: "Connected Sites", url: "/connected-sites", icon: Cloud },
-  { title: "Lovable Cloud", url: "/integrations/lovable", icon: Sparkles, soon: true },
   { title: "GHL (GoHighLevel)", url: "/integrations/ghl", icon: Rocket, soon: true },
   { title: "GitHub Repos", url: "/github/repos", icon: Github, soon: true },
   { title: "Deployments", url: "/github/deployments", icon: Cloud, soon: true },
@@ -710,7 +708,7 @@ export function AppSidebar() {
           ) : null}
         </SidebarGroup>
 
-        {/* Integrations — Lovable, GHL, GitHub, Connected Sites */}
+        {/* Integrations — GHL, GitHub, Connected Sites */}
         <SidebarGroup>
           {!collapsed && (
             <SidebarGroupLabel asChild className="text-cyan-200 hover:text-cyan-100">

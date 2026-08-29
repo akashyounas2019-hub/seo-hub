@@ -41,7 +41,10 @@ export function formatStructuredKb(kb?: StructuredKnowledgeBase | null): string 
   if (kb.services && kb.services.length > 0) {
     const serviceLines = kb.services.map((s) => {
       let head = `* **${s.name}**`;
-      if (s.priceAed) head += ` — From ${s.priceAed} AED`;
+      // Show exactly what's entered in the price field -- no "AED" suffix
+      // auto-appended. Whatever currency/format the operator typed (or
+      // didn't) is what the AI agent sees, not an assumed one.
+      if (s.priceAed) head += ` — From ${s.priceAed}`;
       if (s.turnaround) head += ` (${s.turnaround})`;
       const details: string[] = [];
       if (s.category) details.push(`Category: ${s.category}`);

@@ -595,7 +595,7 @@ function KnowledgeBasePage() {
                   className="rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-1.5 text-xs text-slate-100 focus:border-cyan-400/50 focus:outline-none"
                 />
                 <input
-                  placeholder="Price AED (e.g. 299)"
+                  placeholder="Price (e.g. 299 AED)"
                   value={newServicePrice}
                   onChange={(e) => setNewServicePrice(e.target.value)}
                   className="rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-1.5 text-xs text-slate-100 focus:border-cyan-400/50 focus:outline-none"
@@ -614,7 +614,7 @@ function KnowledgeBasePage() {
                     <tr>
                       <th className="px-4 py-2.5 text-left">Service Name</th>
                       <th className="px-4 py-2.5 text-left">Category</th>
-                      <th className="px-4 py-2.5 text-left">Price (AED)</th>
+                      <th className="px-4 py-2.5 text-left">Price</th>
                       <th className="px-4 py-2.5 text-left">Turnaround Time</th>
                       <th className="px-4 py-2.5 text-right">Action</th>
                     </tr>
@@ -627,7 +627,7 @@ function KnowledgeBasePage() {
                           {s.description && <div className="text-[11px] text-slate-400">{s.description}</div>}
                         </td>
                         <td className="px-4 py-2.5 text-slate-300">{s.category || "General"}</td>
-                        <td className="px-4 py-2.5 font-mono text-cyan-300">{s.priceAed ? `${s.priceAed} AED` : "Quote"}</td>
+                        <td className="px-4 py-2.5 font-mono text-cyan-300">{s.priceAed || "Quote"}</td>
                         <td className="px-4 py-2.5 text-slate-400">{s.turnaround || "Same Day"}</td>
                         <td className="px-4 py-2.5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -923,11 +923,11 @@ function ServiceEditDialog({
               />
             </div>
             <div>
-              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Price (AED)</label>
+              <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Price</label>
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="e.g. 299"
+                placeholder="e.g. 299 AED, $50, or Contact for quote"
                 className="mt-1.5 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white font-mono focus:border-cyan-400 focus:outline-none"
               />
             </div>
