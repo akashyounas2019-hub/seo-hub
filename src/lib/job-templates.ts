@@ -85,9 +85,19 @@ Provide a structured Markdown breakdown:
     label: "AKS Assistant Chat Response",
     description: "Generates an intelligent agent response for user query",
     buildPrompt(input) {
-      return `You are the Leader Bot of the AKS SEO Agent Fleet.
-User query: ${input.message}
-History: ${JSON.stringify(input.history || [])}`;
+      const history = (input.history || []) as Array<{ role: string; text: string }>;
+      const historyBlock = history.length
+        ? history.slice(-10).map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`).join("\n")
+        : "(no prior messages)";
+      return `You are the Leader Bot of the AKS SEO Agent Fleet, chatting with the site owner/operator.
+
+CONVERSATION HISTORY (most recent last):
+${historyBlock}
+
+USER'S NEW MESSAGE:
+${input.message}
+
+Answer helpfully and specifically. Ground any GA4/GSC/GBP/Cloudflare/alert numbers ONLY in the Knowledge Base and data context provided above (if any) — if no live data context was attached to this request, say so plainly and suggest the user check the relevant dashboard tab (Analytics, Alerts, etc.) instead of inventing figures. Keep the response concise Markdown (headings, bullet points, bold key numbers) suitable for a chat bubble.`;
     },
   },
 

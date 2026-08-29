@@ -44,6 +44,9 @@ import { Route as ApiAlertsIndexRouteImport } from './routes/api.alerts.index'
 import { Route as ApiAlertsIdRouteImport } from './routes/api.alerts.$id'
 import { Route as ApiAnalyticsSyncRouteImport } from './routes/api.analytics.sync'
 import { Route as ApiApprovalRulesIdRouteImport } from './routes/api.approval-rules.$id'
+import { Route as ApiAuthLoginRouteImport } from './routes/api.auth.login'
+import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
+import { Route as ApiAuthSessionRouteImport } from './routes/api.auth.session'
 import { Route as ApiAutomationFlowsRouteImport } from './routes/api.automation.flows'
 import { Route as ApiCloudflareAiShieldRouteImport } from './routes/api.cloudflare.ai-shield'
 import { Route as ApiEventsIngestRouteImport } from './routes/api.events.ingest'
@@ -267,6 +270,21 @@ const ApiApprovalRulesIdRoute = ApiApprovalRulesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ApiApprovalRulesRoute,
+} as any)
+const ApiAuthLoginRoute = ApiAuthLoginRouteImport.update({
+  id: '/api/auth/login',
+  path: '/api/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
+  id: '/api/auth/logout',
+  path: '/api/auth/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSessionRoute = ApiAuthSessionRouteImport.update({
+  id: '/api/auth/session',
+  path: '/api/auth/session',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAutomationFlowsRoute = ApiAutomationFlowsRouteImport.update({
   id: '/api/automation/flows',
@@ -538,6 +556,9 @@ export interface FileRoutesByFullPath {
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
@@ -621,6 +642,9 @@ export interface FileRoutesByTo {
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
@@ -705,6 +729,9 @@ export interface FileRoutesById {
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
   '/api/approval-rules/$id': typeof ApiApprovalRulesIdRoute
+  '/api/auth/login': typeof ApiAuthLoginRoute
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
@@ -790,6 +817,9 @@ export interface FileRouteTypes {
     | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/approval-rules/$id'
+    | '/api/auth/login'
+    | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
@@ -873,6 +903,9 @@ export interface FileRouteTypes {
     | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/approval-rules/$id'
+    | '/api/auth/login'
+    | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
@@ -956,6 +989,9 @@ export interface FileRouteTypes {
     | '/api/alerts/$id'
     | '/api/analytics/sync'
     | '/api/approval-rules/$id'
+    | '/api/auth/login'
+    | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
     | '/api/events/ingest'
@@ -1039,6 +1075,9 @@ export interface RootRouteChildren {
   ApiAgentsMetricsRoute: typeof ApiAgentsMetricsRoute
   ApiAlertsIdRoute: typeof ApiAlertsIdRoute
   ApiAnalyticsSyncRoute: typeof ApiAnalyticsSyncRoute
+  ApiAuthLoginRoute: typeof ApiAuthLoginRoute
+  ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiAutomationFlowsRoute: typeof ApiAutomationFlowsRouteWithChildren
   ApiCloudflareAiShieldRoute: typeof ApiCloudflareAiShieldRoute
   ApiEventsIngestRoute: typeof ApiEventsIngestRoute
@@ -1317,6 +1356,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/approval-rules/$id'
       preLoaderRoute: typeof ApiApprovalRulesIdRouteImport
       parentRoute: typeof ApiApprovalRulesRoute
+    }
+    '/api/auth/login': {
+      id: '/api/auth/login'
+      path: '/api/auth/login'
+      fullPath: '/api/auth/login'
+      preLoaderRoute: typeof ApiAuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/logout': {
+      id: '/api/auth/logout'
+      path: '/api/auth/logout'
+      fullPath: '/api/auth/logout'
+      preLoaderRoute: typeof ApiAuthLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/session': {
+      id: '/api/auth/session'
+      path: '/api/auth/session'
+      fullPath: '/api/auth/session'
+      preLoaderRoute: typeof ApiAuthSessionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/automation/flows': {
       id: '/api/automation/flows'
@@ -1822,6 +1882,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAgentsMetricsRoute: ApiAgentsMetricsRoute,
   ApiAlertsIdRoute: ApiAlertsIdRoute,
   ApiAnalyticsSyncRoute: ApiAnalyticsSyncRoute,
+  ApiAuthLoginRoute: ApiAuthLoginRoute,
+  ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiAutomationFlowsRoute: ApiAutomationFlowsRouteWithChildren,
   ApiCloudflareAiShieldRoute: ApiCloudflareAiShieldRoute,
   ApiEventsIngestRoute: ApiEventsIngestRoute,

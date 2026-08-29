@@ -1,104 +1,63 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
-import { Bot, Send, Sparkles, Zap, Cpu, Loader2 } from "lucide-react";
+import { Bot, Send, Sparkles, Zap, Cpu, Loader2, AlertTriangle } from "lucide-react";
 import { jobsStore } from "@/lib/jobs-store";
+import { useSite } from "@/lib/site-context";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({
     meta: [
       { title: "Assistant — AKS SEO Console" },
-      { name: "description", content: "Chat with your AKS agent operator powered by the AKS worker LLM engine." },
+      { name: "description", content: "Chat with your AKS agent operator, backed by the real AKS worker queue." },
     ],
   }),
   component: AssistantPage,
 });
 
-type Msg = { role: "user" | "assistant"; text: string; workerStatus?: string; jobId?: string };
+type Msg = {
+  role: "user" | "assistant";
+  text: string;
+  jobId?: string;
+  jobStatus?: "pending" | "claimed" | "running" | "done" | "failed";
+};
 
-function generateSmartResponse(message: string): string {
-  const msg = message.toLowerCase();
-  
-  if (msg.includes("analytics") || msg.includes("ga4") || msg.includes("traffic") || msg.includes("visitors")) {
-    return `### 📊 Google Analytics 4 Report (Safaeewala)
-Here are the live metrics for the last **7 days** directly retrieved from the GA4 property stream:
-- **Active Users**: \`118\` (engaged search visitors)
-- **Sessions**: \`145\` sessions
-- **Event Count**: \`700\` total events triggered
-- **Conversions**: \`38\` booking goals reached
+const POLL_MS = 3000;
+const MAX_POLLS = 140; // ~7 minutes, matches every other real job poll in this app
 
-Let me know if you would like me to compile a comparative report for **This Month** vs **Last Month**!`;
+/**
+ * Polls the job's real claude_jobs row until it reaches a terminal state.
+ * Same pattern as task-item-detail-modal.tsx's useJobStatus / suggestions.tsx's
+ * pollOrchestratorJob -- this used to be three chained setTimeouts that faked
+ * claim/heartbeat/complete against the real job row while actually generating
+ * the "response" from a local keyword-matched string table. Now the response
+ * is genuinely produced by the AKS worker running the claude CLI.
+ */
+async function pollJob(jobId: string, onStatus: (s: Msg["jobStatus"]) => void): Promise<{ status: string; text?: string }> {
+  for (let i = 0; i < MAX_POLLS; i++) {
+    await new Promise((r) => setTimeout(r, POLL_MS));
+    const res = await fetch(`/api/jobs/${jobId}`);
+    const json = await res.json().catch(() => null);
+    const job = json?.job;
+    if (!job) continue;
+    if (job.status === "done") return { status: "done", text: job.outputMarkdown || "(empty response)" };
+    if (job.status === "failed") return { status: "failed", text: job.error };
+    onStatus(job.status);
   }
-  
-  if (msg.includes("position") || msg.includes("gsc") || msg.includes("search console") || msg.includes("ranking") || msg.includes("average position")) {
-    return `### 🔍 Google Search Console Ranking Summary
-Here are the authenticated metrics for **safaeewala.com** (Last 7 days):
-- **Average Position**: \`28.8\`
-- **Total Clicks**: \`73\` clicks
-- **Total Impressions**: \`8,912\` search views
-- **Average CTR**: \`0.82%\`
-
-**Top query opportunity**: *"deep cleaning services dubai"* is currently ranking at average position **#3.2** but has a high CTR of **7.7%**. I recommend adding FAQ schema blocks to improve rich snippets and grab more search share.`;
-  }
-  
-  if (msg.includes("cloudflare") || msg.includes("bot") || msg.includes("crawl") || msg.includes("scraper") || msg.includes("ai overview")) {
-    return `### 🛡️ Cloudflare AI Crawl Control Audit
-I've checked the active edge rules and WAF metrics for the last 24h:
-- **Total Requests**: \`200\` (decreased by \`49.87%\`)
-- **Allowed Requests**: \`124\` (increased by \`62.99%\`)
-- **Unsuccessful Requests**: \`76\` (increased by \`18.75%\`)
-
-**Top Crawler Details**:
-- **Anthropic (ClaudeBot)**: 51 requests (WAF rule: *Selective Block* active)
-- **Apple (Applebot)**: 19 requests
-- **OpenAI (ChatGPT-User)**: 15 requests
-- **Google (Google-Extended)**: 11 requests
-
-WAF protection is actively shielding the site's origin servers from aggressive LLM scraping.`;
-  }
-
-  if (msg.includes("alert") || msg.includes("health")) {
-    return `### ⚠️ Alert Manager Summary
-There are currently **11 active alerts** requiring your attention:
-- **2 Critical**: LCP regression on \`/services/villa-deep-cleaning\` (4.3s) and Dubai Marina local rank pack drop.
-- **5 High**: NAP Phone mismatches, GBP service area changes, and Downtown Dubai rank drops.
-- **4 Medium/Low**: Spam backlinks and duplicate connects.
-
-You can acknowledge or resolve these alerts directly in the **Alert Manager** panel to dismiss the warning counters.`;
-  }
-
-  if (msg.includes("audit") || msg.includes("crawl") || msg.includes("technical-audit")) {
-    return `### ⚙️ Technical Audit Recommendation
-I recommend enqueuing a **Technical SEO Audit** job inside the **AKS Worker Queue**:
-- **Target URL**: \`https://safaeewala.com/\`
-- **Scope**: Full deep diagnostic scan.
-- **Key Checks**: CLS/LCP metrics, duplicate canonicals, and metadata compliance.
-
-To run this audit, open the **Enqueued Jobs** manager modal and dispatch a new worker task.`;
-  }
-
-  return `### 🤖 AKS Leader Bot Response
-I have analyzed your query: *"${message}"*.
-As the leader bot of the AKS SEO fleet, I can orchestrate specific SEO tasks:
-- **Audit site technical health** (type *"audit"* or *"crawl"*)
-- **Generate Local Business JSON-LD Schema** (type *"schema"*)
-- **Analyze target keywords** (type *"keywords"*)
-- **Draft content outlines** (type *"blog post"*)
-
-Please specify which agent team (On-Page, Technical, Outreach, or Quality Auditor) you would like me to dispatch!`;
+  return { status: "timeout" };
 }
 
 function formatMessageText(text: string) {
   const lines = text.split("\n");
   return lines.map((line, i) => {
     let content: React.ReactNode = line;
-    
+
     // Bold parsing
     if (line.includes("**")) {
       const parts = line.split("**");
       content = parts.map((part, index) => index % 2 === 1 ? <strong key={index} className="font-bold text-white">{part}</strong> : part);
     }
-    
+
     // Inline code parsing
     if (line.includes("`")) {
       const parts = line.split("`");
@@ -116,13 +75,14 @@ function formatMessageText(text: string) {
 }
 
 function AssistantPage() {
+  const { currentSite } = useSite();
   const [msgs, setMsgs] = useState<Msg[]>([
-    { role: "assistant", text: "Hi Ahmed — ready when you are. Ask me anything about your fleet, sites, or SEO ops. I will dispatch AKS workers to pull live metrics." },
+    { role: "assistant", text: "Hi — ask me anything about your fleet, sites, or SEO ops. Your question is queued as a real job for the AKS worker; a `npm run worker` process needs to be running somewhere to answer it." },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
-  
+
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -135,18 +95,35 @@ function AssistantPage() {
     const userPrompt = input;
     setInput("");
     setLoading(true);
-    setCurrentStatus("Enqueuing task in AKS Worker Queue...");
+    setCurrentStatus("Enqueuing in AKS Worker Queue…");
 
-    // Add user message immediately
+    const historyForPrompt = msgs.map((m) => ({ role: m.role, text: m.text }));
     setMsgs((m) => [...m, { role: "user", text: userPrompt }]);
 
-    // Create a new AKS AI Job in queue (persisted to Postgres via /api/jobs)
+    // Real job, real grounding: fetch the site's real structuredKb so
+    // buildPromptForKind (job-templates.ts) can prepend real KB context --
+    // no invented GA4/GSC numbers get generated by an LLM with no data.
+    let structuredKb: unknown = undefined;
+    if (currentSite?.id) {
+      try {
+        const siteRes = await fetch(`/api/sites/${currentSite.id}`);
+        const siteJson = await siteRes.json();
+        structuredKb = siteJson?.site?.structuredKb;
+      } catch {
+        /* proceed without KB grounding rather than blocking the chat */
+      }
+    }
+
     const job = await jobsStore.create({
       kind: "assistant:chat",
-      title: `Leader Bot Chat: ${userPrompt.slice(0, 35)}...`,
+      title: `Leader Bot Chat: ${userPrompt.slice(0, 60)}`,
       input: {
         message: userPrompt,
-        history: msgs,
+        history: historyForPrompt,
+        siteName: currentSite?.label,
+        domain: currentSite?.domain,
+        city: currentSite?.location,
+        structuredKb,
       },
       priority: "high",
     });
@@ -158,34 +135,30 @@ function AssistantPage() {
       return;
     }
 
-    // Simulate worker process loop against the real job record
-    setTimeout(async () => {
-      await jobsStore.claim("aks-worker-leader-bot");
-      setCurrentStatus("Task claimed by aks-worker-leader-bot");
+    setMsgs((m) => [...m, { role: "assistant", text: "", jobId: job.id, jobStatus: "pending" }]);
+    setCurrentStatus("Waiting for the AKS worker — run `npm run worker` if none is running.");
 
-      setTimeout(async () => {
-        await jobsStore.heartbeat(job.id);
-        setCurrentStatus("Processing request in LLM reasoning engine...");
+    const result = await pollJob(job.id, (status) => {
+      setMsgs((m) => m.map((msg) => (msg.jobId === job.id ? { ...msg, jobStatus: status } : msg)));
+      setCurrentStatus(
+        status === "running" ? "AKS worker is generating a response…"
+        : status === "claimed" ? "Claimed by AKS worker…"
+        : "Waiting for the AKS worker — run `npm run worker` if none is running.",
+      );
+    });
 
-        setTimeout(async () => {
-          const responseText = generateSmartResponse(userPrompt);
-          await jobsStore.complete(job.id, responseText, 1500);
+    if (result.status === "done") {
+      setMsgs((m) => m.map((msg) => (msg.jobId === job.id ? { ...msg, text: result.text || "", jobStatus: "done" } : msg)));
+    } else if (result.status === "failed") {
+      setMsgs((m) => m.map((msg) => (msg.jobId === job.id ? { ...msg, text: `Job failed: ${result.text || "unknown error"}`, jobStatus: "failed" } : msg)));
+      toast.error("AKS worker job failed");
+    } else {
+      setMsgs((m) => m.map((msg) => (msg.jobId === job.id ? { ...msg, text: "Still running in the background — check the Jobs Manager shortly." } : msg)));
+      toast.info("Still running — this reply will appear once the worker finishes.");
+    }
 
-          setMsgs((m) => [
-            ...m,
-            {
-              role: "assistant",
-              text: responseText,
-              jobId: job.id,
-              workerStatus: "Completed successfully"
-            }
-          ]);
-          setLoading(false);
-          setCurrentStatus("");
-          toast.success("AKS worker completed response");
-        }, 1200);
-      }, 500);
-    }, 500);
+    setLoading(false);
+    setCurrentStatus("");
   }
 
   return (
@@ -198,11 +171,11 @@ function AssistantPage() {
             </div>
             <div>
               <h1 className="text-2xl font-semibold text-white">Fleet Chat Assistant</h1>
-              <p className="text-xs text-slate-400">Powered by AKS Worker LLM orchestration and live data integrations.</p>
+              <p className="text-xs text-slate-400">Real AKS worker queue (claude_jobs) — every reply is a genuine job, not a canned response.</p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> AKS Worker Active
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+            <AlertTriangle className="h-3 w-3" /> Requires a running worker
           </span>
         </header>
 
@@ -211,36 +184,39 @@ function AssistantPage() {
           <div className="scrollbar-thin mb-4 space-y-4 max-h-[50vh] min-h-[300px] overflow-y-auto pr-1">
             {msgs.map((m, i) => {
               const isUser = m.role === "user";
+              const pending = !isUser && m.jobId && m.jobStatus !== "done" && m.jobStatus !== "failed";
               return (
                 <div key={i} className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
                   <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-lg transition-all ${
-                    isUser 
-                      ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-50" 
+                    isUser
+                      ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-50"
                       : "bg-[#0b0f19] border border-slate-800 text-slate-200"
                   }`}>
-                    {isUser ? <p className="text-xs">{m.text}</p> : formatMessageText(m.text)}
+                    {isUser ? (
+                      <p className="text-xs">{m.text}</p>
+                    ) : pending ? (
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-300" /> {currentStatus || "Working…"}
+                      </div>
+                    ) : (
+                      formatMessageText(m.text)
+                    )}
                   </div>
                   {!isUser && m.jobId && (
                     <div className="mt-1 flex items-center gap-1.5 px-2 text-[10px] text-slate-500 font-mono">
                       <Cpu className="h-3 w-3 text-cyan-400" />
                       <span>Job: {m.jobId}</span>
-                      <span>·</span>
-                      <span className="text-emerald-400">{m.workerStatus}</span>
+                      {m.jobStatus && (
+                        <>
+                          <span>·</span>
+                          <span className={m.jobStatus === "failed" ? "text-rose-400" : "text-emerald-400"}>{m.jobStatus}</span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
               );
             })}
-
-            {/* Loading/Worker states */}
-            {loading && (
-              <div className="flex flex-col items-start animate-pulse">
-                <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-[#0b0f19] px-4 py-3">
-                  <Loader2 className="h-4 w-4 text-cyan-300 animate-spin" />
-                  <span className="text-xs text-slate-400 font-mono">{currentStatus}</span>
-                </div>
-              </div>
-            )}
             <div ref={bottomRef} />
           </div>
 
@@ -252,11 +228,11 @@ function AssistantPage() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
               disabled={loading}
-              placeholder={loading ? "Worker is calculating..." : "Ask about analytics, position, alerts, cloudflare bots..."}
+              placeholder={loading ? "Worker is working…" : "Ask about analytics, position, alerts, cloudflare bots..."}
               className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-500 outline-none disabled:opacity-50"
             />
-            <button 
-              onClick={send} 
+            <button
+              onClick={send}
               disabled={loading || !input.trim()}
               className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-400 px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-cyan-300 transition disabled:opacity-50 cursor-pointer"
             >
@@ -268,14 +244,14 @@ function AssistantPage() {
         {/* Suggestion Prompts */}
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
           {[
-            { t: "Live GA4 traffic report", i: Zap },
-            { t: "Search Console average position", i: Sparkles },
-            { t: "Cloudflare scraper bot audit", i: Bot },
-            { t: "List active pipeline alerts", i: Cpu },
+            { t: "Summarize this site's Knowledge Base", i: Zap },
+            { t: "What SEO tasks are pending approval?", i: Sparkles },
+            { t: "Explain the AKS agent fleet roles", i: Bot },
+            { t: "What should I prioritize this week?", i: Cpu },
           ].map((q) => (
-            <button 
-              key={q.t} 
-              onClick={() => setInput(q.t)} 
+            <button
+              key={q.t}
+              onClick={() => setInput(q.t)}
               disabled={loading}
               className="rounded-xl border border-slate-800 bg-slate-950/40 p-3.5 text-left text-xs text-slate-400 hover:border-cyan-400/30 hover:text-white hover:bg-slate-950/70 transition duration-150 disabled:opacity-50 cursor-pointer"
             >

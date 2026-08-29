@@ -3,29 +3,35 @@ import { useAuth } from "@/lib/auth-context";
 import { Shield, Lock, Eye, EyeOff, KeyRound, AlertCircle, ArrowRight, Server } from "lucide-react";
 
 export function MasterAuthGate({ children }: { children: ReactNode }) {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, checking, login } = useAuth();
   const [passwordInput, setPasswordInput] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#05070d] text-slate-500 text-xs">
+        Checking session…
+      </div>
+    );
+  }
+
   if (isAuthenticated) {
     return <>{children}</>;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const success = login(passwordInput.trim());
-      if (!success) {
-        setErrorMsg("Invalid Master Password. Access Denied.");
-        setPasswordInput("");
-      }
-      setIsSubmitting(false);
-    }, 200);
+    const success = await login(passwordInput.trim());
+    if (!success) {
+      setErrorMsg("Invalid Master Password. Access Denied.");
+      setPasswordInput("");
+    }
+    setIsSubmitting(false);
   };
 
   return (
