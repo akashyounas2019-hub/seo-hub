@@ -36,6 +36,7 @@ import { Route as ScoutTeamScoutIdRouteImport } from './routes/scout-team.$scout
 import { Route as SeoSuiteIndexRouteImport } from './routes/seo-suite.index'
 import { Route as SeoSuiteToolIdRouteImport } from './routes/seo-suite.$toolId'
 import { Route as SitesSiteIdRouteImport } from './routes/sites.$siteId'
+import { Route as ApiAgentsActivityRouteImport } from './routes/api.agents.activity'
 import { Route as ApiAgentsMetricsRouteImport } from './routes/api.agents.metrics'
 import { Route as ApiAlertsIndexRouteImport } from './routes/api.alerts.index'
 import { Route as ApiAlertsIdRouteImport } from './routes/api.alerts.$id'
@@ -46,6 +47,7 @@ import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
 import { Route as ApiAuthSessionRouteImport } from './routes/api.auth.session'
 import { Route as ApiAutomationFlowsRouteImport } from './routes/api.automation.flows'
 import { Route as ApiCloudflareAiShieldRouteImport } from './routes/api.cloudflare.ai-shield'
+import { Route as ApiCloudflareAiTrafficRouteImport } from './routes/api.cloudflare.ai-traffic'
 import { Route as ApiEventsIngestRouteImport } from './routes/api.events.ingest'
 import { Route as ApiGoogleGa4RouteImport } from './routes/api.google.ga4'
 import { Route as ApiGoogleGbpRouteImport } from './routes/api.google.gbp'
@@ -231,6 +233,11 @@ const SitesSiteIdRoute = SitesSiteIdRouteImport.update({
   path: '/sites/$siteId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgentsActivityRoute = ApiAgentsActivityRouteImport.update({
+  id: '/api/agents/activity',
+  path: '/api/agents/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAgentsMetricsRoute = ApiAgentsMetricsRouteImport.update({
   id: '/api/agents/metrics',
   path: '/api/agents/metrics',
@@ -279,6 +286,11 @@ const ApiAutomationFlowsRoute = ApiAutomationFlowsRouteImport.update({
 const ApiCloudflareAiShieldRoute = ApiCloudflareAiShieldRouteImport.update({
   id: '/api/cloudflare/ai-shield',
   path: '/api/cloudflare/ai-shield',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCloudflareAiTrafficRoute = ApiCloudflareAiTrafficRouteImport.update({
+  id: '/api/cloudflare/ai-traffic',
+  path: '/api/cloudflare/ai-traffic',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiEventsIngestRoute = ApiEventsIngestRouteImport.update({
@@ -549,6 +561,7 @@ export interface FileRoutesByFullPath {
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
   '/seo-suite/': typeof SeoSuiteIndexRoute
+  '/api/agents/activity': typeof ApiAgentsActivityRoute
   '/api/agents/metrics': typeof ApiAgentsMetricsRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
@@ -558,6 +571,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
+  '/api/cloudflare/ai-traffic': typeof ApiCloudflareAiTrafficRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
@@ -635,6 +649,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsIndexRoute
   '/scout-team': typeof ScoutTeamIndexRoute
   '/seo-suite': typeof SeoSuiteIndexRoute
+  '/api/agents/activity': typeof ApiAgentsActivityRoute
   '/api/agents/metrics': typeof ApiAgentsMetricsRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
@@ -644,6 +659,7 @@ export interface FileRoutesByTo {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
+  '/api/cloudflare/ai-traffic': typeof ApiCloudflareAiTrafficRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
@@ -722,6 +738,7 @@ export interface FileRoutesById {
   '/analytics/': typeof AnalyticsIndexRoute
   '/scout-team/': typeof ScoutTeamIndexRoute
   '/seo-suite/': typeof SeoSuiteIndexRoute
+  '/api/agents/activity': typeof ApiAgentsActivityRoute
   '/api/agents/metrics': typeof ApiAgentsMetricsRoute
   '/api/alerts/$id': typeof ApiAlertsIdRoute
   '/api/analytics/sync': typeof ApiAnalyticsSyncRoute
@@ -731,6 +748,7 @@ export interface FileRoutesById {
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/automation/flows': typeof ApiAutomationFlowsRouteWithChildren
   '/api/cloudflare/ai-shield': typeof ApiCloudflareAiShieldRoute
+  '/api/cloudflare/ai-traffic': typeof ApiCloudflareAiTrafficRoute
   '/api/events/ingest': typeof ApiEventsIngestRoute
   '/api/google/ga4': typeof ApiGoogleGa4Route
   '/api/google/gbp': typeof ApiGoogleGbpRoute
@@ -810,6 +828,7 @@ export interface FileRouteTypes {
     | '/analytics/'
     | '/scout-team/'
     | '/seo-suite/'
+    | '/api/agents/activity'
     | '/api/agents/metrics'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
@@ -819,6 +838,7 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
+    | '/api/cloudflare/ai-traffic'
     | '/api/events/ingest'
     | '/api/google/ga4'
     | '/api/google/gbp'
@@ -896,6 +916,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/scout-team'
     | '/seo-suite'
+    | '/api/agents/activity'
     | '/api/agents/metrics'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
@@ -905,6 +926,7 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
+    | '/api/cloudflare/ai-traffic'
     | '/api/events/ingest'
     | '/api/google/ga4'
     | '/api/google/gbp'
@@ -982,6 +1004,7 @@ export interface FileRouteTypes {
     | '/analytics/'
     | '/scout-team/'
     | '/seo-suite/'
+    | '/api/agents/activity'
     | '/api/agents/metrics'
     | '/api/alerts/$id'
     | '/api/analytics/sync'
@@ -991,6 +1014,7 @@ export interface FileRouteTypes {
     | '/api/auth/session'
     | '/api/automation/flows'
     | '/api/cloudflare/ai-shield'
+    | '/api/cloudflare/ai-traffic'
     | '/api/events/ingest'
     | '/api/google/ga4'
     | '/api/google/gbp'
@@ -1069,6 +1093,7 @@ export interface RootRouteChildren {
   AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   ScoutTeamIndexRoute: typeof ScoutTeamIndexRoute
   SeoSuiteIndexRoute: typeof SeoSuiteIndexRoute
+  ApiAgentsActivityRoute: typeof ApiAgentsActivityRoute
   ApiAgentsMetricsRoute: typeof ApiAgentsMetricsRoute
   ApiAlertsIdRoute: typeof ApiAlertsIdRoute
   ApiAnalyticsSyncRoute: typeof ApiAnalyticsSyncRoute
@@ -1077,6 +1102,7 @@ export interface RootRouteChildren {
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiAutomationFlowsRoute: typeof ApiAutomationFlowsRouteWithChildren
   ApiCloudflareAiShieldRoute: typeof ApiCloudflareAiShieldRoute
+  ApiCloudflareAiTrafficRoute: typeof ApiCloudflareAiTrafficRoute
   ApiEventsIngestRoute: typeof ApiEventsIngestRoute
   ApiGoogleGa4Route: typeof ApiGoogleGa4Route
   ApiGoogleGbpRoute: typeof ApiGoogleGbpRoute
@@ -1301,6 +1327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitesSiteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agents/activity': {
+      id: '/api/agents/activity'
+      path: '/api/agents/activity'
+      fullPath: '/api/agents/activity'
+      preLoaderRoute: typeof ApiAgentsActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/agents/metrics': {
       id: '/api/agents/metrics'
       path: '/api/agents/metrics'
@@ -1369,6 +1402,13 @@ declare module '@tanstack/react-router' {
       path: '/api/cloudflare/ai-shield'
       fullPath: '/api/cloudflare/ai-shield'
       preLoaderRoute: typeof ApiCloudflareAiShieldRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cloudflare/ai-traffic': {
+      id: '/api/cloudflare/ai-traffic'
+      path: '/api/cloudflare/ai-traffic'
+      fullPath: '/api/cloudflare/ai-traffic'
+      preLoaderRoute: typeof ApiCloudflareAiTrafficRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/events/ingest': {
@@ -1876,6 +1916,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsIndexRoute: AnalyticsIndexRoute,
   ScoutTeamIndexRoute: ScoutTeamIndexRoute,
   SeoSuiteIndexRoute: SeoSuiteIndexRoute,
+  ApiAgentsActivityRoute: ApiAgentsActivityRoute,
   ApiAgentsMetricsRoute: ApiAgentsMetricsRoute,
   ApiAlertsIdRoute: ApiAlertsIdRoute,
   ApiAnalyticsSyncRoute: ApiAnalyticsSyncRoute,
@@ -1884,6 +1925,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiAutomationFlowsRoute: ApiAutomationFlowsRouteWithChildren,
   ApiCloudflareAiShieldRoute: ApiCloudflareAiShieldRoute,
+  ApiCloudflareAiTrafficRoute: ApiCloudflareAiTrafficRoute,
   ApiEventsIngestRoute: ApiEventsIngestRoute,
   ApiGoogleGa4Route: ApiGoogleGa4Route,
   ApiGoogleGbpRoute: ApiGoogleGbpRoute,

@@ -1,253 +1,120 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bot,
   ShieldAlert,
   ShieldCheck,
-  Zap,
   Globe,
-  Lock,
   Search,
-  Activity,
-  Filter,
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  ArrowUpRight,
   RefreshCw,
-  Sliders,
-  Layers,
-  FileCode,
-  Sparkles,
+  Loader2,
+  PlugZap,
 } from "lucide-react";
 import { type ConnectedSite } from "@/lib/site-context";
-
 import { toast } from "sonner";
 
-export type AiBotRule = {
-  id: string;
-  name: string;
-  vendor: string;
-  userAgent: string;
-  purpose: string;
-  blocked: boolean;
-  requests24h: number;
-  dataScraped: string;
-  riskLevel: "Low" | "Medium" | "High";
-  iconBadge?: string;
-  brandColor?: string;
-};
+type BotTraffic = { id: string; label: string; vendor: string; userAgentMatch: string; requests: number; bytesScraped: number };
+type TopUrl = { path: string; requests: number };
+type FirewallRule = { id: string; userAgent: string; mode: string; notes: string };
 
-const INITIAL_BOTS: AiBotRule[] = [
-  {
-    id: "applebot-extended",
-    name: "Applebot-Extended",
-    vendor: "Apple",
-    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) (Applebot/0.1; +http://www.apple.com/go/applebot)",
-    purpose: "Apple Intelligence & Siri Web Training",
-    blocked: true,
-    requests24h: 3190,
-    dataScraped: "11.2 MB",
-    riskLevel: "High",
-    iconBadge: "🍎",
-    brandColor: "from-slate-400 to-slate-200",
-  },
-  {
-    id: "meta-externalagent",
-    name: "Meta-ExternalAgent (Llama)",
-    vendor: "Meta",
-    userAgent: "Mozilla/5.0 (compatible; Meta-ExternalAgent/1.0; +https://www.meta.com/externalagent)",
-    purpose: "Llama AI & Meta AI Dataset Scraping",
-    blocked: true,
-    requests24h: 4890,
-    dataScraped: "16.8 MB",
-    riskLevel: "High",
-    iconBadge: "♾️",
-    brandColor: "from-blue-500 to-cyan-400",
-  },
-  {
-    id: "baiduspider",
-    name: "Baiduspider (Ernie)",
-    vendor: "Baidu",
-    userAgent: "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)",
-    purpose: "Baidu Search & Ernie Bot Indexing",
-    blocked: false,
-    requests24h: 2470,
-    dataScraped: "8.4 MB",
-    riskLevel: "Medium",
-    iconBadge: "🐾",
-    brandColor: "from-red-500 to-rose-400",
-  },
-  {
-    id: "gptbot",
-    name: "GPTBot",
-    vendor: "OpenAI",
-    userAgent: "Mozilla/5.0 AppleWebKit/537.36 (GPTBot/1.2; +https://openai.com/gptbot)",
-    purpose: "Model Training & Web Indexing",
-    blocked: true,
-    requests24h: 5420,
-    dataScraped: "18.4 MB",
-    riskLevel: "High",
-    iconBadge: "⚡",
-    brandColor: "from-emerald-400 to-teal-500",
-  },
-  {
-    id: "chatgpt-user",
-    name: "ChatGPT-User",
-    vendor: "OpenAI",
-    userAgent: "Mozilla/5.0 (compatible; ChatGPT-User/1.0; +https://openai.com/bot)",
-    purpose: "Live User Query Browsing",
-    blocked: false,
-    requests24h: 1890,
-    dataScraped: "4.2 MB",
-    riskLevel: "Low",
-    iconBadge: "🤖",
-    brandColor: "from-emerald-400 to-teal-500",
-  },
-  {
-    id: "claudebot",
-    name: "ClaudeBot",
-    vendor: "Anthropic",
-    userAgent: "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
-    purpose: "Model Training & Context Extraction",
-    blocked: true,
-    requests24h: 3840,
-    dataScraped: "12.1 MB",
-    riskLevel: "High",
-    iconBadge: "🧠",
-    brandColor: "from-amber-400 to-orange-500",
-  },
-  {
-    id: "perplexitybot",
-    name: "PerplexityBot",
-    vendor: "Perplexity AI",
-    userAgent: "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
-    purpose: "Real-Time AI Search Indexing",
-    blocked: false,
-    requests24h: 2150,
-    dataScraped: "6.8 MB",
-    riskLevel: "Medium",
-    iconBadge: "🌐",
-    brandColor: "from-cyan-400 to-blue-500",
-  },
-  {
-    id: "google-extended",
-    name: "Google-Extended",
-    vendor: "Google AI",
-    userAgent: "Google-Extended",
-    purpose: "Gemini & Vertex AI Training",
-    blocked: true,
-    requests24h: 4120,
-    dataScraped: "14.2 MB",
-    riskLevel: "High",
-    iconBadge: "🔍",
-    brandColor: "from-blue-400 to-violet-500",
-  },
-  {
-    id: "bytespider",
-    name: "Bytespider",
-    vendor: "ByteDance",
-    userAgent: "Mozilla/5.0 (compatible; Bytespider; spider-feedback@bytedance.com)",
-    purpose: "Aggressive Scraper / LLM Training",
-    blocked: true,
-    requests24h: 8940,
-    dataScraped: "32.6 MB",
-    riskLevel: "High",
-    iconBadge: "🎵",
-    brandColor: "from-purple-400 to-pink-500",
-  },
-];
-
-const TOP_AI_PAGES = [
-  { url: "/", bots: 4210, scraped: "14.2 MB", status: "Protected (Blocked)" },
-  { url: "/service/deep-cleaning/", bots: 2840, scraped: "8.9 MB", status: "Protected (Blocked)" },
-  { url: "/pricing-packages/", bots: 2100, scraped: "6.1 MB", status: "Protected (Blocked)" },
-  { url: "/contact-us/", bots: 940, scraped: "2.4 MB", status: "Allowed (User Agent)" },
-];
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export function CloudflareAiOverview({ site }: { site?: ConnectedSite }) {
-  const [bots, setBots] = useState<AiBotRule[]>(INITIAL_BOTS);
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [bots, setBots] = useState<BotTraffic[]>([]);
+  const [topUrls, setTopUrls] = useState<TopUrl[]>([]);
+  const [rules, setRules] = useState<FirewallRule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterVendor, setFilterVendor] = useState("All");
 
-  const toggleBot = async (id: string) => {
-    const targetBot = bots.find((b) => b.id === id);
-    if (!targetBot) return;
+  const load = () => {
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      fetch("/api/cloudflare/ai-traffic").then((r) => r.json()),
+      fetch("/api/cloudflare/ai-shield").then((r) => r.json()),
+    ])
+      .then(([traffic, shield]) => {
+        setConfigured(!!traffic.configured);
+        if (traffic.ok) {
+          setBots(traffic.bots || []);
+          setTopUrls(traffic.topUrls || []);
+        } else if (traffic.configured) {
+          setError(traffic.error);
+        }
+        if (shield.ok) setRules(shield.rules || []);
+      })
+      .catch((err) => setError(err.message || "Failed to load Cloudflare data"))
+      .finally(() => setLoading(false));
+  };
 
-    const nextState = !targetBot.blocked;
-    const nextAction = nextState ? "block" : "allow";
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    setBots((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, blocked: nextState } : b)),
-    );
+  const isBlocked = (b: BotTraffic) => rules.some((r) => r.userAgent === b.userAgentMatch && r.mode === "block");
 
-    // Call live Cloudflare WAF Shield API
+  const toggleBot = async (b: BotTraffic) => {
+    const nextAction = isBlocked(b) ? "allow" : "block";
     try {
       const res = await fetch("/api/cloudflare/ai-shield", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          botId: targetBot.id,
-          vendor: targetBot.vendor,
-          userAgent: targetBot.userAgent,
-          action: nextAction,
-        }),
+        body: JSON.stringify({ botId: b.id, vendor: b.vendor, userAgent: b.userAgentMatch, action: nextAction }),
       });
       const data = await res.json();
       if (data.ok) {
-        toast.success(
-          `Cloudflare WAF ${nextAction.toUpperCase()} rule applied for ${targetBot.name}!`,
-          { description: data.message },
-        );
+        toast.success(`Cloudflare WAF ${nextAction.toUpperCase()} rule applied for ${b.label}`, { description: data.message });
+        load();
+      } else {
+        toast.error(data.error || "Failed to update Cloudflare rule");
       }
-    } catch {
-      toast.info(`Updated rule for ${targetBot.name}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update Cloudflare rule");
     }
-  };
-
-  const blockAll = async () => {
-    setBots((prev) => prev.map((b) => ({ ...b, blocked: true })));
-    try {
-      await fetch("/api/cloudflare/ai-shield", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "block", botId: "ALL_AI_CRAWLERS", vendor: "Global Shield" }),
-      });
-      toast.error("Cloudflare Firewall Shield Activated: All AI Crawlers BLOCKED");
-    } catch {
-      toast.error("Blocked all AI crawlers");
-    }
-  };
-
-  const allowAll = async () => {
-    setBots((prev) => prev.map((b) => ({ ...b, blocked: false })));
-    toast.success("Cloudflare AI Shield set to Selective Allow mode");
   };
 
   const filteredBots = useMemo(() => {
     return bots.filter((b) => {
       if (filterVendor !== "All" && b.vendor !== filterVendor) return false;
-      if (
-        search &&
-        !(
-          b.name.toLowerCase().includes(search.toLowerCase()) ||
-          b.vendor.toLowerCase().includes(search.toLowerCase()) ||
-          b.purpose.toLowerCase().includes(search.toLowerCase())
-        )
-      )
-        return false;
+      if (search && !(b.label.toLowerCase().includes(search.toLowerCase()) || b.vendor.toLowerCase().includes(search.toLowerCase()))) return false;
       return true;
     });
   }, [bots, filterVendor, search]);
 
+  const vendors = useMemo(() => Array.from(new Set(bots.map((b) => b.vendor))), [bots]);
+
   const stats = useMemo(() => {
-    const totalReqs = bots.reduce((sum, b) => sum + b.requests24h, 0);
-    const blockedCount = bots.filter((b) => b.blocked).length;
-    const blockedReqs = bots
-      .filter((b) => b.blocked)
-      .reduce((sum, b) => sum + b.requests24h, 0);
+    const totalReqs = bots.reduce((sum, b) => sum + b.requests, 0);
+    const blocked = bots.filter(isBlocked);
+    const blockedReqs = blocked.reduce((sum, b) => sum + b.requests, 0);
     const blockPct = totalReqs > 0 ? Math.round((blockedReqs / totalReqs) * 100) : 0;
-    return { totalReqs, blockedCount, blockedReqs, blockPct };
-  }, [bots]);
+    return { totalReqs, blockedCount: blocked.length, blockedReqs, blockPct };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bots, rules]);
+
+  if (configured === false) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center">
+        <PlugZap className="mx-auto h-8 w-8 text-slate-600" />
+        <h3 className="mt-3 text-sm font-semibold text-white">Cloudflare not connected</h3>
+        <p className="mx-auto mt-1.5 max-w-md text-xs text-slate-500">
+          Set <code className="text-cyan-300">CLOUDFLARE_API_TOKEN</code> (Zone Analytics: Read + Firewall Services: Edit) and{" "}
+          <code className="text-cyan-300">CLOUDFLARE_ZONE_ID</code> in the environment to see real AI bot traffic and manage
+          firewall rules here. Nothing is fabricated in the meantime.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -260,252 +127,176 @@ export function CloudflareAiOverview({ site }: { site?: ConnectedSite }) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-400">
-                  Cloudflare Edge Integration
-                </span>
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-mono text-emerald-300">
-                  Active WAF Protection
-                </span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-400">Cloudflare Edge Integration</span>
+                {configured && (
+                  <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-mono text-emerald-300">
+                    Connected
+                  </span>
+                )}
               </div>
-              <h2 className="mt-1 text-xl font-bold text-white">
-                AI Crawl Control &amp; Bot Audit
-              </h2>
+              <h2 className="mt-1 text-xl font-bold text-white">AI Crawl Control &amp; Bot Audit</h2>
               <p className="mt-0.5 text-xs text-slate-400">
-                Real-time AI bot detection, LLM scraper prevention, and automated Cloudflare Firewall rules for{" "}
-                <span className="font-semibold text-slate-200">{site?.domain || "safaeewala.com"}</span>.
+                Real bot traffic (last 24h) and firewall rules for{" "}
+                <span className="font-semibold text-slate-200">{site?.domain || "this site"}</span>.
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={blockAll}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 transition cursor-pointer"
-            >
-              <ShieldAlert className="h-3.5 w-3.5" /> Block All AI Crawlers
-            </button>
-            <button
-              onClick={allowAll}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 transition cursor-pointer"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" /> Allow Selective
-            </button>
-          </div>
+          <button
+            onClick={load}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>Total Bot Requests (24h)</span>
-            <Bot className="h-4 w-4 text-cyan-400" />
-          </div>
-          <div className="mt-2 text-2xl font-bold text-white">{stats.totalReqs.toLocaleString()}</div>
-          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-cyan-400">
-            <span>Edge Inspected</span>
-          </div>
+      {loading && (
+        <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/30 p-10 text-sm text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading real Cloudflare data…
         </div>
+      )}
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>Cloudflare WAF Blocked</span>
-            <ShieldAlert className="h-4 w-4 text-rose-400" />
-          </div>
-          <div className="mt-2 text-2xl font-bold text-rose-400">{stats.blockedReqs.toLocaleString()} ({stats.blockPct}%)</div>
-          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-rose-300">
-            <span>{stats.blockedCount} Bots Blocked</span>
-          </div>
+      {!loading && error && (
+        <div className="flex items-start gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-200">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
         </div>
+      )}
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>Allowed Verified AI Agents</span>
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+      {!loading && !error && (
+        <>
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Total AI Bot Requests (24h)</span>
+                <Bot className="h-4 w-4 text-cyan-400" />
+              </div>
+              <div className="mt-2 text-2xl font-bold text-white">{stats.totalReqs.toLocaleString()}</div>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Blocked (real firewall rules)</span>
+                <ShieldAlert className="h-4 w-4 text-rose-400" />
+              </div>
+              <div className="mt-2 text-2xl font-bold text-rose-400">{stats.blockedReqs.toLocaleString()} ({stats.blockPct}%)</div>
+              <div className="mt-1 text-xs font-medium text-rose-300">{stats.blockedCount} bot(s) blocked</div>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Allowed</span>
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              </div>
+              <div className="mt-2 text-2xl font-bold text-emerald-300">{(stats.totalReqs - stats.blockedReqs).toLocaleString()}</div>
+            </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-emerald-300">{(stats.totalReqs - stats.blockedReqs).toLocaleString()}</div>
-          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-400">
-            <span>AI Search Indexers</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Enhanced Crawlers Traffic Distribution Grid (with Apple, Baidu, Meta Icons) */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <div>
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-cyan-300" /> AI Crawler Traffic Distribution
-            </h3>
-            <p className="text-xs text-slate-400">Real-time edge visitor breakdown across major AI technology vendors.</p>
-          </div>
-          <span className="rounded-lg border border-cyan-500/30 bg-cyan-950/60 px-2.5 py-1 text-xs font-semibold text-cyan-300">
-            Live Cloudflare Zone: safaeewala.com
-          </span>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-          {[
-            { company: "Apple", bots: "Applebot-Extended", extra: "AI", allowed: 3190, delta: 26.67, up: true, icon: "🍎", border: "border-slate-700/80 bg-slate-950/80" },
-            { company: "Baidu", bots: "Baiduspider", extra: "Ernie", allowed: 2470, delta: 12.50, up: false, icon: "🐾", border: "border-rose-500/30 bg-rose-950/20" },
-            { company: "Meta", bots: "Meta-ExternalAgent", extra: "Llama", allowed: 4890, delta: 50.00, up: false, icon: "♾️", border: "border-blue-500/30 bg-blue-950/20" },
-            { company: "Anthropic", bots: "ClaudeBot", extra: "Claude 3.5", allowed: 3840, delta: 66.00, up: false, icon: "🧠", border: "border-amber-500/30 bg-amber-950/20" },
-            { company: "OpenAI", bots: "GPTBot / ChatGPT", extra: "GPT-4o", allowed: 7310, delta: 53.13, up: true, icon: "⚡", border: "border-emerald-500/30 bg-emerald-950/20" },
-            { company: "Google AI", bots: "Google-Extended", extra: "Gemini", allowed: 4120, delta: 88.89, up: false, icon: "🔍", border: "border-cyan-500/30 bg-cyan-950/20" },
-            { company: "ByteDance", bots: "Bytespider", extra: "LLM", allowed: 8940, delta: 15.00, up: true, icon: "🎵", border: "border-purple-500/30 bg-purple-950/20" },
-            { company: "Perplexity", bots: "PerplexityBot", extra: "Search", allowed: 2150, delta: 18.20, up: true, icon: "🌐", border: "border-sky-500/30 bg-sky-950/20" },
-          ].map((c) => (
-            <div key={c.company} className={`rounded-xl border p-3.5 transition hover:scale-[1.02] ${c.border}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-base leading-none">{c.icon}</span>
-                  <span className="text-xs font-bold text-white">{c.company}</span>
+          {/* Bot Controls Table */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="text-base font-semibold text-white">AI Crawl Control Matrix</h3>
+                <p className="text-xs text-slate-400">Real traffic from Cloudflare's Analytics API, filtered to known AI bot user agents.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Search bot or vendor..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="rounded-lg border border-slate-800 bg-slate-950/60 py-1.5 pl-8 pr-3 text-xs text-slate-200 focus:border-cyan-400/40 focus:outline-none"
+                  />
                 </div>
-                <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[9px] font-semibold text-cyan-300 border border-slate-800">
-                  {c.extra}
-                </span>
-              </div>
-              <div className="mt-1.5 text-[10px] font-mono text-slate-400 truncate">{c.bots}</div>
-              
-              <div className="mt-3 text-[9px] uppercase tracking-wider text-slate-500">24h Edge Requests</div>
-              <div className="mt-0.5 flex items-baseline justify-between gap-1">
-                <span className="text-lg font-bold text-white tabular-nums">{c.allowed.toLocaleString()}</span>
-                <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${c.up ? "text-emerald-400" : "text-rose-400"}`}>
-                  {c.up ? "↗" : "↘"} {c.delta.toFixed(1)}%
-                </span>
+                <select
+                  value={filterVendor}
+                  onChange={(e) => setFilterVendor(e.target.value)}
+                  className="rounded-lg border border-slate-800 bg-slate-950/60 py-1.5 px-3 text-xs text-slate-300 focus:outline-none"
+                >
+                  <option value="All">All Vendors</option>
+                  {vendors.map((v) => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Bot Controls Table */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h3 className="text-base font-semibold text-white">Cloudflare AI Crawl Control Matrix</h3>
-            <p className="text-xs text-slate-400">Manage real-time blocking for specific AI models and scrapers.</p>
+            {bots.length === 0 ? (
+              <div className="mt-4 rounded-lg border border-dashed border-slate-800 bg-slate-950/40 p-6 text-center text-xs text-slate-500">
+                No AI bot traffic detected in the last 24 hours for this zone.
+              </div>
+            ) : (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                      <th className="pb-3">AI Bot</th>
+                      <th className="pb-3">Vendor</th>
+                      <th className="pb-3">24h Requests</th>
+                      <th className="pb-3">Data Scraped</th>
+                      <th className="pb-3 text-right">Firewall Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    {filteredBots.map((b) => {
+                      const blocked = isBlocked(b);
+                      return (
+                        <tr key={b.id} className="hover:bg-slate-900/60 transition">
+                          <td className="py-3.5 font-semibold text-white flex items-center gap-2">
+                            <Bot className="h-4 w-4 text-cyan-400" /> {b.label}
+                          </td>
+                          <td className="py-3.5">{b.vendor}</td>
+                          <td className="py-3.5 font-mono text-slate-200">{b.requests.toLocaleString()}</td>
+                          <td className="py-3.5 font-mono text-slate-200">{formatBytes(b.bytesScraped)}</td>
+                          <td className="py-3.5 text-right">
+                            <button
+                              onClick={() => toggleBot(b)}
+                              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                                blocked
+                                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30"
+                                  : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+                              }`}
+                            >
+                              {blocked ? (
+                                <><XCircle className="h-3.5 w-3.5" /> Blocked</>
+                              ) : (
+                                <><CheckCircle2 className="h-3.5 w-3.5" /> Allowed</>
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search bot or vendor..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="rounded-lg border border-slate-800 bg-slate-950/60 py-1.5 pl-8 pr-3 text-xs text-slate-200 focus:border-cyan-400/40 focus:outline-none"
-              />
-            </div>
-
-            <select
-              value={filterVendor}
-              onChange={(e) => setFilterVendor(e.target.value)}
-              className="rounded-lg border border-slate-800 bg-slate-950/60 py-1.5 px-3 text-xs text-slate-300 focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Vendors</option>
-              <option value="Apple">Apple</option>
-              <option value="Meta">Meta</option>
-              <option value="Baidu">Baidu</option>
-              <option value="OpenAI">OpenAI</option>
-              <option value="Anthropic">Anthropic</option>
-              <option value="Perplexity AI">Perplexity AI</option>
-              <option value="Google AI">Google AI</option>
-              <option value="ByteDance">ByteDance</option>
-              <option value="Common Crawl">Common Crawl</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                <th className="pb-3">AI Bot Name</th>
-                <th className="pb-3">Vendor</th>
-                <th className="pb-3">Primary Purpose</th>
-                <th className="pb-3">24h Requests</th>
-                <th className="pb-3">Risk Level</th>
-                <th className="pb-3 text-right">Cloudflare Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
-              {filteredBots.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-900/60 transition">
-                  <td className="py-3.5 font-semibold text-white flex items-center gap-2">
-                    <Bot className="h-4 w-4 text-cyan-400" />
-                    <div>
-                      <div>{b.name}</div>
-                      <div className="text-[10px] text-slate-500 font-mono truncate max-w-[200px]">{b.userAgent}</div>
+          {/* Top URLs */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+            <h3 className="text-base font-semibold text-white">Top URLs Targeted by AI Crawlers</h3>
+            <p className="text-xs text-slate-400">Real request counts over the last 24 hours.</p>
+            {topUrls.length === 0 ? (
+              <div className="mt-4 rounded-lg border border-dashed border-slate-800 bg-slate-950/40 p-6 text-center text-xs text-slate-500">
+                No data yet.
+              </div>
+            ) : (
+              <div className="mt-4 space-y-2">
+                {topUrls.map((p) => (
+                  <div key={p.path} className="flex items-center justify-between rounded-xl border border-slate-800/80 bg-slate-950/40 p-3 text-xs">
+                    <div className="flex items-center gap-2 font-mono text-cyan-300">
+                      <Globe className="h-4 w-4 text-slate-500" /> <span>{p.path}</span>
                     </div>
-                  </td>
-                  <td className="py-3.5">{b.vendor}</td>
-                  <td className="py-3.5 text-slate-400">{b.purpose}</td>
-                  <td className="py-3.5 font-mono text-slate-200">{b.requests24h.toLocaleString()} ({b.dataScraped})</td>
-                  <td className="py-3.5">
-                    <span
-                      className={`rounded px-2 py-0.5 text-[9px] font-bold ${
-                        b.riskLevel === "High"
-                          ? "bg-rose-500/10 text-rose-300 border border-rose-500/30"
-                          : b.riskLevel === "Medium"
-                          ? "bg-amber-500/10 text-amber-300 border border-amber-500/30"
-                          : "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30"
-                      }`}
-                    >
-                      {b.riskLevel} Risk
-                    </span>
-                  </td>
-                  <td className="py-3.5 text-right">
-                    <button
-                      onClick={() => toggleBot(b.id)}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                        b.blocked
-                          ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30"
-                          : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
-                      }`}
-                    >
-                      {b.blocked ? (
-                        <>
-                          <XCircle className="h-3.5 w-3.5 text-rose-400" /> Blocked
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Allowed
-                        </>
-                      )}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Top Scraped URLs Section */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
-        <h3 className="text-base font-semibold text-white">Top URLs Targeted by AI Crawlers</h3>
-        <p className="text-xs text-slate-400">Pages receiving highest crawler load over the last 24 hours.</p>
-
-        <div className="mt-4 space-y-3">
-          {TOP_AI_PAGES.map((p) => (
-            <div key={p.url} className="flex items-center justify-between rounded-xl border border-slate-800/80 bg-slate-950/40 p-3 text-xs">
-              <div className="flex items-center gap-2 font-mono text-cyan-300">
-                <Globe className="h-4 w-4 text-slate-500" />
-                <span>{p.url}</span>
+                    <span className="text-slate-400">{p.requests.toLocaleString()} requests</span>
+                  </div>
+                ))}
               </div>
-
-              <div className="flex items-center gap-4 text-slate-400">
-                <span>{p.bots.toLocaleString()} requests ({p.scraped})</span>
-                <span className="rounded border border-rose-400/30 bg-rose-400/10 px-2 py-0.5 text-[10px] font-medium text-rose-300">
-                  {p.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
