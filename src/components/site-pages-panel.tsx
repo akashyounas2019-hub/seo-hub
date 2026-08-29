@@ -133,7 +133,7 @@ export function SitePagesPanel({ siteId, domain }: { siteId: string; domain: str
             indexedCount !== null ? (
               <>
                 <div className="mt-1 text-2xl font-semibold text-white tabular-nums">{indexedCount}</div>
-                <div className="mt-0.5 text-[10px] text-slate-500">Real Search Console figure</div>
+                <div className="mt-0.5 text-[10px] text-slate-500">Sitemap pages with real search impressions (28d)</div>
               </>
             ) : (
               <div className="mt-1 flex items-center gap-1 text-xs text-amber-300">

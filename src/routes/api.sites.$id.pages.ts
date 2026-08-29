@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { crawlSitemap } from "@/lib/sitemap-crawler";
-import { fetchGSCSitemaps } from "@/lib/google/search-console";
 import { actorEmailFromRequest, logAudit } from "@/lib/audit";
 
 export const Route = createFileRoute("/api/sites/$id/pages")({
@@ -32,13 +31,41 @@ export const Route = createFileRoute("/api/sites/$id/pages")({
           const [site] = await d.select().from(sites).where(eq(sites.id, params.id)).limit(1);
           if (site?.gscConnected && site.gscPropertyUrl) {
             try {
-              const sitemaps = await fetchGSCSitemaps(site.gscPropertyUrl);
-              indexedCount = sitemaps.reduce((sum, sm) => {
-                const webContent = sm.contents?.find((c) => c.type === "web") || sm.contents?.[0];
-                // The sitemaps.get endpoint (unlike searchAnalytics.query)
-                // returns submitted/indexed as strings, not JSON numbers.
-                return sum + (Number(webContent?.indexed) || 0);
-              }, 0);
+              // Real Search Analytics data, not the Sitemaps report:
+              // GSC's sitemaps.get contents[].indexed field is Google's own
+              // sitemap-specific indexation counter, which is frequently
+              // stale or reports 0 even for sites with genuinely indexed
+              // pages -- confirmed live against this site (submitted: 80,
+              // indexed: 0 from that endpoint, while 68 of those same URLs
+              // had real impressions in the last 28 days). A URL that
+              // received a real impression is unambiguously indexed and
+              // being served by Google -- a far more current, reliable
+              // signal than the sitemap report's own lagging counter.
+              const { fetchGSCSearchAnalytics } = await import("@/lib/google/search-console");
+              const end = new Date();
+              end.setDate(end.getDate() - 2);
+              const start = new Date();
+              start.setDate(start.getDate() - 30);
+              const fmt = (dt: Date) => dt.toISOString().split("T")[0];
+
+              const pageRows = await fetchGSCSearchAnalytics(site.gscPropertyUrl, {
+                startDate: fmt(start),
+                endDate: fmt(end),
+                dimensions: ["page"],
+                rowLimit: 5000,
+              });
+
+              // Only count pages that are BOTH in the real sitemap AND have
+              // real impressions -- matches "Indexed" against the same
+              // sitemap-page population "Total Pages" counts, rather than
+              // counting any URL GSC has ever seen (which could include
+              // pages no longer in the sitemap, or ones GSC found via other
+              // means).
+              const sitemapUrlSet = new Set(pages.map((p) => p.url.replace(/\/$/, "")));
+              indexedCount = pageRows.filter((r: any) => {
+                const url = (r.keys?.[0] || "").replace(/\/$/, "");
+                return sitemapUrlSet.has(url) && (r.impressions || 0) > 0;
+              }).length;
             } catch (err: any) {
               indexedError = err.message;
             }
