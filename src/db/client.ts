@@ -212,6 +212,18 @@ export async function ensureSchema(): Promise<void> {
         PRIMARY KEY (site_id, user_id)
       );
 
+      CREATE TABLE IF NOT EXISTS sessions (
+        token_hash text PRIMARY KEY,
+        user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at timestamptz NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        last_seen_at timestamptz NOT NULL DEFAULT now(),
+        user_agent text,
+        ip text
+      );
+      CREATE INDEX IF NOT EXISTS sessions_user_idx ON sessions(user_id);
+      CREATE INDEX IF NOT EXISTS sessions_expires_idx ON sessions(expires_at);
+
       CREATE TABLE IF NOT EXISTS tasks (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
