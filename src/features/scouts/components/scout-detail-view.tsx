@@ -1,35 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-  Activity,
+  AlertTriangle,
   ArrowLeft,
   ChevronRight,
-  Download,
-  PlayCircle,
-  Radio,
-  Settings2,
-  Sparkles,
-  Wifi,
-  Zap,
+  Loader2,
+  PlugZap,
+  RefreshCw,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
-import { BlogWriterWizard } from "@/components/blog-writer-wizard";
-import { ContentStudioWorkspace } from "@/components/content-studio-workspace";
 import { useScoutDetail } from "../hooks/use-scout-detail";
 
 export function ScoutDetailView({ scoutId }: { scoutId: string }) {
   const navigate = useNavigate();
-  const {
-    scout,
-    activeTab,
-    setActiveTab,
-    clock,
-    running,
-    setRunning,
-    tab,
-    TabIcon,
-    ScoutIcon,
-    peers,
-  } = useScoutDetail(scoutId);
+  const { scout, activeTab, setActiveTab, tab, tabData, loading, error, refetch, TabIcon, ScoutIcon, peers } = useScoutDetail(scoutId);
 
   if (!scout) return null;
 
@@ -49,7 +32,7 @@ export function ScoutDetailView({ scoutId }: { scoutId: string }) {
         />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 py-8">
+      <div className="relative mx-auto max-w-[1600px] px-3 sm:px-4 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs text-slate-400">
           <Link to="/scout-team" className="inline-flex items-center gap-1 hover:text-cyan-300">
@@ -74,15 +57,7 @@ export function ScoutDetailView({ scoutId }: { scoutId: string }) {
               <div className={`absolute -inset-3 rounded-3xl bg-gradient-to-r ${scout.accent} opacity-30 blur-2xl`} />
               <div className="relative grid h-24 w-24 place-items-center overflow-hidden rounded-2xl border border-cyan-300/40 bg-slate-950/90 ring-1 ring-slate-700/70 shadow-[0_0_30px_rgba(0,0,0,0.6)]">
                 <div className={`absolute inset-0 bg-gradient-to-br ${scout.accent} opacity-30`} />
-                <img
-                  src={agentBot}
-                  alt=""
-                  className="relative block h-[68px] w-[68px] object-contain"
-                />
-                <span
-                  className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-slate-950 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
-                  style={{ animation: "ledPulse 1.6s ease-in-out infinite" }}
-                />
+                <img src={agentBot} alt="" className="relative block h-[68px] w-[68px] object-contain" />
                 <span className={`absolute bottom-1.5 right-1.5 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br ${scout.accent} ring-1 ring-slate-950`}>
                   {ScoutIcon && <ScoutIcon className="h-3 w-3 text-slate-950" />}
                 </span>
@@ -92,73 +67,25 @@ export function ScoutDetailView({ scoutId }: { scoutId: string }) {
             {/* Identity */}
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" style={{ animation: "ledPulse 1.6s ease-in-out infinite" }} />
-                  {scout.status}
-                </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-300">
                   {ScoutIcon && <ScoutIcon className="h-3 w-3 text-cyan-300" />}
                   {scout.role}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 font-mono text-[10px] text-slate-300">
-                  <Radio className="h-3 w-3 text-cyan-300" />
-                  {clock} GST
-                </span>
               </div>
-              <h1 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
-                {scout.title}
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                {scout.mission}
-              </p>
-              <div className="mt-3 text-xs text-slate-500">
-                Currently: <span className="text-slate-300">{scout.activity}</span>
-              </div>
+              <h1 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">{scout.title}</h1>
+              <p className="mt-1 max-w-2xl text-sm text-slate-400">{scout.mission}</p>
             </div>
 
             {/* Actions */}
             <div className="flex flex-wrap items-center gap-2 md:justify-end">
               <button
-                onClick={() => setRunning(true)}
-                className={`inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r ${scout.accent} px-3 py-2 text-xs font-semibold text-slate-950 shadow hover:brightness-110`}
+                onClick={refetch}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200 disabled:opacity-50"
               >
-                <PlayCircle className="h-4 w-4" /> Run new task
-              </button>
-              {scout.id === "design" && running && (
-                <button
-                  onClick={() => setRunning(false)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-500/20"
-                >
-                  <span className="h-3 w-3 rounded-sm bg-rose-400" /> Stop
-                </button>
-              )}
-              <button className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
-                <Download className="h-4 w-4" /> Export
-              </button>
-              <button className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400/40 hover:text-cyan-200">
-                <Settings2 className="h-4 w-4" /> Configure
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh real data
               </button>
             </div>
-          </div>
-
-          {/* Quick stats */}
-          <div className="grid grid-cols-2 gap-px bg-slate-800 sm:grid-cols-4">
-            {[
-              { k: "Tabs", v: String(scout.tabs.length), icon: Activity },
-              { k: "Signals / hr", v: "48", icon: Radio },
-              { k: "Tasks in-flight", v: "6", icon: Zap },
-              { k: "Uptime", v: "99.98%", icon: Wifi },
-            ].map((s) => (
-              <div key={s.k} className="bg-slate-950/70 px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500">
-                    {s.k}
-                  </div>
-                  <s.icon className="h-3.5 w-3.5 text-cyan-300/70" />
-                </div>
-                <div className="mt-1 text-lg font-semibold text-white">{s.v}</div>
-              </div>
-            ))}
           </div>
         </section>
 
@@ -178,11 +105,7 @@ export function ScoutDetailView({ scoutId }: { scoutId: string }) {
                       : "text-slate-400 hover:bg-slate-900/60 hover:text-slate-100"
                   }`}
                 >
-                  <span
-                    className={`grid h-6 w-6 place-items-center rounded-md bg-gradient-to-br ${scout.accent} ${
-                      isActive ? "opacity-100" : "opacity-60 group-hover:opacity-90"
-                    }`}
-                  >
+                  <span className={`grid h-6 w-6 place-items-center rounded-md bg-gradient-to-br ${scout.accent} ${isActive ? "opacity-100" : "opacity-60 group-hover:opacity-90"}`}>
                     <Icon className="h-3.5 w-3.5 text-slate-950" />
                   </span>
                   {t.label}
@@ -191,96 +114,37 @@ export function ScoutDetailView({ scoutId }: { scoutId: string }) {
             })}
           </div>
 
-          {/* Tab body */}
-          {scout.id === "content" ? (
-            <div key={tab.id} className="p-5">
-              <ContentStudioWorkspace accent={scout.accent} initialTab={tab.id as "studio" | "writing" | "pipeline" | "quality" | "gmb"} />
-            </div>
-          ) : tab.id === "blog-writer" ? (
-            <div key={tab.id} className="p-5">
-              <BlogWriterWizard accent={scout.accent} />
-            </div>
-          ) : (
-            <div key={tab.id} className="p-5 space-y-4">
-              {/* Primary workspace */}
-              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">
-                      Workspace
-                    </div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${scout.accent}`}>
-                        {TabIcon && <TabIcon className="h-4 w-4 text-slate-950" />}
-                      </span>
-                      <h2 className="text-lg font-semibold text-white">{tab.label}</h2>
-                    </div>
-                    <p className="mt-2 max-w-2xl text-sm text-slate-400">{tab.summary}</p>
+          {/* Tab body -- entirely real data, or an honest empty/error state */}
+          <div key={tab?.id} className="p-5 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">Real data</div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${scout.accent}`}>
+                      {TabIcon && <TabIcon className="h-4 w-4 text-slate-950" />}
+                    </span>
+                    <h2 className="text-lg font-semibold text-white">{tab?.label}</h2>
                   </div>
-                  <button className="inline-flex items-center gap-1.5 rounded-md border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-medium text-cyan-200 hover:bg-cyan-400/20">
-                    <Sparkles className="h-3.5 w-3.5" /> Ask scout
-                  </button>
-                </div>
-
-                {/* Metrics */}
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  {tab.metrics.map((m) => (
-                    <div key={m.label} className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                      <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${scout.accent}`} />
-                      <div className="text-[10px] uppercase tracking-wider text-slate-500">
-                        {m.label}
-                      </div>
-                      <div className="mt-1 text-xl font-semibold text-white">{m.value}</div>
-                      {m.delta ? (
-                        <div className="mt-0.5 text-[10px] font-medium text-emerald-300">
-                          {m.delta}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Signal chart */}
-                <div className="mt-5 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                  <div className="mb-3 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-500">
-                    <span>Signal · last 24h</span>
-                    <span className="font-mono text-slate-400">live</span>
-                  </div>
-                  <SignalChart accent={scout.accent} seed={scout.id + tab.id} />
+                  <p className="mt-2 max-w-2xl text-sm text-slate-400">{tab?.summary}</p>
                 </div>
               </div>
 
-              {/* Activity feed */}
-              <aside className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">
-                      Activity
-                    </div>
-                    <div className="text-sm font-semibold text-white">
-                      Recent from {tab.label}
-                    </div>
+              <div className="mt-5">
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-slate-800 bg-slate-950/40 py-10 text-sm text-slate-500">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading real data…
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-200">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    live
-                  </span>
-                </div>
-
-                <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {tab.activity.map((a, i) => (
-                    <li key={i} className="relative rounded-lg border border-slate-800 bg-slate-950/50 p-3 pl-5">
-                      <span className={`absolute left-2 top-3.5 h-2 w-2 rounded-full bg-gradient-to-br ${scout.accent}`} />
-                      <div className="text-[10px] uppercase tracking-wider text-slate-500">
-                        {a.time} ago
-                      </div>
-                      <div className="mt-1 text-sm text-slate-200">{a.text}</div>
-                    </li>
-                  ))}
-                </ol>
-              </aside>
+                ) : error ? (
+                  <div className="flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-200">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+                  </div>
+                ) : (
+                  <TabContent tabData={tabData} />
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Peer scouts */}
@@ -304,12 +168,8 @@ export function ScoutDetailView({ scoutId }: { scoutId: string }) {
                     <Icon className="h-3.5 w-3.5 text-slate-950" />
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-white">
-                      {p.title}
-                    </div>
-                    <div className="truncate text-[10px] uppercase tracking-wider text-slate-500">
-                      {p.role}
-                    </div>
+                    <div className="truncate text-xs font-semibold text-white">{p.title}</div>
+                    <div className="truncate text-[10px] uppercase tracking-wider text-slate-500">{p.role}</div>
                   </div>
                 </div>
               </button>
@@ -323,67 +183,86 @@ export function ScoutDetailView({ scoutId }: { scoutId: string }) {
   );
 }
 
-function SignalChart({ accent, seed }: { accent: string; seed: string }) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const rand = () => {
-    h = (h * 1103515245 + 12345) >>> 0;
-    return (h & 0x7fffffff) / 0x7fffffff;
-  };
-  const W = 600;
-  const H = 120;
-  const N = 40;
-  const pts = Array.from({ length: N }, (_, i) => {
-    const x = (i / (N - 1)) * W;
-    const base = H * 0.6;
-    const y = base - Math.sin(i / 3 + rand() * 0.6) * 22 - rand() * 18;
-    return [x, y] as const;
-  });
-  const path = pts
-    .map(([x, y], i) => (i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`))
-    .join(" ");
-  const area = `${path} L ${W} ${H} L 0 ${H} Z`;
-  const gradId = `sig-${seed}`;
-  const strokeId = `sigStroke-${seed}`;
+function TabContent({ tabData }: { tabData: { available: boolean; reason?: string; [key: string]: unknown } | undefined }) {
+  if (!tabData) {
+    return (
+      <div className="rounded-lg border border-dashed border-slate-800 bg-slate-950/40 p-6 text-center text-xs text-slate-500">
+        No data returned for this tab.
+      </div>
+    );
+  }
+
+  if (!tabData.available) {
+    return (
+      <div className="flex items-start gap-3 rounded-lg border border-dashed border-amber-500/30 bg-amber-500/5 p-5">
+        <PlugZap className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+        <div>
+          <div className="text-sm font-medium text-amber-200">Not available yet</div>
+          <p className="mt-1 text-xs leading-relaxed text-amber-200/70">{tabData.reason || "This requires a data source that isn't connected yet."}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const metrics = tabData.metrics as { label: string; value: string }[] | undefined;
+  const items = (tabData.items || tabData.recent || tabData.topQueries || tabData.pages || tabData.reviews) as any[] | undefined;
+  const note = tabData.note as string | undefined;
+  const byStage = tabData.byStage as Record<string, number> | undefined;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-28 w-full">
-      <defs>
-        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgba(34,211,238,0.35)" />
-          <stop offset="100%" stopColor="rgba(34,211,238,0)" />
-        </linearGradient>
-        <linearGradient id={strokeId} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="rgba(34,211,238,1)" />
-          <stop offset="100%" stopColor="rgba(139,92,246,1)" />
-        </linearGradient>
-      </defs>
-      {[0.25, 0.5, 0.75].map((f) => (
-        <line
-          key={f}
-          x1={0}
-          x2={W}
-          y1={H * f}
-          y2={H * f}
-          stroke="rgba(148,163,184,0.12)"
-          strokeDasharray="2 6"
-        />
-      ))}
-      <path d={area} fill={`url(#${gradId})`} />
-      <path
-        d={path}
-        fill="none"
-        stroke={`url(#${strokeId})`}
-        strokeWidth={1.6}
-        strokeLinecap="round"
-      />
-      <circle
-        cx={pts[pts.length - 1][0]}
-        cy={pts[pts.length - 1][1]}
-        r={3.5}
-        fill="rgba(34,211,238,1)"
-      />
-      <title>{accent}</title>
-    </svg>
+    <div className="space-y-4">
+      {metrics && metrics.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {metrics.map((m) => (
+            <div key={m.label} className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">{m.label}</div>
+              <div className="mt-1 text-xl font-semibold text-white">{m.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {byStage && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {Object.entries(byStage).map(([stage, count]) => (
+            <div key={stage} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-slate-500">{stage.replace("_", " ")}</div>
+              <div className="mt-1 text-lg font-semibold text-white">{count}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {note && (
+        <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-cyan-200">{note}</div>
+      )}
+
+      {items && items.length > 0 && (
+        <div className="overflow-hidden rounded-lg border border-slate-800">
+          <ul className="divide-y divide-slate-800">
+            {items.slice(0, 15).map((it, i) => (
+              <li key={i} className="p-3 text-sm text-slate-200">
+                {typeof it === "string" ? it : (
+                  <div>
+                    <div className="font-medium text-white">{it.title || it.query || it.page || it.author || JSON.stringify(it).slice(0, 60)}</div>
+                    <div className="mt-0.5 text-[11px] text-slate-500">
+                      {[it.status, it.severity, it.source, it.position != null ? `pos ${it.position}` : null, it.clicks != null ? `${it.clicks} clicks` : null, it.createdAt]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </div>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {!metrics?.length && !byStage && !note && !items?.length && (
+        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-950/40 p-6 text-center text-xs text-slate-500">
+          No real data yet for this tab.
+        </div>
+      )}
+    </div>
   );
 }

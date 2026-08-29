@@ -114,7 +114,7 @@ export function DashboardView() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 py-10">
+      <div className="relative mx-auto max-w-[1600px] px-3 sm:px-4 py-10">
         {/* Fleet Control top bar */}
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">

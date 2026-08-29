@@ -1,23 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  Search,
-  FileText,
-  Palette,
-  MapPin,
-  Target,
-  ClipboardCheck,
-  Wrench,
   Radio,
-  Coffee,
-  Wifi,
-  Activity,
-  Zap,
   Crown,
-  Sparkles,
 } from "lucide-react";
 import agentBot from "@/assets/agent-bot.png";
 import leaderBot from "@/assets/leader-bot.png";
+import { SCOUTS } from "@/lib/scouts";
 
 export const Route = createFileRoute("/scout-team/")({
   head: () => ({
@@ -38,101 +27,6 @@ export const Route = createFileRoute("/scout-team/")({
   }),
   component: ScoutTeamPage,
 });
-
-type Scout = {
-  id: string;
-  title: string;
-  role: string;
-  icon: typeof Search;
-  accent: string;
-  activity: string;
-  status: string;
-  /** angle in degrees, 0 = top, clockwise */
-  angle: number;
-};
-
-const SCOUTS: Scout[] = [
-  {
-    id: "keyword",
-    title: "Keyword Scout",
-    role: "Query Intelligence",
-    icon: Search,
-    accent: "from-cyan-400 to-sky-500",
-    activity: "Mining 428 long-tail queries",
-    status: "Engaged",
-    angle: 0,
-  },
-  {
-    id: "content",
-    title: "Content Scout",
-    role: "Editorial Radar",
-    icon: FileText,
-    accent: "from-violet-400 to-fuchsia-500",
-    activity: "Drafting brief · move-in checklist",
-    status: "Writing",
-    angle: 51.4,
-  },
-  {
-    id: "design",
-    title: "Designing Scout",
-    role: "Visual Systems",
-    icon: Palette,
-    accent: "from-indigo-400 to-blue-500",
-    activity: "Prototyping hero layout",
-    status: "Sketching",
-    angle: 102.8,
-  },
-  {
-    id: "local",
-    title: "Local Business Scout",
-    role: "GBP & Citations",
-    icon: MapPin,
-    accent: "from-emerald-400 to-teal-500",
-    activity: "Sweeping 42 UAE directories",
-    status: "Scanning",
-    angle: 154.3,
-  },
-  {
-    id: "competitor",
-    title: "Competitor Scout",
-    role: "SERP Surveillance",
-    icon: Target,
-    accent: "from-amber-400 to-orange-500",
-    activity: "Diffing 6 rival sitemaps",
-    status: "Tracking",
-    angle: 205.7,
-  },
-  {
-    id: "audit",
-    title: "Audit & Reporting Scout",
-    role: "Insights Desk",
-    icon: ClipboardCheck,
-    accent: "from-indigo-400 to-blue-500",
-    activity: "Compiling weekly exec report",
-    status: "Reporting",
-    angle: 257.1,
-  },
-  {
-    id: "technical",
-    title: "Technical Scout",
-    role: "Crawl & Performance",
-    icon: Wrench,
-    accent: "from-rose-400 to-red-500",
-    activity: "Running Lighthouse on 32 pages",
-    status: "Auditing",
-    angle: 308.6,
-  },
-  {
-    id: "geo",
-    title: "GEO & AI Search Scout",
-    role: "AI Overview Radar",
-    icon: Sparkles,
-    accent: "from-cyan-400 to-indigo-500",
-    activity: "Tracking Perplexity & Gemini citations",
-    status: "Monitoring",
-    angle: 335,
-  },
-];
 
 function ScoutTeamPage() {
   const [clock, setClock] = useState("");
@@ -166,7 +60,7 @@ function ScoutTeamPage() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 py-10">
+      <div className="relative mx-auto max-w-[1600px] px-3 sm:px-4 py-10">
         {/* Command header */}
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 px-5 py-4 backdrop-blur">
           <div className="flex items-center gap-3">
@@ -175,52 +69,17 @@ function ScoutTeamPage() {
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-white">
-                Scout Team · Command Floor
+                Scout Team
               </h1>
               <p className="text-xs text-slate-400">
-                1 leader orchestrating 7 scouts · Dubai HQ
+                1 leader orchestrating {SCOUTS.length} scouts — click any scout for its real, live data
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-emerald-200">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              All desks online
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-slate-300">
-              <Wifi className="h-3.5 w-3.5 text-cyan-300" /> Mesh 1.2 Gb/s
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 font-mono text-slate-300">
-              <Coffee className="h-3.5 w-3.5 text-amber-300" /> {clock} GST
-            </span>
-          </div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 font-mono text-xs text-slate-300">
+            {clock}
+          </span>
         </header>
-
-        {/* Floor stats */}
-        <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { k: "Scouts", v: "7", icon: Activity },
-            { k: "Tasks in-flight", v: "48", icon: Zap },
-            { k: "Signals / hr", v: "312", icon: Radio },
-            { k: "Uptime", v: "99.98%", icon: Wifi },
-          ].map((s) => (
-            <div
-              key={s.k}
-              className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3"
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-[11px] uppercase tracking-wider text-slate-500">
-                  {s.k}
-                </div>
-                <s.icon className="h-3.5 w-3.5 text-cyan-300/70" />
-              </div>
-              <div className="mt-1 text-lg font-semibold text-white">{s.v}</div>
-            </div>
-          ))}
-        </section>
 
         {/* Constellation */}
         <div className="mt-8 mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
@@ -234,7 +93,7 @@ function ScoutTeamPage() {
         {/* Roster */}
         <div className="mt-10 mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
           <span className="h-px flex-1 bg-slate-800" />
-          <span>Roster · Live Status</span>
+          <span>Roster</span>
           <span className="h-px flex-1 bg-slate-800" />
         </div>
 
@@ -261,21 +120,12 @@ function ScoutTeamPage() {
                       {s.title}
                     </div>
                     <div className="truncate text-[11px] text-slate-400">
-                      {s.activity}
+                      {s.role}
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-200">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" style={{ animation: "ledPulse 1.6s ease-in-out infinite" }} />
-                    {s.status}
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-500">
-                    {s.role}
-                  </span>
-                </div>
+                <p className="mt-3 line-clamp-2 text-[11px] leading-relaxed text-slate-500">{s.mission}</p>
               </Link>
-
             );
           })}
         </section>
