@@ -108,11 +108,14 @@ export async function fetchPageSpeedInsights(
   strategy: "mobile" | "desktop" = "mobile",
 ): Promise<PageSpeedResult> {
   const apiKey = await resolvePageSpeedApiKey();
-  const params = new URLSearchParams({
-    url,
-    strategy,
-    category: "performance,seo,accessibility,best-practices",
-  });
+  // The PSI API takes `category` as a repeated query param, not a single
+  // comma-joined value -- passing "performance,seo,accessibility,best-practices"
+  // as one string is rejected by Google with a 400 "Invalid value at
+  // 'category'" error that has nothing to do with the API key.
+  const params = new URLSearchParams({ url, strategy });
+  for (const cat of ["performance", "seo", "accessibility", "best-practices"]) {
+    params.append("category", cat);
+  }
   if (apiKey) params.set("key", apiKey);
 
   const res = await fetch(

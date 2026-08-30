@@ -19,7 +19,12 @@ export const Route = createFileRoute("/api/settings/apikeys/verify-pagespeed")({
           return Response.json({ ok: true, valid: true, message: "PageSpeed Insights API responded successfully." });
         } catch (err: any) {
           const msg = String(err.message || "");
-          const authFailure = /\((400|401|403)\)/.test(msg) && /key|invalid|forbidden|unauthorized/i.test(msg);
+          // Only classify as a key problem when Google's error text actually
+          // names the key/credential -- a generic "invalid value" elsewhere
+          // in the request (e.g. a malformed parameter) is a code bug, not
+          // proof the configured key is bad, and must not be reported as one.
+          const authFailure =
+            /\((400|401|403)\)/.test(msg) && /\bapi[ _-]?key\b|\bkeyinvalid\b|forbidden|unauthorized|permission_denied/i.test(msg);
           if (authFailure) {
             return Response.json({ ok: true, valid: false, message: `Google rejected this API key: ${msg.slice(0, 300)}` });
           }
