@@ -82,6 +82,7 @@ import { Route as ApiJobsIdFailRouteImport } from './routes/api.jobs.$id.fail'
 import { Route as ApiJobsIdHeartbeatRouteImport } from './routes/api.jobs.$id.heartbeat'
 import { Route as ApiQaRunsIdRouteImport } from './routes/api.qa.runs.$id'
 import { Route as ApiScoutsScoutIdDataRouteImport } from './routes/api.scouts.$scoutId.data'
+import { Route as ApiSettingsApikeysVerifyPagespeedRouteImport } from './routes/api.settings.apikeys.verify-pagespeed'
 import { Route as ApiSettingsAutomationRulesIdRouteImport } from './routes/api.settings.automation-rules.$id'
 import { Route as ApiSettingsRolesIdRouteImport } from './routes/api.settings.roles.$id'
 import { Route as ApiSettingsWebhooksIdRouteImport } from './routes/api.settings.webhooks.$id'
@@ -465,6 +466,12 @@ const ApiScoutsScoutIdDataRoute = ApiScoutsScoutIdDataRouteImport.update({
   path: '/api/scouts/$scoutId/data',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSettingsApikeysVerifyPagespeedRoute =
+  ApiSettingsApikeysVerifyPagespeedRouteImport.update({
+    id: '/verify-pagespeed',
+    path: '/verify-pagespeed',
+    getParentRoute: () => ApiSettingsApikeysRoute,
+  } as any)
 const ApiSettingsAutomationRulesIdRoute =
   ApiSettingsAutomationRulesIdRouteImport.update({
     id: '/$id',
@@ -584,7 +591,7 @@ export interface FileRoutesByFullPath {
   '/api/qa/run': typeof ApiQaRunRoute
   '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
-  '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
+  '/api/settings/apikeys': typeof ApiSettingsApikeysRouteWithChildren
   '/api/settings/audit': typeof ApiSettingsAuditRoute
   '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
   '/api/settings/general': typeof ApiSettingsGeneralRoute
@@ -607,6 +614,7 @@ export interface FileRoutesByFullPath {
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
   '/api/qa/runs/$id': typeof ApiQaRunsIdRouteWithChildren
   '/api/scouts/$scoutId/data': typeof ApiScoutsScoutIdDataRoute
+  '/api/settings/apikeys/verify-pagespeed': typeof ApiSettingsApikeysVerifyPagespeedRoute
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
@@ -672,7 +680,7 @@ export interface FileRoutesByTo {
   '/api/qa/run': typeof ApiQaRunRoute
   '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
-  '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
+  '/api/settings/apikeys': typeof ApiSettingsApikeysRouteWithChildren
   '/api/settings/audit': typeof ApiSettingsAuditRoute
   '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
   '/api/settings/general': typeof ApiSettingsGeneralRoute
@@ -695,6 +703,7 @@ export interface FileRoutesByTo {
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
   '/api/qa/runs/$id': typeof ApiQaRunsIdRouteWithChildren
   '/api/scouts/$scoutId/data': typeof ApiScoutsScoutIdDataRoute
+  '/api/settings/apikeys/verify-pagespeed': typeof ApiSettingsApikeysVerifyPagespeedRoute
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
@@ -761,7 +770,7 @@ export interface FileRoutesById {
   '/api/qa/run': typeof ApiQaRunRoute
   '/api/qa/runs': typeof ApiQaRunsRouteWithChildren
   '/api/seo-suite/run': typeof ApiSeoSuiteRunRoute
-  '/api/settings/apikeys': typeof ApiSettingsApikeysRoute
+  '/api/settings/apikeys': typeof ApiSettingsApikeysRouteWithChildren
   '/api/settings/audit': typeof ApiSettingsAuditRoute
   '/api/settings/automation-rules': typeof ApiSettingsAutomationRulesRouteWithChildren
   '/api/settings/general': typeof ApiSettingsGeneralRoute
@@ -784,6 +793,7 @@ export interface FileRoutesById {
   '/api/jobs/$id/heartbeat': typeof ApiJobsIdHeartbeatRoute
   '/api/qa/runs/$id': typeof ApiQaRunsIdRouteWithChildren
   '/api/scouts/$scoutId/data': typeof ApiScoutsScoutIdDataRoute
+  '/api/settings/apikeys/verify-pagespeed': typeof ApiSettingsApikeysVerifyPagespeedRoute
   '/api/settings/automation-rules/$id': typeof ApiSettingsAutomationRulesIdRoute
   '/api/settings/roles/$id': typeof ApiSettingsRolesIdRoute
   '/api/settings/webhooks/$id': typeof ApiSettingsWebhooksIdRouteWithChildren
@@ -874,6 +884,7 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/heartbeat'
     | '/api/qa/runs/$id'
     | '/api/scouts/$scoutId/data'
+    | '/api/settings/apikeys/verify-pagespeed'
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
@@ -962,6 +973,7 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/heartbeat'
     | '/api/qa/runs/$id'
     | '/api/scouts/$scoutId/data'
+    | '/api/settings/apikeys/verify-pagespeed'
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
@@ -1050,6 +1062,7 @@ export interface FileRouteTypes {
     | '/api/jobs/$id/heartbeat'
     | '/api/qa/runs/$id'
     | '/api/scouts/$scoutId/data'
+    | '/api/settings/apikeys/verify-pagespeed'
     | '/api/settings/automation-rules/$id'
     | '/api/settings/roles/$id'
     | '/api/settings/webhooks/$id'
@@ -1115,7 +1128,7 @@ export interface RootRouteChildren {
   ApiQaRunRoute: typeof ApiQaRunRoute
   ApiQaRunsRoute: typeof ApiQaRunsRouteWithChildren
   ApiSeoSuiteRunRoute: typeof ApiSeoSuiteRunRoute
-  ApiSettingsApikeysRoute: typeof ApiSettingsApikeysRoute
+  ApiSettingsApikeysRoute: typeof ApiSettingsApikeysRouteWithChildren
   ApiSettingsAuditRoute: typeof ApiSettingsAuditRoute
   ApiSettingsAutomationRulesRoute: typeof ApiSettingsAutomationRulesRouteWithChildren
   ApiSettingsGeneralRoute: typeof ApiSettingsGeneralRoute
@@ -1648,6 +1661,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiScoutsScoutIdDataRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/settings/apikeys/verify-pagespeed': {
+      id: '/api/settings/apikeys/verify-pagespeed'
+      path: '/verify-pagespeed'
+      fullPath: '/api/settings/apikeys/verify-pagespeed'
+      preLoaderRoute: typeof ApiSettingsApikeysVerifyPagespeedRouteImport
+      parentRoute: typeof ApiSettingsApikeysRoute
+    }
     '/api/settings/automation-rules/$id': {
       id: '/api/settings/automation-rules/$id'
       path: '/$id'
@@ -1806,6 +1826,18 @@ const ApiQaRunsRouteWithChildren = ApiQaRunsRoute._addFileChildren(
   ApiQaRunsRouteChildren,
 )
 
+interface ApiSettingsApikeysRouteChildren {
+  ApiSettingsApikeysVerifyPagespeedRoute: typeof ApiSettingsApikeysVerifyPagespeedRoute
+}
+
+const ApiSettingsApikeysRouteChildren: ApiSettingsApikeysRouteChildren = {
+  ApiSettingsApikeysVerifyPagespeedRoute:
+    ApiSettingsApikeysVerifyPagespeedRoute,
+}
+
+const ApiSettingsApikeysRouteWithChildren =
+  ApiSettingsApikeysRoute._addFileChildren(ApiSettingsApikeysRouteChildren)
+
 interface ApiSettingsAutomationRulesRouteChildren {
   ApiSettingsAutomationRulesIdRoute: typeof ApiSettingsAutomationRulesIdRoute
 }
@@ -1939,7 +1971,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQaRunRoute: ApiQaRunRoute,
   ApiQaRunsRoute: ApiQaRunsRouteWithChildren,
   ApiSeoSuiteRunRoute: ApiSeoSuiteRunRoute,
-  ApiSettingsApikeysRoute: ApiSettingsApikeysRoute,
+  ApiSettingsApikeysRoute: ApiSettingsApikeysRouteWithChildren,
   ApiSettingsAuditRoute: ApiSettingsAuditRoute,
   ApiSettingsAutomationRulesRoute: ApiSettingsAutomationRulesRouteWithChildren,
   ApiSettingsGeneralRoute: ApiSettingsGeneralRoute,

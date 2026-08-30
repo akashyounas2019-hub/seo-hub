@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { encrypt, isEncryptionConfigured } from "@/lib/crypto";
+import { encrypt, decrypt, isEncryptionConfigured } from "@/lib/crypto";
 import { actorEmailFromRequest, logAudit } from "@/lib/audit";
 
 // Maps the UI's provider key to the org_settings ciphertext column.
@@ -25,12 +25,29 @@ export const Route = createFileRoute("/api/settings/apikeys")({
           const d = db();
           const [row] = await d.select().from(orgSettings).where(eq(orgSettings.id, "singleton")).limit(1);
 
+          // Masked key (last 4 real characters only) so the UI can show
+          // "which key is this" without ever sending the plaintext secret
+          // back to the browser. Decrypts server-side only; the mask is
+          // the only thing that leaves this handler.
           const set: Record<string, boolean> = {};
+          const masked: Record<string, string | null> = {};
           for (const [provider, column] of Object.entries(PROVIDER_COLUMNS)) {
-            set[provider] = !!(row as any)?.[column];
+            const ciphertext = (row as any)?.[column] as string | undefined;
+            set[provider] = !!ciphertext;
+            if (ciphertext) {
+              try {
+                const plaintext = decrypt(ciphertext);
+                const tail = plaintext.slice(-4);
+                masked[provider] = `${"•".repeat(Math.max(plaintext.length - 4, 4))}${tail}`;
+              } catch {
+                masked[provider] = null;
+              }
+            } else {
+              masked[provider] = null;
+            }
           }
 
-          return Response.json({ ok: true, set, encryptionConfigured: isEncryptionConfigured() });
+          return Response.json({ ok: true, set, masked, encryptionConfigured: isEncryptionConfigured() });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message }, { status: 500 });
         }
