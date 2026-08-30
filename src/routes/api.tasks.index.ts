@@ -13,8 +13,15 @@ export const Route = createFileRoute("/api/tasks/")({
           await ensureSchema();
           const d = db();
 
-          const tasksList = await d.select().from(kanbanTasks).orderBy(desc(kanbanTasks.createdAt));
-          const templatesList = await d.select().from(kanbanTaskTemplates).orderBy(desc(kanbanTaskTemplates.createdAt));
+          // Not tightly paginated: the board's own KPIs (done/inprogress
+          // counts in use-tasks.ts) are computed client-side over this exact
+          // list, so a real page-size limit here would silently understate
+          // them. The cap is a runaway-query guard for this app's real
+          // scale, not a functional page size -- if the task volume grows
+          // enough to need real pagination, the KPI aggregation should move
+          // server-side (SQL COUNT) at the same time, not before.
+          const tasksList = await d.select().from(kanbanTasks).orderBy(desc(kanbanTasks.createdAt)).limit(5000);
+          const templatesList = await d.select().from(kanbanTaskTemplates).orderBy(desc(kanbanTaskTemplates.createdAt)).limit(500);
 
           return Response.json({ tasks: tasksList, templates: templatesList });
         } catch (err: any) {

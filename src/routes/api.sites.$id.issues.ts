@@ -124,7 +124,7 @@ export async function runAndStoreDiagnostics(
   const result: DiagnosticsResult = { scores, pageSpeedIssues, pageSpeedError, technicalIssues, checkedUrl: targetUrl };
 
   const { db, ensureSchema } = await import("@/db/client");
-  const { siteDiagnosticsReports } = await import("@/db/schema");
+  const { siteDiagnosticsReports, sites } = await import("@/db/schema");
   const { eq, and } = await import("drizzle-orm");
 
   await ensureSchema();
@@ -151,6 +151,16 @@ export async function runAndStoreDiagnostics(
   } else {
     await d.insert(siteDiagnosticsReports).values({ siteId, strategy, ...row });
   }
+
+  // sites.health previously only ever moved off its DB default
+  // ("onboarding") through a manual, unvalidated PATCH -- nothing in the app
+  // ever computed it from a real signal, so the badge shown across Agency
+  // Health / Connected Sites / the sidebar was permanently meaningless
+  // unless someone hand-set it. A completed real diagnostics run is exactly
+  // the real signal that should drive it: any critical finding means the
+  // site needs attention; a clean or warnings-only run means healthy.
+  const hasCritical = [...technicalIssues, ...pageSpeedIssues].some((i: any) => i.severity === "critical");
+  await d.update(sites).set({ health: hasCritical ? "attention" : "healthy" }).where(eq(sites.id, siteId));
 
   return result;
 }

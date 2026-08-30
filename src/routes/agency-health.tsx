@@ -29,11 +29,11 @@ export const Route = createFileRoute("/agency-health")({
   component: AgencyHealthPage,
 });
 
-const FILTERS = ["All", "Healthy", "Warning", "Critical"] as const;
+const FILTERS = ["All", "Healthy", "Warning", "Onboarding", "Critical"] as const;
 type FilterKey = (typeof FILTERS)[number];
 
 function AgencyHealthPage() {
-  const { allSites, deleteSite, setCurrentSiteId } = useSite();
+  const { allSites, deleteSite, setCurrentSiteId, isLoading, loadError } = useSite();
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("All");
   const [q, setQ] = useState("");
@@ -42,9 +42,16 @@ function AgencyHealthPage() {
     setMounted(true);
   }, []);
 
+  // "onboarding" is a real, distinct lifecycle state (the DB default for a
+  // newly connected site, per src/db/schema.ts) -- not a synonym for
+  // "critical". It previously counted toward this page's "Critical" bucket
+  // while connected-sites.tsx showed the exact same value as a neutral
+  // "Onboarding" badge, so a brand-new site looked alarming here and fine
+  // there. Both pages now agree: onboarding is its own bucket.
   const filtered = useMemo(() => {
     return allSites.filter((s) => {
-      const statusKey = s.health === "healthy" ? "healthy" : s.health === "attention" ? "warning" : "critical";
+      const statusKey =
+        s.health === "healthy" ? "healthy" : s.health === "attention" ? "warning" : s.health === "onboarding" ? "onboarding" : "critical";
       if (filter !== "All" && statusKey !== filter.toLowerCase()) return false;
       if (q && !(s.label.toLowerCase().includes(q.toLowerCase()) || s.domain.toLowerCase().includes(q.toLowerCase()))) return false;
       return true;
@@ -54,10 +61,11 @@ function AgencyHealthPage() {
   const summary = useMemo(() => {
     const healthy = allSites.filter((s) => s.health === "healthy").length;
     const warning = allSites.filter((s) => s.health === "attention").length;
-    const critical = allSites.filter((s) => s.health === "onboarding").length;
+    const onboarding = allSites.filter((s) => s.health === "onboarding").length;
+    const critical = allSites.filter((s) => s.health !== "healthy" && s.health !== "attention" && s.health !== "onboarding").length;
     const connected = allSites.filter((s) => s.gaConnected || s.gscConnected || s.gbpConnected).length;
     const issues = allSites.reduce((a, s) => a + s.openFixes, 0);
-    return { healthy, warning, critical, connected, issues };
+    return { healthy, warning, onboarding, critical, connected, issues };
   }, [allSites]);
 
   const handleDelete = (site: ConnectedSite) => {
@@ -129,6 +137,7 @@ function AgencyHealthPage() {
             { l: "Connected", v: `${summary.connected}`, sub: "sites", a: "from-cyan-400 to-blue-500", i: Gauge },
             { l: "Healthy", v: `${summary.healthy}`, sub: "sites", a: "from-emerald-400 to-teal-500", i: CheckCircle2 },
             { l: "Warning", v: `${summary.warning}`, sub: "sites", a: "from-amber-400 to-yellow-500", i: AlertTriangle },
+            { l: "Onboarding", v: `${summary.onboarding}`, sub: "sites", a: "from-cyan-300 to-sky-400", i: Sparkles },
             { l: "Critical", v: `${summary.critical}`, sub: "sites", a: "from-rose-400 to-red-500", i: AlertTriangle },
             { l: "Open Issues", v: `${summary.issues}`, sub: "total", a: "from-violet-400 to-fuchsia-500", i: Activity },
           ].map((k) => (
@@ -176,16 +185,26 @@ function AgencyHealthPage() {
         </section>
 
         {/* Site Cards Grid */}
-        <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((site) => (
-            <SiteCard key={site.id} site={site} onDelete={() => handleDelete(site)} onSelect={() => setCurrentSiteId(site.id)} />
-          ))}
-          {filtered.length === 0 && (
-            <div className="col-span-full rounded-xl border border-dashed border-slate-800 p-8 text-center text-sm text-slate-500">
-              No connected sites match this search filter.
-            </div>
-          )}
-        </section>
+        {loadError ? (
+          <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/5 p-8 text-center text-sm text-rose-300">
+            Failed to load sites: {loadError}
+          </div>
+        ) : isLoading ? (
+          <div className="mt-4 rounded-xl border border-dashed border-slate-800 p-8 text-center text-sm text-slate-500">
+            Loading connected sites…
+          </div>
+        ) : (
+          <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((site) => (
+              <SiteCard key={site.id} site={site} onDelete={() => handleDelete(site)} onSelect={() => setCurrentSiteId(site.id)} />
+            ))}
+            {filtered.length === 0 && (
+              <div className="col-span-full rounded-xl border border-dashed border-slate-800 p-8 text-center text-sm text-slate-500">
+                No connected sites match this search filter.
+              </div>
+            )}
+          </section>
+        )}
 
         <div aria-hidden className="h-16" />
       </div>
@@ -194,10 +213,12 @@ function AgencyHealthPage() {
 }
 
 function SiteCard({ site, onDelete, onSelect }: { site: ConnectedSite; onDelete: () => void; onSelect: () => void }) {
-  const statusKey = site.health === "healthy" ? "healthy" : site.health === "attention" ? "warning" : "critical";
+  const statusKey =
+    site.health === "healthy" ? "healthy" : site.health === "attention" ? "warning" : site.health === "onboarding" ? "onboarding" : "critical";
   const statusStyles = {
     healthy: { ring: "ring-emerald-400/30", dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]", chip: "bg-emerald-400/10 text-emerald-300 border-emerald-400/25", label: "Healthy" },
     warning: { ring: "ring-amber-400/30", dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]", chip: "bg-amber-400/10 text-amber-300 border-amber-400/25", label: "Watch" },
+    onboarding: { ring: "ring-cyan-400/30", dot: "bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.9)]", chip: "bg-cyan-400/10 text-cyan-200 border-cyan-400/25", label: "Onboarding" },
     critical: { ring: "ring-rose-400/30", dot: "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.9)]", chip: "bg-rose-400/10 text-rose-300 border-rose-400/25", label: "Attention" },
   }[statusKey];
 

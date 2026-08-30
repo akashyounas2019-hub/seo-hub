@@ -243,8 +243,6 @@ export type AgentProfile = {
   tasks: Task[];
   settings: AgentSettings;
   extraSubs?: Sub[];
-  memory: string;
-  notes: MemoryNote[];
   memories?: MemoryNote[];
   logs: LogEntry[];
 };
@@ -302,18 +300,8 @@ export function saveProfiles(profiles: ProfileState) {
   } catch {}
 }
 
-const SEED_MEMORY: Record<string, string> = {
-  onpage: "Prefer entity-first briefs. Client tone: pragmatic, Dubai-market. Cluster around service + area.",
-  offpage: "Only pursue UAE-relevant DR40+ referrers. Never buy links. Ramadan blackout: Mar 1–10.",
-  technical: "LCP budget = 2.0s. Origin behind Cloudflare. Log parsing runs nightly at 02:00 GST.",
-  research: "Track Arabic + English variants. Persona focus: property managers, HR admins.",
-  auditor: "E-E-A-T = author bios + sameAs + real-world case studies. Zero tolerance for AI-only pages.",
-  geo: "Optimize for Gemini AI Overviews & Perplexity citations. Maintain verified Wikidata & Schema grounding.",
-  international: "Ensure 100% hreflang symmetry across En / Ar landing pages. Sweep 5x5 geo-grids weekly.",
-};
-
 export function getDefaultProfile(id: string): AgentProfile {
-  const { parentId, subSlug } = parseAgentId(id);
+  const { subSlug } = parseAgentId(id);
   const nowIso = new Date().toISOString();
   // Sub-agents get their own real skill string (SUB_AGENT_SKILLS); parent
   // agents (and the id === parentId case, i.e. no subSlug) use DEFAULT_SKILLS.
@@ -325,10 +313,8 @@ export function getDefaultProfile(id: string): AgentProfile {
     skills,
     tasks: [],
     settings: { ...DEFAULT_SETTINGS },
-    memory: SEED_MEMORY[parentId] ?? "",
-    notes: [],
     logs: [
-      { id: "seed-1", ts: nowIso, kind: "system", message: "Agent initialized · memory seeded from playbook." },
+      { id: "seed-1", ts: nowIso, kind: "system", message: "Agent initialized." },
     ],
   };
 }

@@ -60,6 +60,13 @@ export const Route = createFileRoute("/api/sites/$id")({
             /* fallback */
           }
 
+          if (body.health !== undefined && !["healthy", "attention", "onboarding"].includes(body.health)) {
+            return Response.json(
+              { ok: false, error: `Invalid health value "${body.health}" -- must be healthy, attention, or onboarding.` },
+              { status: 400 },
+            );
+          }
+
           const updates: Record<string, any> = { updatedAt: new Date() };
           for (const key of ALLOWED_FIELDS) {
             if (body[key] !== undefined) updates[key] = body[key];

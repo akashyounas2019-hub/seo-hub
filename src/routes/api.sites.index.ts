@@ -11,7 +11,13 @@ export const Route = createFileRoute("/api/sites/")({
 
           await ensureSchema();
           const d = db();
-          const rows = await d.select().from(sites).orderBy(asc(sites.createdAt));
+          // Deliberately not paginated: every caller (site-context.tsx's
+          // sidebar switcher, Agency Health, Connected Sites) treats "all
+          // sites" as the complete managed portfolio, not a feed -- silently
+          // truncating it would hide real client sites from the switcher.
+          // The cap here is a runaway-query guard, not a real limit at this
+          // app's actual scale (a managed agency's site portfolio).
+          const rows = await d.select().from(sites).orderBy(asc(sites.createdAt)).limit(2000);
           return Response.json({ ok: true, sites: rows });
         } catch (err: any) {
           return Response.json({ ok: false, error: err.message || "Failed to load sites" }, { status: 500 });

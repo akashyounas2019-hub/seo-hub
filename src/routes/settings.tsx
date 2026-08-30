@@ -171,15 +171,6 @@ function Card({ title, desc, children }: { title: string; desc?: string; childre
   );
 }
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between border-t border-slate-800 py-3 first:border-t-0 first:pt-0">
-      <div className="text-sm text-slate-300">{label}</div>
-      <div className="text-sm text-white">{value}</div>
-    </div>
-  );
-}
-
 const PROVIDER_OPTIONS = [
   { value: "gemini", label: "Gemini → Groq → Anthropic" },
   { value: "anthropic", label: "Anthropic → OpenAI → Gemini" },
@@ -223,11 +214,6 @@ function GeneralPanel() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="Workspace" desc="Identity used across dashboards & exports. Not yet editable — placeholder values.">
-        <Row label="Workspace name" value="AKS SEO" />
-        <Row label="Timezone" value="Asia/Dubai (GST)" />
-        <Row label="Currency" value="AED" />
-      </Card>
       <Card title="Provider preference" desc="Which model to try first for routine tasks. Saved to Postgres org_settings.">
         <select
           value={provider}

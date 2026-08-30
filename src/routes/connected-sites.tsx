@@ -57,7 +57,7 @@ function statusMeta(s: IntegrationStatus) {
 }
 
 function ConnectedSitesPage() {
-  const { allSites, deleteSite, setCurrentSiteId } = useSite();
+  const { allSites, deleteSite, setCurrentSiteId, isLoading, loadError } = useSite();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "healthy" | "attention" | "onboarding">("all");
   const [query, setQuery] = useState("");
@@ -168,26 +168,36 @@ function ConnectedSitesPage() {
       </div>
 
       {/* Site cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {filtered.map((site) => (
-          <SiteCard
-            key={site.id}
-            site={site}
-            paused={!!disabled[site.id]}
-            onDelete={() => handleDelete(site.id, site.label)}
-            onToggle={() => handleToggle(site.id, site.label)}
-            onViewDetails={() => {
-              setCurrentSiteId(site.id);
-              navigate({ to: "/knowledge-base" });
-            }}
-          />
-        ))}
-        {filtered.length === 0 && (
-          <div className="col-span-full rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-6 py-10 text-center text-[13px] text-slate-500">
-            No sites match this filter.
-          </div>
-        )}
-      </div>
+      {loadError ? (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-6 py-10 text-center text-[13px] text-rose-300">
+          Failed to load connected sites: {loadError}
+        </div>
+      ) : isLoading ? (
+        <div className="rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-6 py-10 text-center text-[13px] text-slate-500">
+          Loading connected sites…
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {filtered.map((site) => (
+            <SiteCard
+              key={site.id}
+              site={site}
+              paused={!!disabled[site.id]}
+              onDelete={() => handleDelete(site.id, site.label)}
+              onToggle={() => handleToggle(site.id, site.label)}
+              onViewDetails={() => {
+                setCurrentSiteId(site.id);
+                navigate({ to: "/knowledge-base" });
+              }}
+            />
+          ))}
+          {filtered.length === 0 && (
+            <div className="col-span-full rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-6 py-10 text-center text-[13px] text-slate-500">
+              No sites match this filter.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
