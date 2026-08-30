@@ -47,8 +47,10 @@ type IssuesData = {
   pageSpeedIssues: PageSpeedIssue[];
   pageSpeedError: string | null;
   technicalIssues: TechnicalIssue[];
-  checkedUrl: string;
-  checkedAt: string;
+  checkedUrl: string | null;
+  checkedAt: string | null;
+  cached?: boolean;
+  source?: "manual" | "daily-auto";
 };
 
 const CATEGORY_ICON: Record<string, typeof Gauge> = {
@@ -80,29 +82,55 @@ function scoreRing(score: number | null): string {
  */
 export function IssuesDrilldown({ site }: { site?: ConnectedSite }) {
   const [data, setData] = useState<IssuesData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingCache, setLoadingCache] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [strategy, setStrategy] = useState<"mobile" | "desktop">("mobile");
 
-  const load = async () => {
+  // Loads whatever is already cached -- near-instant, runs on mount and on
+  // strategy switch so the tab never blocks on a live PageSpeed run just to
+  // show the last real result.
+  const loadCached = async () => {
     if (!site?.id) return;
-    setLoading(true);
+    setLoadingCache(true);
     try {
       const res = await fetch(`/api/sites/${site.id}/issues?strategy=${strategy}`);
       const json = await res.json();
       if (json?.ok) {
         setData(json);
       } else {
-        toast.error(json?.error || "Failed to load issues");
+        toast.error(json?.error || "Failed to load cached issues");
       }
     } catch {
-      toast.error("Failed to load issues");
+      toast.error("Failed to load cached issues");
     } finally {
-      setLoading(false);
+      setLoadingCache(false);
+    }
+  };
+
+  // Actually triggers a fresh PSI + technical check ("Re-check"). This can
+  // legitimately take up to ~90s for a real Lighthouse run -- the cached
+  // result above stays on screen the whole time instead of clearing.
+  const runCheck = async () => {
+    if (!site?.id || checking) return;
+    setChecking(true);
+    try {
+      const res = await fetch(`/api/sites/${site.id}/issues?strategy=${strategy}`, { method: "POST" });
+      const json = await res.json();
+      if (json?.ok) {
+        setData(json);
+        toast.success("Diagnostics updated");
+      } else {
+        toast.error(json?.error || "Failed to run diagnostics");
+      }
+    } catch {
+      toast.error("Failed to run diagnostics — the check may still be running server-side; try reloading in a moment.");
+    } finally {
+      setChecking(false);
     }
   };
 
   useEffect(() => {
-    load();
+    loadCached();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [site?.id, strategy]);
 
@@ -117,7 +145,9 @@ export function IssuesDrilldown({ site }: { site?: ConnectedSite }) {
           <h2 className="text-lg font-semibold text-white">Issues</h2>
           <p className="mt-0.5 text-xs text-slate-400">
             Real Google PageSpeed Insights scores + failing audits, plus robots.txt/sitemap/HTTPS checks.
-            {data?.checkedAt && ` Last checked ${new Date(data.checkedAt).toLocaleString()}.`}
+            {data?.checkedAt &&
+              ` Last checked ${new Date(data.checkedAt).toLocaleString()}${data.source === "daily-auto" ? " (daily automated check)" : ""}.`}
+            {checking && " Running a fresh check in the background — this can take up to a minute; the numbers above are still the last real result."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -140,12 +170,13 @@ export function IssuesDrilldown({ site }: { site?: ConnectedSite }) {
             </button>
           </div>
           <button
-            onClick={load}
-            disabled={loading}
+            onClick={runCheck}
+            disabled={checking}
+            title="Runs a fresh live PageSpeed Insights check — can take up to a minute"
             className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-400/20 disabled:opacity-50"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            {loading ? "Checking…" : "Re-check"}
+            <RefreshCw className={`h-3.5 w-3.5 ${checking ? "animate-spin" : ""}`} />
+            {checking ? "Checking…" : "Re-check"}
           </button>
         </div>
       </div>
@@ -215,8 +246,12 @@ export function IssuesDrilldown({ site }: { site?: ConnectedSite }) {
         <div className="border-b border-slate-800/70 px-5 py-3">
           <h3 className="text-sm font-semibold text-white">Active Issues</h3>
         </div>
-        {loading && !data ? (
-          <div className="p-10 text-center text-xs text-slate-500">Checking live PageSpeed + technical signals…</div>
+        {loadingCache && !data ? (
+          <div className="p-10 text-center text-xs text-slate-500">Loading the last real diagnostics result…</div>
+        ) : allIssues.length === 0 && !data?.checkedAt ? (
+          <div className="p-10 text-center text-xs text-slate-500">
+            No diagnostics have run for this site yet — click "Re-check" to run the first one.
+          </div>
         ) : allIssues.length === 0 ? (
           <div className="flex flex-col items-center gap-2 p-10 text-center">
             <CheckCircle2 className="h-6 w-6 text-emerald-400" />

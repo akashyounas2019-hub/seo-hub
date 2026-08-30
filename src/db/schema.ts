@@ -618,6 +618,37 @@ export const qaFindings = pgTable(
   }),
 );
 
+// Real cache for the Issues tab's PageSpeed Insights + technical-check
+// result. Previously api.sites.$id.issues.ts ran a brand-new live PSI
+// Lighthouse pass on every page load with nothing stored -- since a single
+// PSI run legitimately takes 20-60s (four Lighthouse categories in one
+// pass), that meant every dashboard visit either blocked for up to a
+// minute or hit the fetch's own AbortSignal timeout and surfaced as
+// "operation was aborted due to timeout". This table lets the Issues tab
+// render the most recent real result instantly, while a fresh check runs
+// in the background (manual re-check button, or the daily worker-driven
+// diagnostic pass) and overwrites this same row when it completes.
+export const siteDiagnosticsReports = pgTable(
+  "site_diagnostics_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    strategy: text("strategy").notNull().default("mobile"), // "mobile" | "desktop"
+    scores: jsonb("scores").$type<Record<string, number | null>>(),
+    pageSpeedIssues: jsonb("page_speed_issues").$type<Array<Record<string, unknown>>>().notNull().default(sql`'[]'::jsonb`),
+    pageSpeedError: text("page_speed_error"),
+    technicalIssues: jsonb("technical_issues").$type<Array<Record<string, unknown>>>().notNull().default(sql`'[]'::jsonb`),
+    checkedUrl: text("checked_url"),
+    source: text("source").notNull().default("manual"), // "manual" | "daily-auto"
+    checkedAt: timestamp("checked_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    siteStrategyUq: uniqueIndex("site_diagnostics_site_strategy_uq").on(t.siteId, t.strategy),
+  }),
+);
+
 export type Site = typeof sites.$inferSelect;
 export type NewSite = typeof sites.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
@@ -636,5 +667,6 @@ export type ApprovalRule = typeof approvalRules.$inferSelect;
 export type SitePage = typeof sitePages.$inferSelect;
 export type QaRun = typeof qaRuns.$inferSelect;
 export type QaFinding = typeof qaFindings.$inferSelect;
+export type SiteDiagnosticsReport = typeof siteDiagnosticsReports.$inferSelect;
 
 

@@ -69,6 +69,8 @@ import { Route as ApiSettingsIntegrationsRouteImport } from './routes/api.settin
 import { Route as ApiSettingsNotificationsRouteImport } from './routes/api.settings.notifications'
 import { Route as ApiSettingsRolesRouteImport } from './routes/api.settings.roles'
 import { Route as ApiSettingsWebhooksRouteImport } from './routes/api.settings.webhooks'
+import { Route as ApiSiteDiagnosticsDueSitesRouteImport } from './routes/api.site-diagnostics.due-sites'
+import { Route as ApiSiteDiagnosticsRunRouteImport } from './routes/api.site-diagnostics.run'
 import { Route as ApiSitesIndexRouteImport } from './routes/api.sites.index'
 import { Route as ApiSitesIdRouteImport } from './routes/api.sites.$id'
 import { Route as ApiSocialScrapeRouteImport } from './routes/api.social.scrape'
@@ -401,6 +403,17 @@ const ApiSettingsWebhooksRoute = ApiSettingsWebhooksRouteImport.update({
   path: '/api/settings/webhooks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSiteDiagnosticsDueSitesRoute =
+  ApiSiteDiagnosticsDueSitesRouteImport.update({
+    id: '/api/site-diagnostics/due-sites',
+    path: '/api/site-diagnostics/due-sites',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiSiteDiagnosticsRunRoute = ApiSiteDiagnosticsRunRouteImport.update({
+  id: '/api/site-diagnostics/run',
+  path: '/api/site-diagnostics/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSitesIndexRoute = ApiSitesIndexRouteImport.update({
   id: '/api/sites/',
   path: '/api/sites/',
@@ -599,6 +612,8 @@ export interface FileRoutesByFullPath {
   '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
+  '/api/site-diagnostics/due-sites': typeof ApiSiteDiagnosticsDueSitesRoute
+  '/api/site-diagnostics/run': typeof ApiSiteDiagnosticsRunRoute
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
@@ -688,6 +703,8 @@ export interface FileRoutesByTo {
   '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
+  '/api/site-diagnostics/due-sites': typeof ApiSiteDiagnosticsDueSitesRoute
+  '/api/site-diagnostics/run': typeof ApiSiteDiagnosticsRunRoute
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
@@ -778,6 +795,8 @@ export interface FileRoutesById {
   '/api/settings/notifications': typeof ApiSettingsNotificationsRoute
   '/api/settings/roles': typeof ApiSettingsRolesRouteWithChildren
   '/api/settings/webhooks': typeof ApiSettingsWebhooksRouteWithChildren
+  '/api/site-diagnostics/due-sites': typeof ApiSiteDiagnosticsDueSitesRoute
+  '/api/site-diagnostics/run': typeof ApiSiteDiagnosticsRunRoute
   '/api/sites/$id': typeof ApiSitesIdRouteWithChildren
   '/api/social/scrape': typeof ApiSocialScrapeRoute
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
@@ -869,6 +888,8 @@ export interface FileRouteTypes {
     | '/api/settings/notifications'
     | '/api/settings/roles'
     | '/api/settings/webhooks'
+    | '/api/site-diagnostics/due-sites'
+    | '/api/site-diagnostics/run'
     | '/api/sites/$id'
     | '/api/social/scrape'
     | '/api/tasks/$id'
@@ -958,6 +979,8 @@ export interface FileRouteTypes {
     | '/api/settings/notifications'
     | '/api/settings/roles'
     | '/api/settings/webhooks'
+    | '/api/site-diagnostics/due-sites'
+    | '/api/site-diagnostics/run'
     | '/api/sites/$id'
     | '/api/social/scrape'
     | '/api/tasks/$id'
@@ -1047,6 +1070,8 @@ export interface FileRouteTypes {
     | '/api/settings/notifications'
     | '/api/settings/roles'
     | '/api/settings/webhooks'
+    | '/api/site-diagnostics/due-sites'
+    | '/api/site-diagnostics/run'
     | '/api/sites/$id'
     | '/api/social/scrape'
     | '/api/tasks/$id'
@@ -1136,6 +1161,8 @@ export interface RootRouteChildren {
   ApiSettingsNotificationsRoute: typeof ApiSettingsNotificationsRoute
   ApiSettingsRolesRoute: typeof ApiSettingsRolesRouteWithChildren
   ApiSettingsWebhooksRoute: typeof ApiSettingsWebhooksRouteWithChildren
+  ApiSiteDiagnosticsDueSitesRoute: typeof ApiSiteDiagnosticsDueSitesRoute
+  ApiSiteDiagnosticsRunRoute: typeof ApiSiteDiagnosticsRunRoute
   ApiSitesIdRoute: typeof ApiSitesIdRouteWithChildren
   ApiSocialScrapeRoute: typeof ApiSocialScrapeRoute
   ApiTasksIdRoute: typeof ApiTasksIdRouteWithChildren
@@ -1570,6 +1597,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSettingsWebhooksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/site-diagnostics/due-sites': {
+      id: '/api/site-diagnostics/due-sites'
+      path: '/api/site-diagnostics/due-sites'
+      fullPath: '/api/site-diagnostics/due-sites'
+      preLoaderRoute: typeof ApiSiteDiagnosticsDueSitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/site-diagnostics/run': {
+      id: '/api/site-diagnostics/run'
+      path: '/api/site-diagnostics/run'
+      fullPath: '/api/site-diagnostics/run'
+      preLoaderRoute: typeof ApiSiteDiagnosticsRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/sites/': {
       id: '/api/sites/'
       path: '/api/sites'
@@ -1979,6 +2020,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSettingsNotificationsRoute: ApiSettingsNotificationsRoute,
   ApiSettingsRolesRoute: ApiSettingsRolesRouteWithChildren,
   ApiSettingsWebhooksRoute: ApiSettingsWebhooksRouteWithChildren,
+  ApiSiteDiagnosticsDueSitesRoute: ApiSiteDiagnosticsDueSitesRoute,
+  ApiSiteDiagnosticsRunRoute: ApiSiteDiagnosticsRunRoute,
   ApiSitesIdRoute: ApiSitesIdRouteWithChildren,
   ApiSocialScrapeRoute: ApiSocialScrapeRoute,
   ApiTasksIdRoute: ApiTasksIdRouteWithChildren,

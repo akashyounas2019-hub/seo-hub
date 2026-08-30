@@ -103,6 +103,17 @@ async function resolvePageSpeedApiKey(): Promise<string | undefined> {
   return undefined;
 }
 
+// A real PSI run against all four Lighthouse categories in one request
+// (performance + seo + accessibility + best-practices) commonly takes
+// 20-50s, and can run past 60s for a slow target site -- Google's own PSI
+// web UI displays the same wait. The previous 25s AbortSignal timeout was
+// shorter than a normal successful run, not just a safety ceiling, so it
+// was aborting real in-flight requests and surfacing as "operation was
+// aborted due to timeout" even though the API key and connection were
+// both fine. 90s gives a real run room to finish while still failing fast
+// enough that a caller isn't left hanging indefinitely.
+const PSI_TIMEOUT_MS = 90_000;
+
 export async function fetchPageSpeedInsights(
   url: string,
   strategy: "mobile" | "desktop" = "mobile",
@@ -120,7 +131,7 @@ export async function fetchPageSpeedInsights(
 
   const res = await fetch(
     `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params.toString()}`,
-    { signal: AbortSignal.timeout(25000) },
+    { signal: AbortSignal.timeout(PSI_TIMEOUT_MS) },
   );
 
   if (!res.ok) {

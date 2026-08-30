@@ -502,6 +502,25 @@ export async function ensureSchema(): Promise<void> {
       );
       CREATE UNIQUE INDEX IF NOT EXISTS traffic_snapshots_uq ON traffic_snapshots(site_id, source, snapshot_date);
       CREATE INDEX IF NOT EXISTS traffic_snapshots_date_idx ON traffic_snapshots(snapshot_date);
+
+      -- Caches the Issues tab's PageSpeed Insights + technical-check result
+      -- so the dashboard can render the most recent real result instantly
+      -- instead of re-running a live 20-60s PSI Lighthouse pass on every
+      -- page load (the prior behaviour, which routinely hit its own fetch
+      -- timeout and surfaced as "operation was aborted due to timeout").
+      CREATE TABLE IF NOT EXISTS site_diagnostics_reports (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        site_id uuid NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+        strategy text NOT NULL DEFAULT 'mobile',
+        scores jsonb,
+        page_speed_issues jsonb NOT NULL DEFAULT '[]'::jsonb,
+        page_speed_error text,
+        technical_issues jsonb NOT NULL DEFAULT '[]'::jsonb,
+        checked_url text,
+        source text NOT NULL DEFAULT 'manual',
+        checked_at timestamptz NOT NULL DEFAULT now()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS site_diagnostics_site_strategy_uq ON site_diagnostics_reports(site_id, strategy);
     `);
 
     // One-time cleanup: task_comments/tasks/task_templates/site_users were

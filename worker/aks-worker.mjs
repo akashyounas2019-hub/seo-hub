@@ -30,6 +30,9 @@ const MODEL = process.env.AKS_WORKER_CLAUDE_MODEL ?? "sonnet";
 // would be pointless DB load since the due-check granularity is 24h itself;
 // once an hour is plenty responsive without hammering Postgres.
 const ORCHESTRATOR_CHECK_INTERVAL_MS = Number(process.env.AKS_WORKER_ORCHESTRATOR_CHECK_INTERVAL_MS ?? 60 * 60_000);
+// Same reasoning, for the daily technical diagnostics agent (PageSpeed
+// Insights + robots.txt/sitemap/HTTPS checks -> Issues tab + Alert Manager).
+const DIAGNOSTICS_CHECK_INTERVAL_MS = Number(process.env.AKS_WORKER_DIAGNOSTICS_CHECK_INTERVAL_MS ?? 60 * 60_000);
 
 async function api(path, init = {}) {
   const res = await fetch(`${PORTAL}${path}`, {
@@ -303,18 +306,51 @@ async function checkAndRunDueOrchestratorReviews() {
   }
 }
 
+/**
+ * Real 24h auto-trigger for the daily technical diagnostics agent -- same
+ * shape as checkAndRunDueOrchestratorReviews above, calling the exact same
+ * /api/site-diagnostics/run endpoint a manual re-check would hit (via
+ * runAndStoreDiagnostics inside api.sites.$id.issues.ts), so there's one
+ * real diagnostics code path either way.
+ */
+async function checkAndRunDueDiagnostics() {
+  try {
+    const { due } = await api(`/api/site-diagnostics/due-sites`);
+    for (const site of due || []) {
+      try {
+        console.log(`[worker] auto-triggering daily diagnostics for ${site.siteName} (last checked: ${site.lastCheckedAt || "never"})`);
+        await api(`/api/site-diagnostics/run`, {
+          method: "POST",
+          body: JSON.stringify({ siteId: site.siteId }),
+        });
+      } catch (err) {
+        console.warn(`[worker] auto-diagnostics trigger failed for ${site.siteId}:`, err.message);
+      }
+    }
+  } catch (err) {
+    console.warn("[worker] diagnostics due-sites check failed:", err.message);
+  }
+}
+
 async function main() {
   console.log(`[worker] starting · workerId=${WORKER_ID} · portal=${PORTAL} · model=${MODEL}`);
   console.log(`[worker] polling every ${POLL_INTERVAL_MS / 1000}s`);
   console.log(`[worker] checking for due Head of SEO reviews every ${ORCHESTRATOR_CHECK_INTERVAL_MS / 60_000}min`);
+  console.log(`[worker] checking for due daily diagnostics every ${DIAGNOSTICS_CHECK_INTERVAL_MS / 60_000}min`);
 
   let lastOrchestratorCheck = 0;
+  let lastDiagnosticsCheck = 0;
 
   while (true) {
     try {
       if (Date.now() - lastOrchestratorCheck >= ORCHESTRATOR_CHECK_INTERVAL_MS) {
         lastOrchestratorCheck = Date.now();
         await checkAndRunDueOrchestratorReviews();
+      }
+
+      if (Date.now() - lastDiagnosticsCheck >= DIAGNOSTICS_CHECK_INTERVAL_MS) {
+        lastDiagnosticsCheck = Date.now();
+        await checkAndRunDueDiagnostics();
       }
 
       const job = await claimOnce();
