@@ -10,8 +10,11 @@ import {
   Zap,
   ShieldCheck,
   Radar,
+  FileDown,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
-import { getSeoTool, SEO_CATEGORIES, SEO_TOOLS, type SeoTool } from "@/lib/seo-tools";
+import { getSeoTool, SEO_CATEGORIES, type SeoTool } from "@/lib/seo-tools";
 import { useSite } from "@/lib/site-context";
 import { MarkdownReport } from "@/components/markdown-report";
 import { RefreshCw } from "lucide-react";
@@ -85,9 +88,25 @@ function SeoToolPage() {
   const [statusLabel, setStatusLabel] = useState("");
   const [ranAt, setRanAt] = useState<string | null>(null);
   const [reportMarkdown, setReportMarkdown] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
 
-  const peers = SEO_TOOLS.filter((t) => t.id !== tool.id).slice(0, 6);
+  async function onDownloadPdf() {
+    if (!reportRef.current || !reportMarkdown || exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      const { exportNodeToPdf } = await import("@/lib/export-pdf");
+      const slug = tool.id.replace(/[^a-z0-9-]+/gi, "-");
+      await exportNodeToPdf(reportRef.current, `${slug}-report`);
+      toast.success("PDF downloaded");
+    } catch {
+      toast.error("Could not generate PDF");
+    } finally {
+      setExportingPdf(false);
+    }
+  }
 
   async function onRun(e: React.FormEvent) {
     e.preventDefault();
@@ -149,7 +168,7 @@ function SeoToolPage() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 py-8">
+      <div className="relative mx-auto max-w-[1600px] px-3 sm:px-4 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs text-slate-400">
           <Link to="/seo-suite" className="inline-flex items-center gap-1 hover:text-cyan-300">
@@ -305,7 +324,7 @@ function SeoToolPage() {
 
         {/* Report preview */}
         <section className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/70">
                 Report preview
@@ -314,15 +333,41 @@ function SeoToolPage() {
                 {tool.title} · Markdown output
               </h2>
             </div>
-            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${
-              reportMarkdown ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-200" : "border-slate-700 bg-slate-900/60 text-slate-300"
-            }`}>
-              <Sparkles className="h-3 w-3" /> {reportMarkdown ? "Live result" : "No run yet"}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${
+                reportMarkdown ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-200" : "border-slate-700 bg-slate-900/60 text-slate-300"
+              }`}>
+                <Sparkles className="h-3 w-3" /> {reportMarkdown ? "Live result" : "No run yet"}
+              </span>
+              <button
+                type="button"
+                disabled={!reportMarkdown || exportingPdf}
+                onClick={onDownloadPdf}
+                title="Download this report as a PDF"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-2.5 py-1 text-[11px] text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FileDown className="h-3.5 w-3.5" /> {exportingPdf ? "Generating…" : "Download PDF"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                title={expanded ? "Collapse" : "Expand to full height"}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-2.5 py-1 text-[11px] text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+              >
+                {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                {expanded ? "Collapse" : "Expand"}
+              </button>
+            </div>
           </div>
-          <div className="mt-4 max-h-96 overflow-auto rounded-xl border border-slate-800 bg-black/40 p-4">
+          <div
+            className={`mt-4 overflow-auto rounded-xl border border-slate-800 bg-black/40 p-4 sm:p-6 ${
+              expanded ? "max-h-[calc(100vh-220px)]" : "max-h-[calc(100vh-320px)] min-h-[420px]"
+            }`}
+          >
             {reportMarkdown ? (
-              <MarkdownReport content={reportMarkdown} />
+              <div ref={reportRef} className="bg-[#0b0f19] p-2">
+                <MarkdownReport content={reportMarkdown} />
+              </div>
             ) : (
               <p className="text-[12px] leading-relaxed text-slate-500">
                 Run "{tool.title}" to generate a real report here.
@@ -334,41 +379,6 @@ function SeoToolPage() {
             )}
           </div>
         </section>
-
-        {/* Peer tools */}
-        <div className="mt-8 mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
-          <span className="h-px flex-1 bg-slate-800" />
-          <span>Jump to another tool</span>
-          <span className="h-px flex-1 bg-slate-800" />
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {peers.map((p) => {
-            const PIcon = p.icon;
-            return (
-              <Link
-                key={p.id}
-                to="/seo-suite/$toolId"
-                params={{ toolId: p.id }}
-                className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40 p-3 text-left transition hover:-translate-y-0.5 hover:border-cyan-400/40"
-              >
-                <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${p.accent}`} />
-                <div className="flex items-center gap-2">
-                  <span className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${p.accent}`}>
-                    <PIcon className="h-3.5 w-3.5 text-slate-950" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-white">
-                      {p.title}
-                    </div>
-                    <div className="truncate text-[10px] uppercase tracking-wider text-slate-500">
-                      {SEO_CATEGORIES[p.category].label}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
 
         <div aria-hidden className="h-16" />
       </div>

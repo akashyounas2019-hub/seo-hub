@@ -18,6 +18,25 @@ import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 const COOKIE_NAME = "aks_session";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
+// A `Secure` cookie is silently dropped by the browser on any connection it
+// sees as plain HTTP -- previously this was gated on NODE_ENV === "production"
+// alone, which is true in this app's Docker image regardless of whether a
+// TLS-terminating proxy sits in front of it. In production today the app is
+// exposed directly on port 3333 with no reverse proxy/TLS at all, so every
+// login cookie was marked Secure over an insecure connection and never
+// actually stored -- explaining sessions not surviving a new tab/window.
+// Reads the real scheme the request arrived on (respecting a TLS-terminating
+// proxy's X-Forwarded-Proto when present) so this is correct either way.
+function isRequestSecure(request: Request): boolean {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  if (forwardedProto) return forwardedProto.split(",")[0].trim().toLowerCase() === "https";
+  try {
+    return new URL(request.url).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function getMasterPassword(): string {
   // Falls back to the app's historical shared password only if the env var
   // isn't set, so existing deployments don't get locked out on upgrade --
@@ -75,7 +94,7 @@ export async function createSession(request: Request): Promise<{ token: string; 
   await d.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, admin.id));
 
   const cookie = `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}${
-    process.env.NODE_ENV === "production" ? "; Secure" : ""
+    isRequestSecure(request) ? "; Secure" : ""
   }`;
 
   return { token, cookie };

@@ -94,7 +94,7 @@ function ConnectedSitesPage() {
   };
 
   return (
-    <div className="min-h-full space-y-6 text-slate-200">
+    <div className="mx-auto min-h-full max-w-[1600px] space-y-6 text-slate-200">
       {/* Header */}
       <header className="relative overflow-hidden rounded-2xl border border-cyan-500/25 bg-slate-950/70 p-5 sm:p-6">
         <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-cyan-500/20 blur-3xl" />

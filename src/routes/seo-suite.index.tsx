@@ -76,7 +76,7 @@ function SeoSuiteHub() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 py-8">
+      <div className="relative mx-auto max-w-[1600px] px-3 sm:px-4 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs text-slate-400">
           <Link to="/dashboard" className="hover:text-cyan-300">Console</Link>

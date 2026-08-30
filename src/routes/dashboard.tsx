@@ -305,7 +305,7 @@ function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+      <div className="mx-auto max-w-[1600px] px-3 sm:px-4 py-8">
         {/* Top Header & Site Selector */}
         <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-5 backdrop-blur-md">
           <div>

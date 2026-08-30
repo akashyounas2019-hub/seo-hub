@@ -49,7 +49,7 @@ export function TasksView() {
         />
       </div>
 
-      <div className="mx-auto max-w-[1400px] px-6 py-8">
+      <div className="mx-auto max-w-[1600px] px-3 sm:px-4 py-8">
         {/* Header */}
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">

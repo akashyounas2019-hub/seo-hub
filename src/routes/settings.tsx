@@ -95,7 +95,7 @@ function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto max-w-[1600px] px-3 sm:px-4 py-8">
         <header className="mb-6 flex items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-600/30 ring-1 ring-cyan-400/40">
             <SlidersHorizontal className="h-5 w-5 text-cyan-200" />

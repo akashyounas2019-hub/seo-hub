@@ -68,7 +68,7 @@ function AgencyHealthPage() {
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-200">
-      <div className="mx-auto max-w-7xl px-6 py-10">
+      <div className="mx-auto max-w-[1600px] px-3 sm:px-4 py-10">
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
