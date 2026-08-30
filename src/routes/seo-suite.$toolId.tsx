@@ -91,18 +91,17 @@ function SeoToolPage() {
   const [expanded, setExpanded] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
-  const reportRef = useRef<HTMLDivElement>(null);
 
   async function onDownloadPdf() {
-    if (!reportRef.current || !reportMarkdown || exportingPdf) return;
+    if (!reportMarkdown || exportingPdf) return;
     setExportingPdf(true);
     try {
-      const { exportNodeToPdf } = await import("@/lib/export-pdf");
+      const { exportMarkdownToPdf } = await import("@/lib/export-pdf");
       const slug = tool.id.replace(/[^a-z0-9-]+/gi, "-");
-      await exportNodeToPdf(reportRef.current, `${slug}-report`);
+      await exportMarkdownToPdf(reportMarkdown, `${slug}-report`, tool.title);
       toast.success("PDF downloaded");
-    } catch {
-      toast.error("Could not generate PDF");
+    } catch (err: any) {
+      toast.error(`Could not generate PDF: ${err?.message || "unknown error"}`);
     } finally {
       setExportingPdf(false);
     }
@@ -365,7 +364,7 @@ function SeoToolPage() {
             }`}
           >
             {reportMarkdown ? (
-              <div ref={reportRef} className="bg-[#0b0f19] p-2">
+              <div className="bg-[#0b0f19] p-2">
                 <MarkdownReport content={reportMarkdown} />
               </div>
             ) : (
