@@ -302,7 +302,7 @@ export async function ensureSchema(): Promise<void> {
 
       CREATE TABLE IF NOT EXISTS kanban_tasks (
         id text PRIMARY KEY,
-        site_id text DEFAULT 'safaeewala',
+        site_id text,
         title text NOT NULL,
         "desc" text,
         assignee text NOT NULL,
@@ -324,6 +324,20 @@ export async function ensureSchema(): Promise<void> {
       ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS published_url text;
       ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS published_at timestamptz;
       ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS operator_notes text;
+      -- Drops the hardcoded 'safaeewala' default on an already-existing
+      -- production table -- every real insert path now explicitly resolves
+      -- a real sites.id and refuses to insert without one, so this default
+      -- could only ever fire and silently mislabel a task's site.
+      ALTER TABLE kanban_tasks ALTER COLUMN site_id DROP DEFAULT;
+      -- One-time backfill: confirmed live in production that this default
+      -- had already fired for 2 real tasks (site_id = the slug
+      -- 'safaeewala' instead of the real sites.id UUID), which silently
+      -- broke site-scoped approval-rule matching for them (approval_rules.
+      -- site_id is a real UUID FK). Only rewrites rows that still hold the
+      -- literal slug string; a no-op once already corrected or on a fresh
+      -- database with no such rows.
+      UPDATE kanban_tasks SET site_id = (SELECT id::text FROM sites WHERE slug = 'safaeewala' LIMIT 1)
+        WHERE site_id = 'safaeewala' AND EXISTS (SELECT 1 FROM sites WHERE slug = 'safaeewala');
 
       CREATE TABLE IF NOT EXISTS kanban_task_templates (
         id text PRIMARY KEY,

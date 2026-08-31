@@ -41,6 +41,31 @@ export type ApprovalDecision = {
  * dimensions wins (site+category+priority beats priority-only). Ties break
  * by requiring approval (fail safe -- when rules disagree, prefer asking).
  */
+/**
+ * Real attribution for an auto-approved task: the Head of Department user
+ * account (users.role = 'head_of_department'), if one exists. Falls back to
+ * a generic label when none has been added in Settings > Roles yet -- never
+ * silent, but never claims a specific person approved something when no
+ * such person is configured.
+ *
+ * Was previously duplicated byte-for-byte in api.jobs.$id.complete.ts and
+ * api.tasks.pending-approval.ts -- both real approval code paths (a task
+ * auto-approved at creation time vs. via "Re-evaluate pending") needing
+ * this exact lookup, with no shared source of truth to keep them in sync.
+ */
+export async function resolveHeadOfDepartment(): Promise<string> {
+  const { db } = await import("@/db/client");
+  const { users } = await import("@/db/schema");
+  const { eq } = await import("drizzle-orm");
+  try {
+    const d = db();
+    const [hod] = await d.select().from(users).where(eq(users.role, "head_of_department" as any)).limit(1);
+    return hod ? (hod.email || hod.name || "Head of Department") : "Head of Department (unassigned)";
+  } catch {
+    return "Head of Department (unassigned)";
+  }
+}
+
 export function evaluateApproval(task: EvaluableTask, rules: EvaluableRule[]): ApprovalDecision {
   const taskPriorityRank = PRIORITY_RANK[(task.priority || "medium").toLowerCase()] ?? 1;
 

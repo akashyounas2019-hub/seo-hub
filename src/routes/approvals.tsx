@@ -54,6 +54,17 @@ type ApprovalRule = {
   createdAt: string;
 };
 
+// The real, complete set of category values a pending task's templateId can
+// actually hold -- deduplicated union of the two real generators: the
+// orchestrator's own inline category enum (job-templates.ts's
+// buildOrchestratorPrompt) and SeoToolCategory (seo-tools.ts, used by any
+// producesTasks: true SEO Suite tool). A rule's category match is an exact
+// string comparison (evaluateApproval in lib/approval-rules.ts), so a rule
+// author typing a category that doesn't exactly match either vocabulary
+// would silently never match any real task -- this list is what actually
+// gets tagged, not a guess.
+const TASK_CATEGORIES = ["technical", "content", "local", "schema", "strategy", "other", "audit", "authority", "intelligence"] as const;
+
 const PRIORITY_META: Record<string, string> = {
   low: "border-slate-700 bg-slate-800/50 text-slate-300",
   medium: "border-sky-400/30 bg-sky-500/10 text-sky-200",
@@ -453,6 +464,7 @@ function ApprovalRulesModal({ onClose, sites }: { onClose: () => void; sites: Ar
   const [rules, setRules] = useState<ApprovalRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState<ApprovalRule | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -549,6 +561,9 @@ function ApprovalRulesModal({ onClose, sites }: { onClose: () => void; sites: Ar
                   >
                     <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${r.enabled ? "left-4" : "left-0.5"}`} />
                   </button>
+                  <button onClick={() => setEditingRule(r)} className="rounded-md p-1.5 text-slate-500 hover:bg-slate-800 hover:text-cyan-300">
+                    <Settings2 className="h-3.5 w-3.5" />
+                  </button>
                   <button onClick={() => remove(r.id)} className="rounded-md p-1.5 text-slate-500 hover:bg-slate-800 hover:text-rose-300">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -569,8 +584,20 @@ function ApprovalRulesModal({ onClose, sites }: { onClose: () => void; sites: Ar
         <CreateRuleModal
           sites={sites}
           onClose={() => setCreateOpen(false)}
-          onCreated={() => {
+          onSaved={() => {
             setCreateOpen(false);
+            load();
+          }}
+        />
+      )}
+
+      {editingRule && (
+        <CreateRuleModal
+          sites={sites}
+          rule={editingRule}
+          onClose={() => setEditingRule(null)}
+          onSaved={() => {
+            setEditingRule(null);
             load();
           }}
         />
@@ -579,16 +606,18 @@ function ApprovalRulesModal({ onClose, sites }: { onClose: () => void; sites: Ar
   );
 }
 
-function CreateRuleModal({ sites, onClose, onCreated }: {
+function CreateRuleModal({ sites, rule, onClose, onSaved }: {
   sites: Array<{ id: string; label: string }>;
+  rule?: ApprovalRule;
   onClose: () => void;
-  onCreated: () => void;
+  onSaved: () => void;
 }) {
-  const [name, setName] = useState("");
-  const [minPriority, setMinPriority] = useState("");
-  const [category, setCategory] = useState("");
-  const [siteId, setSiteId] = useState("");
-  const [requiresApproval, setRequiresApproval] = useState(true);
+  const isEdit = !!rule;
+  const [name, setName] = useState(rule?.name || "");
+  const [minPriority, setMinPriority] = useState(rule?.minPriority || "");
+  const [category, setCategory] = useState(rule?.category || "");
+  const [siteId, setSiteId] = useState(rule?.siteId || "");
+  const [requiresApproval, setRequiresApproval] = useState(rule?.requiresApproval ?? true);
   const [saving, setSaving] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -596,24 +625,24 @@ function CreateRuleModal({ sites, onClose, onCreated }: {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/approval-rules", {
-        method: "POST",
+      const res = await fetch(isEdit ? `/api/approval-rules/${rule!.id}` : "/api/approval-rules", {
+        method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
           minPriority: minPriority || null,
-          category: category.trim() || null,
+          category: category || null,
           siteId: siteId || null,
           requiresApproval,
-          enabled: true,
+          ...(isEdit ? {} : { enabled: true }),
         }),
       });
       const json = await res.json();
       if (json?.ok) {
-        toast.success("Approval rule created");
-        onCreated();
+        toast.success(isEdit ? "Approval rule updated" : "Approval rule created");
+        onSaved();
       } else {
-        toast.error(json?.error || "Failed to create rule");
+        toast.error(json?.error || `Failed to ${isEdit ? "update" : "create"} rule`);
       }
     } finally {
       setSaving(false);
@@ -624,7 +653,7 @@ function CreateRuleModal({ sites, onClose, onCreated }: {
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={onClose}>
       <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="w-full max-w-lg overflow-hidden rounded-2xl border border-cyan-500/30 bg-slate-950 p-6 shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h3 className="text-base font-semibold text-white">New Approval Rule</h3>
+          <h3 className="text-base font-semibold text-white">{isEdit ? "Edit Approval Rule" : "New Approval Rule"}</h3>
           <button type="button" onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white"><X className="h-4 w-4" /></button>
         </div>
         <div className="mt-4 space-y-4">
@@ -654,8 +683,17 @@ function CreateRuleModal({ sites, onClose, onCreated }: {
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Category / agent (optional)</label>
-            <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. technical, content, local, schema" className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs text-slate-100 focus:border-cyan-400/50 focus:outline-none" />
+            <label className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Category (optional)</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs text-slate-100 focus:border-cyan-400/50 focus:outline-none">
+              <option value="">Any category</option>
+              {TASK_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-[10px] text-slate-500">
+              A free-text field here previously invited typos that would silently never match any real task —
+              these are the exact category values tasks are actually tagged with.
+            </p>
           </div>
           <div className="flex items-center justify-between rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2.5">
             <div>
@@ -675,7 +713,7 @@ function CreateRuleModal({ sites, onClose, onCreated }: {
         <div className="mt-6 flex justify-end gap-2 border-t border-slate-800 pt-4">
           <button type="button" onClick={onClose} className="rounded-md border border-slate-800 bg-slate-900/40 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-900">Cancel</button>
           <button type="submit" disabled={saving} className="rounded-md bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow hover:brightness-110 disabled:opacity-50">
-            {saving ? "Creating…" : "Create rule"}
+            {saving ? (isEdit ? "Saving…" : "Creating…") : isEdit ? "Save changes" : "Create rule"}
           </button>
         </div>
       </form>

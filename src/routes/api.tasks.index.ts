@@ -73,9 +73,16 @@ export const Route = createFileRoute("/api/tasks/")({
             jobId = job.id;
           }
 
+          if (!resolvedSiteId) {
+            return Response.json(
+              { ok: false, error: "No site is connected yet — add a site before creating tasks." },
+              { status: 400 },
+            );
+          }
+
           const newTask = {
             id,
-            siteId: resolvedSiteId || "safaeewala",
+            siteId: resolvedSiteId,
             title: body.title,
             desc: body.desc || null,
             assignee: body.assignee || "Technical SEO Expert",

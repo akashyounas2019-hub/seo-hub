@@ -1,19 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { evaluateApproval, type EvaluableRule } from "@/lib/approval-rules";
+import { evaluateApproval, resolveHeadOfDepartment, type EvaluableRule } from "@/lib/approval-rules";
 import { actorEmailFromRequest, logAudit } from "@/lib/audit";
-
-async function resolveHeadOfDepartment(): Promise<string> {
-  const { db } = await import("@/db/client");
-  const { users } = await import("@/db/schema");
-  const { eq } = await import("drizzle-orm");
-  try {
-    const d = db();
-    const [hod] = await d.select().from(users).where(eq(users.role, "head_of_department" as any)).limit(1);
-    return hod ? (hod.email || hod.name || "Head of Department") : "Head of Department (unassigned)";
-  } catch {
-    return "Head of Department (unassigned)";
-  }
-}
 
 export const Route = createFileRoute("/api/tasks/pending-approval")({
   server: {

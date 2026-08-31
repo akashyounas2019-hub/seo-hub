@@ -39,25 +39,6 @@ function extractTasksBlock(output: string): any {
   }
 }
 
-/**
- * Real attribution for an auto-approved task: the Head of Department user
- * account (users.role = 'head_of_department'), if one exists. Falls back to
- * a generic label when none has been added in Settings > Roles yet -- never
- * silent, but never claims a specific person approved something when no
- * such person is configured.
- */
-async function resolveHeadOfDepartment(): Promise<string> {
-  const { db } = await import("@/db/client");
-  const { users } = await import("@/db/schema");
-  const { eq } = await import("drizzle-orm");
-  try {
-    const d = db();
-    const [hod] = await d.select().from(users).where(eq(users.role, "head_of_department" as any)).limit(1);
-    return hod ? (hod.email || hod.name || "Head of Department") : "Head of Department (unassigned)";
-  } catch {
-    return "Head of Department (unassigned)";
-  }
-}
 
 /**
  * Inserts a model-proposed task list into kanban_tasks, running each task
@@ -73,9 +54,22 @@ async function insertProposedTasks(tasks: any[], siteId: string | undefined, sou
     return 0;
   }
 
+  // Every real caller (the orchestrator, an SEO Suite tool marked
+  // producesTasks) always sets job.input.siteId -- if it's ever missing,
+  // that's a real bug upstream, not a case to paper over. This previously
+  // fell back to the literal string "safaeewala" (a site *slug*, not the
+  // sites.id UUID kanban_tasks.site_id actually expects), which would
+  // silently attribute generated tasks to the wrong site instead of
+  // surfacing the problem -- exactly the kind of hardcoded-fallback bug
+  // this project's standing rule prohibits.
+  if (!siteId) {
+    console.warn(`[${sourceLabel}] refused to insert ${tasks.length} task(s): job had no siteId`);
+    return 0;
+  }
+
   const { db, ensureSchema } = await import("@/db/client");
   const { kanbanTasks, approvalRules } = await import("@/db/schema");
-  const { evaluateApproval } = await import("@/lib/approval-rules");
+  const { evaluateApproval, resolveHeadOfDepartment } = await import("@/lib/approval-rules");
 
   await ensureSchema();
   const d = db();
@@ -101,7 +95,7 @@ async function insertProposedTasks(tasks: any[], siteId: string | undefined, sou
     const id = `${sourceLabel}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     await d.insert(kanbanTasks).values({
       id,
-      siteId: siteId || "safaeewala",
+      siteId,
       title: String(t.title).slice(0, 300),
       desc: [t.description, t.reasoning ? `\n\nWhy: ${t.reasoning}` : ""].filter(Boolean).join(""),
       assignee: t.assignee || "Technical SEO Expert",

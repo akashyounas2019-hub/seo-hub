@@ -371,7 +371,12 @@ export const kanbanTasks = pgTable(
   "kanban_tasks",
   {
     id: text("id").primaryKey(),
-    siteId: text("site_id").default("safaeewala"),
+    // No default -- every real insert path (api.tasks.index.ts,
+    // api.jobs.$id.complete.ts) explicitly resolves a real sites.id UUID
+    // and refuses to insert without one. A hardcoded "safaeewala" default
+    // here previously meant a task could silently land on the wrong site
+    // (or an unparseable non-UUID value) if a caller ever omitted siteId.
+    siteId: text("site_id"),
     title: text("title").notNull(),
     desc: text("desc"),
     assignee: text("assignee").notNull(),
