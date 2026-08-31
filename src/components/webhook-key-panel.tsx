@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { KeyRound, RefreshCw, Copy, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type WebhookKey = { id: string; keyId: string; active: boolean; createdAt: string; lastUsedAt: string | null };
 
@@ -54,8 +55,10 @@ export function WebhookKeyPanel({ siteId }: { siteId: string }) {
     }
   };
 
-  const copy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text).then(() => toast.success(`${label} copied`));
+  const copy = async (text: string, label: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) toast.success(`${label} copied`);
+    else toast.error(`Couldn't copy ${label.toLowerCase()} — try selecting the text manually`);
   };
 
   return (

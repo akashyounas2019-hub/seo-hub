@@ -16,9 +16,11 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 import { jobsStore, type AIJob } from "@/lib/jobs-store";
 import { TEMPLATES } from "@/lib/job-templates";
 import { MarkdownReport } from "@/components/markdown-report";
+import { copyToClipboard } from "@/lib/clipboard";
 
 export function JobsManagerModal({ onClose }: { onClose: () => void }) {
   const [jobs, setJobs] = useState<AIJob[]>([]);
@@ -204,7 +206,11 @@ export function JobsManagerModal({ onClose }: { onClose: () => void }) {
                   {selectedJob.outputMarkdown && (
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => navigator.clipboard.writeText(selectedJob.outputMarkdown || "")}
+                        onClick={async () => {
+                          const ok = await copyToClipboard(selectedJob.outputMarkdown || "");
+                          if (ok) toast.success("Output copied");
+                          else toast.error("Couldn't copy to clipboard — try selecting the text manually");
+                        }}
                         className="text-[11px] text-cyan-300 hover:underline"
                       >
                         Copy Output

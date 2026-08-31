@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   CheckCircle2,
+  CheckSquare,
   XCircle,
   Clock,
   Plus,
@@ -84,8 +85,11 @@ function timeAgo(iso: string) {
 
 function ApprovalsPage() {
   const { allSites } = useSite();
+  const [activeTab, setActiveTab] = useState<"pending" | "resolved">("pending");
   const [tasks, setTasks] = useState<PendingTask[]>([]);
+  const [resolvedTasks, setResolvedTasks] = useState<PendingTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resolvedLoading, setResolvedLoading] = useState(true);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [reevaluating, setReevaluating] = useState(false);
   const [viewTask, setViewTask] = useState<PendingTask | null>(null);
@@ -101,8 +105,20 @@ function ApprovalsPage() {
     }
   };
 
+  const loadResolved = async () => {
+    setResolvedLoading(true);
+    try {
+      const res = await fetch("/api/tasks/resolved");
+      const json = await res.json();
+      if (json?.ok) setResolvedTasks(json.tasks || []);
+    } finally {
+      setResolvedLoading(false);
+    }
+  };
+
   useEffect(() => {
     load();
+    loadResolved();
   }, []);
 
   const [immediateIds, setImmediateIds] = useState<Set<string>>(new Set());
@@ -150,6 +166,34 @@ function ApprovalsPage() {
       setViewTask(null);
     } catch (err: any) {
       toast.error(err?.message || "Failed to update task");
+      load();
+    }
+  }
+
+  // A third real outcome alongside Approve (-> inprogress, starts a real
+  // claude_jobs execution) and Reject (-> rejected, discarded): Resolved
+  // means the reviewer handled this manually outside the AI-execution
+  // flow and wants it tracked as dealt with, not re-surfaced here again.
+  // Goes through the same real PATCH endpoint, which records
+  // approvedBy/approvedAt attribution and a task.resolved audit_log entry.
+  async function resolve(id: string, operatorNotes?: string) {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "resolved",
+          operatorNotes: operatorNotes?.trim() ? operatorNotes.trim() : undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json?.error) throw new Error(json.error);
+      toast.success("Task marked resolved");
+      setViewTask(null);
+      loadResolved();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to mark task resolved");
       load();
     }
   }
@@ -224,6 +268,33 @@ function ApprovalsPage() {
           </div>
         </div>
 
+        {/* Tabs -- Resolved tracks every task the reviewer has manually
+            marked resolved via the button on each pending card / the View
+            modal, kept separate from Pending so a resolved item doesn't
+            just disappear with no record of it. */}
+        <div className="mt-6 flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-950/60 p-1 w-fit">
+          <button
+            onClick={() => setActiveTab("pending")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+              activeTab === "pending" ? "bg-cyan-400/15 text-cyan-200" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            Pending
+            <span className="rounded-full bg-slate-800 px-1.5 text-[10px] tabular-nums">{tasks.length}</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("resolved")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+              activeTab === "resolved" ? "bg-cyan-400/15 text-cyan-200" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            Resolved
+            <span className="rounded-full bg-slate-800 px-1.5 text-[10px] tabular-nums">{resolvedTasks.length}</span>
+          </button>
+        </div>
+
+        {activeTab === "pending" ? (
+        <>
         {/* KPIs */}
         <section className="mt-6 grid grid-cols-3 gap-3">
           <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
@@ -286,6 +357,13 @@ function ApprovalsPage() {
                         <Eye className="h-3.5 w-3.5" /> View
                       </button>
                       <button
+                        onClick={() => resolve(t.id)}
+                        title="Mark handled manually, outside the AI-execution flow"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                      >
+                        <CheckSquare className="h-3.5 w-3.5" /> Resolved
+                      </button>
+                      <button
                         onClick={() => decide(t.id, false)}
                         className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
                       >
@@ -313,6 +391,53 @@ function ApprovalsPage() {
             ))
           )}
         </section>
+        </>
+        ) : (
+        /* Resolved tab -- everything a reviewer has manually marked
+           resolved, tracked here rather than just vanishing off the
+           Pending list with no record. */
+        <section className="mt-6 space-y-3">
+          {resolvedLoading ? (
+            <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center text-sm text-slate-500">
+              Loading resolved tasks…
+            </div>
+          ) : resolvedTasks.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center text-sm text-slate-500">
+              Nothing has been manually resolved yet. Use "Resolved" on a pending task to track it here.
+            </div>
+          ) : (
+            resolvedTasks.map((t) => (
+              <article key={t.id} className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${PRIORITY_META[t.priority] || PRIORITY_META.medium}`}>
+                        {t.priority}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-0.5 text-[10px] text-emerald-300">
+                        <CheckSquare className="h-2.5 w-2.5" /> Resolved
+                      </span>
+                      <span className="text-[11px] text-slate-500">{siteLabel(t.siteId)}</span>
+                    </div>
+                    <h3 className="mt-2 text-sm font-semibold text-white">{t.title}</h3>
+                    {t.desc && <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-slate-400">{t.desc}</p>}
+                    <div className="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+                      <span>Suggested: {t.assignee}</span>
+                      <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {timeAgo(t.createdAt)}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setViewTask(t)}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                  >
+                    <Eye className="h-3.5 w-3.5" /> View
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
+        </section>
+        )}
       </div>
 
       {rulesOpen && <ApprovalRulesModal onClose={() => setRulesOpen(false)} sites={allSites} />}
@@ -321,9 +446,11 @@ function ApprovalsPage() {
         <ApprovalViewModal
           task={viewTask}
           siteLabel={siteLabel(viewTask.siteId)}
+          readOnly={activeTab === "resolved"}
           onClose={() => setViewTask(null)}
           onApprove={(notes, immediate) => decide(viewTask.id, true, immediate, notes)}
           onReject={(notes) => decide(viewTask.id, false, false, notes)}
+          onResolve={(notes) => resolve(viewTask.id, notes)}
           onSaveComment={(notes) => saveComment(viewTask.id, notes)}
         />
       )}
@@ -334,16 +461,20 @@ function ApprovalsPage() {
 function ApprovalViewModal({
   task,
   siteLabel,
+  readOnly,
   onClose,
   onApprove,
   onReject,
+  onResolve,
   onSaveComment,
 }: {
   task: PendingTask;
   siteLabel: string;
+  readOnly?: boolean;
   onClose: () => void;
   onApprove: (notes: string, immediate: boolean) => void;
   onReject: (notes: string) => void;
+  onResolve: (notes: string) => void;
   onSaveComment: (notes: string) => void;
 }) {
   const [notes, setNotes] = useState(task.operatorNotes || "");
@@ -425,35 +556,46 @@ function ApprovalViewModal({
             />
           </div>
 
-          <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200">
-            <input
-              type="checkbox"
-              checked={immediate}
-              onChange={() => setImmediate((v) => !v)}
-              className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-amber-400 accent-amber-400 focus:ring-amber-400/40"
-            />
-            <Zap className="h-3 w-3 text-amber-300" /> Immediate — bypass queue on approve
-          </label>
+          {!readOnly && (
+            <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200">
+              <input
+                type="checkbox"
+                checked={immediate}
+                onChange={() => setImmediate((v) => !v)}
+                className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-amber-400 accent-amber-400 focus:ring-amber-400/40"
+              />
+              <Zap className="h-3 w-3 text-amber-300" /> Immediate — bypass queue on approve
+            </label>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-2 border-t border-slate-800 p-4">
           <button onClick={onClose} className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800">
             Close
           </button>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onReject(notes)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
-            >
-              <XCircle className="h-3.5 w-3.5" /> Reject
-            </button>
-            <button
-              onClick={() => onApprove(notes, immediate)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" /> Approve
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onResolve(notes)}
+                title="Mark handled manually, outside the AI-execution flow"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
+              >
+                <CheckSquare className="h-3.5 w-3.5" /> Resolved
+              </button>
+              <button
+                onClick={() => onReject(notes)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 hover:bg-rose-500/20"
+              >
+                <XCircle className="h-3.5 w-3.5" /> Reject
+              </button>
+              <button
+                onClick={() => onApprove(notes, immediate)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" /> Approve
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useSite } from "@/lib/site-context";
+import { copyToClipboard } from "@/lib/clipboard";
 import {
   SlidersHorizontal,
   KeyRound,
@@ -997,7 +998,15 @@ function WebhooksPanel() {
         <div className="mt-1.5 flex items-center gap-2">
           <code className="flex-1 truncate rounded bg-slate-900 px-2 py-1.5 font-mono text-xs text-cyan-200">{inboundUrl}</code>
           <button
-            onClick={() => { navigator.clipboard.writeText(inboundUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            onClick={async () => {
+              const ok = await copyToClipboard(inboundUrl);
+              if (ok) {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              } else {
+                toast.error("Couldn't copy to clipboard — try selecting the text manually");
+              }
+            }}
             className="inline-flex items-center gap-1 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 hover:border-cyan-400/40"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
@@ -1067,6 +1076,11 @@ function describeAuditAction(e: AuditEntry): string {
     case "general_settings.updated": return "Updated general settings";
     case "site.updated": return `Updated site ${d.siteId} (${(d.fields as string[] | undefined)?.join(", ")})`;
     case "site.deleted": return `Deleted site ${d.siteId}`;
+    case "task.approved": return `Approved task "${d.title || d.taskId}"`;
+    case "task.rejected": return `Rejected task "${d.title || d.taskId}"`;
+    case "task.resolved": return `Marked task "${d.title || d.taskId}" resolved`;
+    case "task.status_changed": return `Moved task "${d.title || d.taskId}" from ${d.previousStatus} to ${d.newStatus}`;
+    case "task.commented": return `Commented on task "${d.title || d.taskId}"`;
     default: return e.action;
   }
 }

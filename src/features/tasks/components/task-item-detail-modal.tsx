@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  FileDown,
   History,
   Loader2,
   RefreshCw,
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 import type { Priority, Status, Task } from "../types";
 import { EXPERTS } from "@/lib/agents";
 import { MarkdownReport } from "@/components/markdown-report";
+import { copyToClipboard } from "@/lib/clipboard";
 import { TaskHistoryModal } from "./task-history-modal";
 
 type JobStatus = "pending" | "claimed" | "running" | "done" | "failed" | "cancelled";
@@ -101,6 +103,7 @@ export function TaskItemDetailModal({
   const [generation, setGeneration] = useState(0);
   const [regenerating, setRegenerating] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const { job, loading } = useJobStatus(currentJobId, generation);
 
   const handleSave = () => {
@@ -130,9 +133,26 @@ export function TaskItemDetailModal({
     }
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!job?.outputMarkdown) return;
-    navigator.clipboard.writeText(job.outputMarkdown).then(() => toast.success("Report copied"));
+    const ok = await copyToClipboard(job.outputMarkdown);
+    if (ok) toast.success("Report copied");
+    else toast.error("Couldn't copy to clipboard — try selecting the text manually");
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!job?.outputMarkdown || exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      const { exportMarkdownToPdf } = await import("@/lib/export-pdf");
+      const slug = task.id.replace(/[^a-z0-9-]+/gi, "-");
+      await exportMarkdownToPdf(job.outputMarkdown, `${slug}-report`, task.title);
+      toast.success("PDF downloaded");
+    } catch (err: any) {
+      toast.error(`Could not generate PDF: ${err?.message || "unknown error"}`);
+    } finally {
+      setExportingPdf(false);
+    }
   };
 
   const statusMeta = job ? JOB_STATUS_META[job.status] : null;
@@ -255,6 +275,14 @@ export function TaskItemDetailModal({
                     className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-[11px] text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
                   >
                     <Copy className="h-3 w-3" /> Copy
+                  </button>
+                  <button
+                    onClick={handleDownloadPdf}
+                    disabled={exportingPdf}
+                    title="Download this result as a PDF"
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-[11px] text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <FileDown className="h-3 w-3" /> {exportingPdf ? "Generating…" : "PDF"}
                   </button>
                   <button
                     onClick={handleRegenerate}

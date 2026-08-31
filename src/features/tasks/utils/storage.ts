@@ -19,21 +19,6 @@ export function relativeDue(iso?: string): string {
   return `${Math.round(diffH / 24)}d`;
 }
 
-export function loadState(seedTasks: Task[], seedTemplates: Template[]): { tasks: Task[]; templates: Template[] } {
-  if (typeof window === "undefined") return { tasks: seedTasks, templates: seedTemplates };
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { tasks: seedTasks, templates: seedTemplates };
-    const parsed = JSON.parse(raw);
-    return {
-      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : seedTasks,
-      templates: Array.isArray(parsed.templates) ? parsed.templates : seedTemplates,
-    };
-  } catch {
-    return { tasks: seedTasks, templates: seedTemplates };
-  }
-}
-
 export function saveState(state: { tasks: Task[]; templates: Template[] }): void {
   if (typeof window === "undefined") return;
   try {

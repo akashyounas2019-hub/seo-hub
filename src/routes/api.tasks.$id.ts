@@ -60,6 +60,22 @@ export const Route = createFileRoute("/api/tasks/$id")({
               : (body.priority || task.priority) === "critical"
                 ? "high"
                 : "normal";
+
+            // Real site context (Knowledge Base, business category) so the
+            // execution prompt is actually grounded in this site's real
+            // facts instead of running on nothing but the task's own
+            // title/description -- previously no task-execution job ever
+            // included this, despite the prompt template itself claiming
+            // to ground claims in Knowledge Base context that was never
+            // attached.
+            const { siteContextForJobInput } = await import("@/lib/job-templates");
+            let siteContext: Record<string, any> = {};
+            if (task.siteId) {
+              const { sites } = await import("@/db/schema");
+              const [site] = await d.select().from(sites).where(eq(sites.id, task.siteId)).limit(1);
+              siteContext = siteContextForJobInput(site);
+            }
+
             const [job] = await d.insert(claudeJobs).values({
               kind: "kanban_task_execution",
               title: `Execute SEO Task: ${task.title}`,
@@ -70,6 +86,7 @@ export const Route = createFileRoute("/api/tasks/$id")({
                 priority: body.priority || task.priority,
                 immediate: !!body.immediate,
                 operatorNotes: operatorNotes || undefined,
+                ...siteContext,
               },
               status: "pending",
               priority: jobPriority,
@@ -99,7 +116,9 @@ export const Route = createFileRoute("/api/tasks/$id")({
           if (leavingPendingApproval) {
             updates.approvedBy = actor;
             updates.approvedAt = new Date();
-            await logAudit(actor, body.status === "rejected" ? "task.rejected" : "task.approved", {
+            const auditAction =
+              body.status === "rejected" ? "task.rejected" : body.status === "resolved" ? "task.resolved" : "task.approved";
+            await logAudit(actor, auditAction, {
               taskId: params.id,
               title: task.title,
               newStatus: body.status,

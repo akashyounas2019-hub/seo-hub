@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getSeoTool, SEO_CATEGORIES, type SeoTool } from "@/lib/seo-tools";
 import { useSite } from "@/lib/site-context";
+import { copyToClipboard } from "@/lib/clipboard";
 import { MarkdownReport } from "@/components/markdown-report";
 import { RefreshCw } from "lucide-react";
 
@@ -310,9 +311,11 @@ function SeoToolPage() {
             <button
               type="button"
               disabled={!reportMarkdown}
-              onClick={() => {
+              onClick={async () => {
                 if (!reportMarkdown) return;
-                navigator.clipboard.writeText(reportMarkdown).then(() => toast.success("Report copied"));
+                const ok = await copyToClipboard(reportMarkdown);
+                if (ok) toast.success("Report copied");
+                else toast.error("Couldn't copy to clipboard — try selecting the text manually");
               }}
               className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-[11px] text-slate-400 hover:border-cyan-400/30 hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
             >

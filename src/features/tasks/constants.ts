@@ -1,6 +1,5 @@
 import { AlertTriangle, Flag } from "lucide-react";
-import type { ColumnMeta, Priority, PriorityMeta, Task, Template } from "./types";
-import { isoDaysFromNow } from "./utils/storage";
+import type { ColumnMeta, Priority, PriorityMeta, Template } from "./types";
 
 export const SEED_TEMPLATES: Template[] = [
   {
@@ -47,65 +46,6 @@ export const SEED_TEMPLATES: Template[] = [
     defaultAssignee: "Auditor",
     priority: "high",
     builtIn: true,
-  },
-];
-
-export const SEED_TASKS: Task[] = [
-  {
-    id: "seed-1",
-    title: "Fix 14 canonical mismatches",
-    desc: "Self-referencing canonicals point to trailing-slash variants.",
-    assignee: "Technical SEO Expert",
-    priority: "high",
-    status: "inprogress",
-    due: isoDaysFromNow(1),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "seed-2",
-    title: "Add FAQ schema to 12 top service pages",
-    assignee: "On-Page Expert",
-    priority: "medium",
-    status: "todo",
-    due: isoDaysFromNow(3),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "seed-3",
-    title: "Pitch 5 UAE real-estate blogs",
-    desc: "Personalized outreach for guest posts on move-in cleaning.",
-    assignee: "Off-Page Expert",
-    priority: "medium",
-    status: "review",
-    due: isoDaysFromNow(2),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "seed-4",
-    title: "Ship XML sitemap v3 to GSC",
-    assignee: "Technical SEO Expert",
-    priority: "low",
-    status: "done",
-    due: isoDaysFromNow(-1),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "seed-5",
-    title: "Reclaim 8 unlinked brand mentions",
-    assignee: "Off-Page Expert",
-    priority: "high",
-    status: "todo",
-    due: isoDaysFromNow(4),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "seed-6",
-    title: "Improve LCP on /pricing (3.1s → <2.0s)",
-    assignee: "Technical SEO Expert",
-    priority: "critical",
-    status: "inprogress",
-    due: isoDaysFromNow(0),
-    createdAt: new Date().toISOString(),
   },
 ];
 

@@ -37,6 +37,8 @@ export function AgentDashboardView() {
   const {
     tasks,
     templates,
+    loading: tasksLoading,
+    loadError: tasksLoadError,
     agents,
     query,
     setQuery,
@@ -174,6 +176,16 @@ export function AgentDashboardView() {
             </div>
           </div>
 
+          {tasksLoadError ? (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-6 text-center text-sm text-rose-300">
+              Failed to load the execution board: {tasksLoadError}
+              <button onClick={refetch} className="ml-2 underline hover:text-rose-200">Retry</button>
+            </div>
+          ) : tasksLoading ? (
+            <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-10 text-center text-sm text-slate-500">
+              Loading the execution board…
+            </div>
+          ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             {COLUMNS.map((col) => {
               const colTasks = filtered.filter((t) => t.status === col.id);
@@ -244,6 +256,7 @@ export function AgentDashboardView() {
               );
             })}
           </div>
+          )}
         </section>
 
         {/* Workload Management Section */}

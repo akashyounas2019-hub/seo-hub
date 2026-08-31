@@ -32,6 +32,8 @@ export const Route = createFileRoute("/api/tasks/")({
         try {
           const { db, ensureSchema } = await import("@/db/client");
           const { kanbanTasks, claudeJobs, sites } = await import("@/db/schema");
+          const { eq } = await import("drizzle-orm");
+          const { siteContextForJobInput } = await import("@/lib/job-templates");
 
           await ensureSchema();
           const d = db();
@@ -45,14 +47,23 @@ export const Route = createFileRoute("/api/tasks/")({
 
           // A caller omitting siteId used to fall back to a hardcoded
           // "safaeewala" string -- silently wrong the moment a second real
-          // site exists. Resolve the real first site instead; still just a
-          // best-effort default for a caller that didn't specify one, but
-          // now grounded in what's actually connected rather than a
-          // hardcoded slug from this app's original single-tenant setup.
-          let resolvedSiteId = body.siteId;
-          if (!resolvedSiteId) {
-            const [firstSite] = await d.select({ id: sites.id }).from(sites).limit(1);
-            resolvedSiteId = firstSite?.id;
+          // site exists. Resolve the real site row instead of just an id:
+          // still a best-effort default for a caller that didn't specify
+          // one, but now grounded in what's actually connected, and the
+          // full row is what lets a real execution job include Knowledge
+          // Base context instead of running on the task title alone.
+          const [resolvedSite] = body.siteId
+            ? await d.select().from(sites).where(eq(sites.id, body.siteId)).limit(1)
+            : await d.select().from(sites).limit(1);
+
+          // Checked before creating anything (a job used to be inserted
+          // here even when no site could be resolved, leaving an orphaned
+          // claude_jobs row behind a 400 response).
+          if (!resolvedSite) {
+            return Response.json(
+              { ok: false, error: "No site is connected yet — add a site before creating tasks." },
+              { status: 400 },
+            );
           }
 
           const id = body.id || `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -64,7 +75,13 @@ export const Route = createFileRoute("/api/tasks/")({
             const [job] = await d.insert(claudeJobs).values({
               kind: "kanban_task_execution",
               title: `Execute SEO Task: ${body.title}`,
-              input: { taskId: id, assignee: body.assignee, desc: body.desc || body.title, priority: body.priority },
+              input: {
+                taskId: id,
+                assignee: body.assignee,
+                desc: body.desc || body.title,
+                priority: body.priority,
+                ...siteContextForJobInput(resolvedSite),
+              },
               status: "pending",
               priority: body.priority === "critical" || body.priority === "high" ? "high" : "normal",
               preferWorker: "mac",
@@ -73,16 +90,9 @@ export const Route = createFileRoute("/api/tasks/")({
             jobId = job.id;
           }
 
-          if (!resolvedSiteId) {
-            return Response.json(
-              { ok: false, error: "No site is connected yet — add a site before creating tasks." },
-              { status: 400 },
-            );
-          }
-
           const newTask = {
             id,
-            siteId: resolvedSiteId,
+            siteId: resolvedSite.id,
             title: body.title,
             desc: body.desc || null,
             assignee: body.assignee || "Technical SEO Expert",

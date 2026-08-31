@@ -1,12 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { EXPERTS } from "@/lib/agents";
-import { SEED_TASKS, SEED_TEMPLATES } from "../constants";
+import { SEED_TEMPLATES } from "../constants";
 import type { Priority, Status, Task, Template } from "../types";
-import { loadState, saveState } from "../utils/storage";
+import { saveState } from "../utils/storage";
 
 export function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>(SEED_TASKS);
+  // No fake seed tasks -- an empty array until the real /api/tasks fetch
+  // resolves. Previously this initialized to SEED_TASKS (6 hardcoded fake
+  // tasks like "Fix 14 canonical mismatches") and, on first-ever visit,
+  // localStorage fell back to the same seed -- meaning a user could see
+  // (and the board would even persist into localStorage) fabricated work
+  // items before, or instead of, the real board ever loaded. Templates are
+  // real static config (form presets, not fabricated activity), so
+  // SEED_TEMPLATES stays as the honest starting set until the real
+  // /api/tasks response's own templates replace it.
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [templates, setTemplates] = useState<Template[]>(SEED_TEMPLATES);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [query, setQuery] = useState("");
   const [prioFilter, setPrioFilter] = useState<"all" | Priority>("all");
@@ -25,29 +36,39 @@ export function useTasks() {
   // work that's actually approved and in flight. Exposed as `refetch` so
   // real actions elsewhere on the board (publish, cancel) can pull the
   // board's state back in sync after they happen server-side.
+  //
+  // A real, genuinely empty result (a brand-new site with zero tasks yet)
+  // is a valid state and must still clear the board -- previously this
+  // only called setTasks when the array was non-empty, so an empty real
+  // response silently left whatever was on screen before (which, before
+  // this fix, was fabricated seed data that would then never go away).
+  // A failed/unreachable fetch is reported as a real error instead of
+  // silently keeping stale or fake data on screen.
   const refetch = () => {
+    setLoadError(null);
     return fetch("/api/tasks")
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`Failed to load tasks (${res.status})`))))
       .then((data) => {
-        if (data && Array.isArray(data.tasks) && data.tasks.length > 0) {
-          setTasks(data.tasks.filter((t: Task) => !["pending_approval", "rejected", "cancelled"].includes(t.status as string)));
+        if (data && Array.isArray(data.tasks)) {
+          setTasks(data.tasks.filter((t: Task) => !["pending_approval", "rejected", "resolved", "cancelled"].includes(t.status as string)));
+        } else {
+          throw new Error(data?.error || "Unexpected response loading tasks");
         }
         if (data && Array.isArray(data.templates) && data.templates.length > 0) {
           setTemplates(data.templates);
         }
       })
-      .catch(() => {
-        /* fallback to local storage */
+      .catch((err: any) => {
+        setLoadError(err?.message || "Failed to load tasks");
       });
   };
 
   useEffect(() => {
-    // Initial local storage hydration
-    const s = loadState(SEED_TASKS, SEED_TEMPLATES);
-    setTasks(s.tasks);
-    setTemplates(s.templates);
-
-    refetch().finally(() => setHydrated(true));
+    setLoading(true);
+    refetch().finally(() => {
+      setHydrated(true);
+      setLoading(false);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -177,6 +198,8 @@ export function useTasks() {
   return {
     tasks,
     templates,
+    loading,
+    loadError,
     agents,
     query,
     setQuery,

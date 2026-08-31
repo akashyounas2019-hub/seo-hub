@@ -1,8 +1,44 @@
+import { getBusinessCategory } from "./business-categories";
+
 export interface JobTemplate {
   kind: string;
   label: string;
   description: string;
   buildPrompt(input: Record<string, any>): string;
+}
+
+/**
+ * Real per-site grounding fields (Knowledge Base content, business
+ * category hint) for a claude_jobs.input payload -- the same shape
+ * api.seo-suite.run.ts already builds for its own jobs, so
+ * buildPromptForKind's Knowledge Base injection (below) actually has
+ * something to attach.
+ *
+ * kanban_task_execution jobs previously never included any of this: task
+ * execution ran on nothing but the task's own title/description, with no
+ * real site data behind it at all, despite the prompt template itself
+ * claiming to ground claims in "the Knowledge Base context provided
+ * above" -- there was never any context to provide. Every task-execution
+ * job creation site (api.tasks.$id.ts, api.tasks.index.ts,
+ * api.tasks.$id.regenerate.ts) should call this with the task's real site
+ * row instead of building this object ad hoc three separate times.
+ */
+export function siteContextForJobInput(site: { id: string; name: string; domain: string; businessCategory?: string | null; knowledgeBase?: string | null; structuredKb?: unknown } | null | undefined) {
+  if (!site) return {};
+  // sites.businessCategory stores a category id (e.g. "cleaning_services"),
+  // not the hint text itself -- resolved via getBusinessCategory the same
+  // way api.seo-suite.run.ts does, so both real job-creation paths ground
+  // prompts in the same vertical guidance instead of one shipping a raw id.
+  const category = getBusinessCategory(site.businessCategory);
+  return {
+    siteId: site.id,
+    siteName: site.name,
+    domain: site.domain,
+    businessCategoryHint: category?.promptHint || undefined,
+    plainTextKb: site.knowledgeBase || undefined,
+    structuredKb: site.structuredKb || undefined,
+    siteKb: site.knowledgeBase || undefined,
+  };
 }
 
 export const TEMPLATES: Record<string, JobTemplate> = {
@@ -109,10 +145,19 @@ Answer helpfully and specifically. Ground any GA4/GSC/GBP/Cloudflare/alert numbe
       const notesBlock = input.operatorNotes
         ? `\n\nOPERATOR INSTRUCTIONS (added when this task was approved -- follow these explicitly, they override generic assumptions below):\n${input.operatorNotes}`
         : "";
-      return `You are ${input.assignee || "an SEO specialist"} on an SEO agency's agent fleet, executing an approved task.
+      const categoryHint = input.businessCategoryHint ? `\nBUSINESS VERTICAL GUIDANCE: ${input.businessCategoryHint}` : "";
+      const siteLine = input.siteName || input.domain ? `\nSITE: ${input.siteName || ""}${input.domain ? ` (${input.domain})` : ""}` : "";
+      return `You are ${input.assignee || "an SEO specialist"} on an SEO agency's agent fleet, executing an approved task. This output goes straight to a human reviewer's approval queue (the "Waiting Approval" stage) before anything ships, so it needs to withstand real scrutiny, not read as a generic first draft.${siteLine}
 
 TASK: ${input.desc || input.title || "See task details"}
-PRIORITY: ${input.priority || "medium"}${input.immediate ? " (marked Immediate by the approver -- treat as urgent)" : ""}${notesBlock}
+PRIORITY: ${input.priority || "medium"}${input.immediate ? " (marked Immediate by the approver -- treat as urgent)" : ""}${categoryHint}${notesBlock}
+
+ANALYSIS DEPTH REQUIRED:
+1. Before recommending anything, briefly state what you actually checked or considered (the specific facts, pages, or data points from the Knowledge Base context below that this analysis is grounded in) -- not just the conclusion.
+2. Where the Knowledge Base context gives you real numbers, services, FAQs, or policies, cite them specifically rather than writing generically about "the business."
+3. Call out trade-offs or risks a reviewer would want to know about (e.g. "this assumes X; if that's wrong, revisit Y") rather than presenting one option as the only path.
+4. If a claim can't be grounded in the Knowledge Base context or explicit task details, label it as an assumption instead of stating it as fact.
+5. End with a short "What I'd want confirmed before this goes live" list if there's anything a human reviewer should specifically double-check -- omit this section only if there's genuinely nothing to flag.
 
 Produce a thorough, execution-ready Markdown deliverable for this task. Ground every specific claim in the Knowledge Base context provided above (if any) -- if a needed data source isn't available, say so explicitly rather than inventing facts. Structure the output with clear headings and concrete, actionable content a reviewer could approve and publish as-is.`;
     },

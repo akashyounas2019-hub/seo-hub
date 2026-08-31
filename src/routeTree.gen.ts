@@ -78,6 +78,7 @@ import { Route as ApiTasksIndexRouteImport } from './routes/api.tasks.index'
 import { Route as ApiTasksIdRouteImport } from './routes/api.tasks.$id'
 import { Route as ApiTasksHistoryRouteImport } from './routes/api.tasks.history'
 import { Route as ApiTasksPendingApprovalRouteImport } from './routes/api.tasks.pending-approval'
+import { Route as ApiTasksResolvedRouteImport } from './routes/api.tasks.resolved'
 import { Route as ApiAutomationFlowsIdRouteImport } from './routes/api.automation.flows.$id'
 import { Route as ApiJobsIdCompleteRouteImport } from './routes/api.jobs.$id.complete'
 import { Route as ApiJobsIdFailRouteImport } from './routes/api.jobs.$id.fail'
@@ -449,6 +450,11 @@ const ApiTasksPendingApprovalRoute = ApiTasksPendingApprovalRouteImport.update({
   path: '/api/tasks/pending-approval',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTasksResolvedRoute = ApiTasksResolvedRouteImport.update({
+  id: '/api/tasks/resolved',
+  path: '/api/tasks/resolved',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAutomationFlowsIdRoute = ApiAutomationFlowsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -619,6 +625,7 @@ export interface FileRoutesByFullPath {
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/history': typeof ApiTasksHistoryRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
+  '/api/tasks/resolved': typeof ApiTasksResolvedRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
   '/api/sites/': typeof ApiSitesIndexRoute
@@ -710,6 +717,7 @@ export interface FileRoutesByTo {
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/history': typeof ApiTasksHistoryRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
+  '/api/tasks/resolved': typeof ApiTasksResolvedRoute
   '/api/alerts': typeof ApiAlertsIndexRoute
   '/api/jobs': typeof ApiJobsIndexRoute
   '/api/sites': typeof ApiSitesIndexRoute
@@ -802,6 +810,7 @@ export interface FileRoutesById {
   '/api/tasks/$id': typeof ApiTasksIdRouteWithChildren
   '/api/tasks/history': typeof ApiTasksHistoryRoute
   '/api/tasks/pending-approval': typeof ApiTasksPendingApprovalRoute
+  '/api/tasks/resolved': typeof ApiTasksResolvedRoute
   '/api/alerts/': typeof ApiAlertsIndexRoute
   '/api/jobs/': typeof ApiJobsIndexRoute
   '/api/sites/': typeof ApiSitesIndexRoute
@@ -895,6 +904,7 @@ export interface FileRouteTypes {
     | '/api/tasks/$id'
     | '/api/tasks/history'
     | '/api/tasks/pending-approval'
+    | '/api/tasks/resolved'
     | '/api/alerts/'
     | '/api/jobs/'
     | '/api/sites/'
@@ -986,6 +996,7 @@ export interface FileRouteTypes {
     | '/api/tasks/$id'
     | '/api/tasks/history'
     | '/api/tasks/pending-approval'
+    | '/api/tasks/resolved'
     | '/api/alerts'
     | '/api/jobs'
     | '/api/sites'
@@ -1077,6 +1088,7 @@ export interface FileRouteTypes {
     | '/api/tasks/$id'
     | '/api/tasks/history'
     | '/api/tasks/pending-approval'
+    | '/api/tasks/resolved'
     | '/api/alerts/'
     | '/api/jobs/'
     | '/api/sites/'
@@ -1168,6 +1180,7 @@ export interface RootRouteChildren {
   ApiTasksIdRoute: typeof ApiTasksIdRouteWithChildren
   ApiTasksHistoryRoute: typeof ApiTasksHistoryRoute
   ApiTasksPendingApprovalRoute: typeof ApiTasksPendingApprovalRoute
+  ApiTasksResolvedRoute: typeof ApiTasksResolvedRoute
   ApiAlertsIndexRoute: typeof ApiAlertsIndexRoute
   ApiJobsIndexRoute: typeof ApiJobsIndexRoute
   ApiSitesIndexRoute: typeof ApiSitesIndexRoute
@@ -1660,6 +1673,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTasksPendingApprovalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tasks/resolved': {
+      id: '/api/tasks/resolved'
+      path: '/api/tasks/resolved'
+      fullPath: '/api/tasks/resolved'
+      preLoaderRoute: typeof ApiTasksResolvedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/automation/flows/$id': {
       id: '/api/automation/flows/$id'
       path: '/$id'
@@ -2027,6 +2047,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTasksIdRoute: ApiTasksIdRouteWithChildren,
   ApiTasksHistoryRoute: ApiTasksHistoryRoute,
   ApiTasksPendingApprovalRoute: ApiTasksPendingApprovalRoute,
+  ApiTasksResolvedRoute: ApiTasksResolvedRoute,
   ApiAlertsIndexRoute: ApiAlertsIndexRoute,
   ApiJobsIndexRoute: ApiJobsIndexRoute,
   ApiSitesIndexRoute: ApiSitesIndexRoute,

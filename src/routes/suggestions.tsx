@@ -443,6 +443,7 @@ const STATUS_META: Record<string, string> = {
   review: "border-violet-400/25 bg-violet-500/10 text-violet-200",
   done: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200",
   rejected: "border-rose-400/25 bg-rose-500/10 text-rose-300",
+  resolved: "border-teal-400/25 bg-teal-500/10 text-teal-200",
 };
 
 const PRIORITY_META: Record<string, string> = {

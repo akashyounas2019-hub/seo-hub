@@ -19,8 +19,9 @@ export const Route = createFileRoute("/api/tasks/$id/regenerate")({
       POST: async ({ params, request }) => {
         try {
           const { db, ensureSchema } = await import("@/db/client");
-          const { kanbanTasks, claudeJobs } = await import("@/db/schema");
+          const { kanbanTasks, claudeJobs, sites } = await import("@/db/schema");
           const { eq } = await import("drizzle-orm");
+          const { siteContextForJobInput } = await import("@/lib/job-templates");
 
           await ensureSchema();
           const d = db();
@@ -30,12 +31,30 @@ export const Route = createFileRoute("/api/tasks/$id/regenerate")({
             return Response.json({ ok: false, error: "Task not found" }, { status: 404 });
           }
 
+          // Same real Knowledge Base grounding as a first-time run
+          // (api.tasks.$id.ts) -- a Regenerate previously carried no more
+          // information than the original attempt, so a reviewer asking
+          // for a better result via Regenerate could never actually get
+          // one grounded in real site facts.
+          let siteContext: Record<string, any> = {};
+          if (task.siteId) {
+            const [site] = await d.select().from(sites).where(eq(sites.id, task.siteId)).limit(1);
+            siteContext = siteContextForJobInput(site);
+          }
+
           const [job] = await d
             .insert(claudeJobs)
             .values({
               kind: "kanban_task_execution",
               title: `Regenerate: ${task.title}`,
-              input: { taskId: params.id, assignee: task.assignee, desc: task.desc || task.title, priority: task.priority },
+              input: {
+                taskId: params.id,
+                assignee: task.assignee,
+                desc: task.desc || task.title,
+                priority: task.priority,
+                operatorNotes: task.operatorNotes || undefined,
+                ...siteContext,
+              },
               status: "pending",
               priority: task.priority === "critical" ? "high" : "normal",
               preferWorker: "mac",
